@@ -1,0 +1,120 @@
+"""Triage router agent for query classification."""
+
+import json
+import os
+from typing import Any
+
+from langchain_core.messages import AIMessage, HumanMessage
+
+from ..graph.state import AgentState, QueryType
+from ..utils.llm_config import get_llm_from_config, get_structured_llm
+from ..utils.prompts import TRIAGE_ROUTER_PROMPT
+
+
+def triage_node(state: AgentState) -> dict[str, Any]:
+    """Triage router agent node.
+
+    Analyzes the customer query and routes it to the appropriate specialist.
+
+    Args:
+        state: Current agent state
+
+    Returns:
+        Updated state with routing information
+    """
+    # Get the last message (user query)
+    messages = state["messages"]
+    last_message = messages[-1]
+
+    if isinstance(last_message, HumanMessage):
+        query = last_message.content
+    else:
+        query = str(last_message.content)
+
+    # Get user context
+    user_context = state.get("user_context", {})
+    context_str = json.dumps(user_context, indent=2) if user_context else "None provided"
+
+    # Prepare prompt
+    prompt = TRIAGE_ROUTER_PROMPT.format(query=query, user_context=context_str)
+
+    # Get LLM response with LaunchDarkly AI Config
+    use_ld = os.getenv("LAUNCHDARKLY_ENABLED", "false").lower() == "true"
+
+    if use_ld:
+        # Use LaunchDarkly AI Config for this agent
+        llm, tracker = get_llm_from_config(
+            config_key="triage-router",
+            context=user_context,
+            default_temperature=0.0,
+        )
+        # Configure for JSON output if OpenAI
+        if hasattr(llm, 'model_kwargs'):
+            llm.model_kwargs = {"response_format": {"type": "json_object"}}
+
+        response = llm.invoke([HumanMessage(content=prompt)])
+    else:
+        # Fallback to default configuration
+        llm = get_structured_llm(temperature=0.0)
+        response = llm.invoke([HumanMessage(content=prompt)])
+
+    # Parse the JSON response
+    try:
+        result = json.loads(response.content)
+    except json.JSONDecodeError:
+        # Fallback if JSON parsing fails
+        result = {
+            "query_type": "schedule_agent",
+            "confidence_score": 0.5,
+            "extracted_context": {},
+            "escalation_needed": True,
+            "reasoning": "Failed to parse query, routing to human agent for safety",
+        }
+
+    # Map query type to enum
+    query_type_str = result.get("query_type", "schedule_agent")
+    query_type_map = {
+        "policy_question": QueryType.POLICY_QUESTION,
+        "provider_lookup": QueryType.PROVIDER_LOOKUP,
+        "schedule_agent": QueryType.SCHEDULE_AGENT,
+    }
+    query_type = query_type_map.get(query_type_str, QueryType.SCHEDULE_AGENT)
+
+    # Determine next agent
+    agent_map = {
+        QueryType.POLICY_QUESTION: "policy_specialist",
+        QueryType.PROVIDER_LOOKUP: "provider_specialist",
+        QueryType.SCHEDULE_AGENT: "scheduler_specialist",
+    }
+    next_agent = agent_map[query_type]
+
+    # Check confidence - if low, escalate
+    confidence_score = result.get("confidence_score", 0.0)
+    escalation_needed = result.get("escalation_needed", False)
+
+    if confidence_score < 0.7:
+        escalation_needed = True
+        next_agent = "scheduler_specialist"
+
+    # Update state
+    updates: dict[str, Any] = {
+        "query_type": query_type,
+        "next_agent": next_agent,
+        "confidence_score": confidence_score,
+        "escalation_needed": escalation_needed,
+        "messages": messages
+        + [
+            AIMessage(
+                content=f"Routing to {next_agent} (confidence: {confidence_score:.2f})",
+                additional_kwargs={"reasoning": result.get("reasoning", "")},
+            )
+        ],
+    }
+
+    # Merge extracted context
+    extracted_context = result.get("extracted_context", {})
+    if extracted_context:
+        merged_context = {**user_context, **extracted_context}
+        updates["user_context"] = merged_context
+
+    return updates
