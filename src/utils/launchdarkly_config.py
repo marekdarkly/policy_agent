@@ -108,8 +108,8 @@ class LaunchDarklyClient:
         Returns:
             Default configuration dictionary
         """
-        provider = os.getenv("LLM_PROVIDER", "openai")
-        model = os.getenv("LLM_MODEL", "gpt-4-turbo-preview")
+        provider = os.getenv("LLM_PROVIDER", "bedrock")
+        model = os.getenv("LLM_MODEL", "claude-3-5-sonnet")
 
         return {
             "model": {

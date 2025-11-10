@@ -53,17 +53,17 @@ For each agent, create an AI Config in LaunchDarkly:
 
 **Config Key:** `triage-router`
 
-**Default Configuration:**
+**Default Configuration (AWS Bedrock):**
 ```json
 {
   "model": {
-    "name": "gpt-4-turbo-preview",
+    "name": "claude-3-5-sonnet",
     "parameters": {
       "temperature": 0.0,
       "maxTokens": 1000
     }
   },
-  "provider": "openai",
+  "provider": "bedrock",
   "enabled": true
 }
 ```
@@ -72,7 +72,77 @@ For each agent, create an AI Config in LaunchDarkly:
 
 **Config Key:** `policy-specialist`
 
-**Default Configuration:**
+**Default Configuration (AWS Bedrock):**
+```json
+{
+  "model": {
+    "name": "claude-3-5-sonnet",
+    "parameters": {
+      "temperature": 0.7,
+      "maxTokens": 2000
+    }
+  },
+  "provider": "bedrock",
+  "enabled": true
+}
+```
+
+#### Example: Provider Specialist Config
+
+**Config Key:** `provider-specialist`
+
+**Default Configuration (AWS Bedrock):**
+```json
+{
+  "model": {
+    "name": "claude-3-haiku",
+    "parameters": {
+      "temperature": 0.7,
+      "maxTokens": 1500
+    }
+  },
+  "provider": "bedrock",
+  "enabled": true
+}
+```
+
+#### Example: Scheduler Specialist Config
+
+**Config Key:** `scheduler-specialist`
+
+**Default Configuration (AWS Bedrock):**
+```json
+{
+  "model": {
+    "name": "claude-3-haiku",
+    "parameters": {
+      "temperature": 0.7,
+      "maxTokens": 1500
+    }
+  },
+  "provider": "bedrock",
+  "enabled": true
+}
+```
+
+### 4. Available Bedrock Models
+
+**Anthropic Claude (via Bedrock):**
+- `claude-3-5-sonnet` - Best overall performance
+- `claude-3-sonnet` - Good balance of quality and cost
+- `claude-3-haiku` - Fast and cost-effective
+- `claude-3-opus` - Most capable (highest cost)
+
+**Meta Llama:**
+- `llama-3-1-70b` - Good for complex tasks
+- `llama-3-1-8b` - Fast and efficient
+
+**Amazon Titan:**
+- `titan-text-express` - AWS native model
+
+### 5. Using Alternative Providers
+
+**OpenAI:**
 ```json
 {
   "model": {
@@ -87,48 +157,7 @@ For each agent, create an AI Config in LaunchDarkly:
 }
 ```
 
-#### Example: Provider Specialist Config
-
-**Config Key:** `provider-specialist`
-
-**Default Configuration:**
-```json
-{
-  "model": {
-    "name": "gpt-3.5-turbo",
-    "parameters": {
-      "temperature": 0.7,
-      "maxTokens": 1500
-    }
-  },
-  "provider": "openai",
-  "enabled": true
-}
-```
-
-#### Example: Scheduler Specialist Config
-
-**Config Key:** `scheduler-specialist`
-
-**Default Configuration:**
-```json
-{
-  "model": {
-    "name": "gpt-3.5-turbo",
-    "parameters": {
-      "temperature": 0.7,
-      "maxTokens": 1500
-    }
-  },
-  "provider": "openai",
-  "enabled": true
-}
-```
-
-### 4. Using Anthropic Models
-
-To use Anthropic's Claude models:
-
+**Anthropic Direct:**
 ```json
 {
   "model": {
@@ -149,7 +178,7 @@ To use Anthropic's Claude models:
 
 Target different models to different user segments using LaunchDarkly's targeting rules:
 
-**Example:** Premium users get GPT-4, standard users get GPT-3.5
+**Example:** Premium users get Claude 3.5 Sonnet, standard users get Claude 3 Haiku
 
 1. In LaunchDarkly, add targeting rules to your AI Config
 2. Target by custom attributes like `tier`, `policy_type`, etc.
@@ -171,39 +200,45 @@ result = run_workflow(
 Test different models with percentage rollouts:
 
 1. Create a new variation in your AI Config
-2. Set up percentage rollout (e.g., 10% GPT-4, 90% GPT-3.5)
+2. Set up percentage rollout (e.g., 10% Claude 3.5 Sonnet, 90% Claude 3 Haiku)
 3. Monitor metrics in LaunchDarkly
 4. Gradually increase rollout based on performance
 
-### Cost Optimization
+### Cost Optimization (Bedrock)
 
 Example strategy for cost-effective configuration:
 
 ```json
 // Triage Router - High accuracy needed
 {
-  "model": {"name": "gpt-4-turbo-preview"},
-  "provider": "openai"
+  "model": {"name": "claude-3-5-sonnet"},
+  "provider": "bedrock"
+  // Cost: ~$3.00/1M input, $15.00/1M output
 }
 
 // Policy Specialist - Complex reasoning
 {
-  "model": {"name": "gpt-4-turbo-preview"},
-  "provider": "openai"
+  "model": {"name": "claude-3-sonnet"},
+  "provider": "bedrock"
+  // Cost: ~$3.00/1M input, $15.00/1M output
 }
 
 // Provider Specialist - Simpler task
 {
-  "model": {"name": "gpt-3.5-turbo"},
-  "provider": "openai"
+  "model": {"name": "claude-3-haiku"},
+  "provider": "bedrock"
+  // Cost: ~$0.25/1M input, $1.25/1M output (12x cheaper!)
 }
 
 // Scheduler Specialist - Simpler task
 {
-  "model": {"name": "gpt-3.5-turbo"},
-  "provider": "openai"
+  "model": {"name": "claude-3-haiku"},
+  "provider": "bedrock"
+  // Cost: ~$0.25/1M input, $1.25/1M output (12x cheaper!)
 }
 ```
+
+**Cost Savings:** Using Haiku for simpler tasks (provider lookup and scheduling) can reduce costs by up to 90% while maintaining quality!
 
 ## Metrics Tracking
 
