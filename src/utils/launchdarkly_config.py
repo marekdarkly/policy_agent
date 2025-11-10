@@ -11,7 +11,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage
 from ldclient import Context
 from ldclient.config import Config
-from ldai import LDAIClient
+from ldai.client import LDAIClient
 
 # Load environment variables
 load_dotenv()

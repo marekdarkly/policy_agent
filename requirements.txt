@@ -15,7 +15,7 @@ typing-extensions>=4.8.0
 
 # LaunchDarkly AI Configs
 launchdarkly-server-sdk>=9.0.0
-ld-ai-sdk-python>=0.1.0
+launchdarkly-server-sdk-ai>=0.8.0
 
 # AWS Bedrock
 boto3>=1.34.0
