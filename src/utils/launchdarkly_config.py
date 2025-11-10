@@ -11,7 +11,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage
 from ldclient import Context
 from ldclient.config import Config
-from ldai.client import LDAIClient
+from ldai.client import LDAIClient, AIConfig, ModelConfig, ProviderConfig
 
 # Load environment variables
 load_dotenv()
@@ -67,17 +67,24 @@ class LaunchDarklyClient:
         # Create LaunchDarkly context
         ld_context = self._create_context(context or {})
 
-        # Default configuration
-        default = default_config or self._get_default_config()
+        # Default configuration - convert dict to AIConfig if needed
+        if default_config:
+            default_ai_config = self._dict_to_ai_config(default_config)
+        else:
+            default_ai_config = self._get_default_ai_config()
 
         try:
-            # Get AI config from LaunchDarkly
+            # Get AI config from LaunchDarkly (returns AIConfig object)
             config_value, tracker = self.ai_client.config(
-                config_key, ld_context, default, {}
+                config_key, ld_context, default_ai_config, {}
             )
-            return config_value, tracker
+            # Convert AIConfig back to dict for compatibility
+            return self._ai_config_to_dict(config_value), tracker
         except Exception as e:
             print(f"⚠️  Error retrieving AI config '{config_key}': {e}")
+            import traceback
+            traceback.print_exc()
+            default = default_config or self._get_default_config()
             return default, NoOpTracker()
 
     def _create_context(self, context_dict: dict[str, Any]) -> Context:
@@ -103,7 +110,7 @@ class LaunchDarklyClient:
         return context_builder.build()
 
     def _get_default_config(self) -> dict[str, Any]:
-        """Get default AI configuration.
+        """Get default AI configuration as dict.
 
         Returns:
             Default configuration dictionary
@@ -119,6 +126,77 @@ class LaunchDarklyClient:
             "provider": provider,
             "enabled": True,
         }
+
+    def _get_default_ai_config(self) -> AIConfig:
+        """Get default AI configuration as AIConfig object.
+
+        Returns:
+            Default AIConfig object
+        """
+        provider = os.getenv("LLM_PROVIDER", "bedrock")
+        model = os.getenv("LLM_MODEL", "claude-3-5-sonnet")
+
+        model_config = ModelConfig(
+            name=model,
+            parameters={"temperature": 0.7, "maxTokens": 2000}
+        )
+        provider_config = ProviderConfig(name=provider)
+        return AIConfig(
+            enabled=True,
+            model=model_config,
+            provider=provider_config
+        )
+
+    def _dict_to_ai_config(self, config_dict: dict[str, Any]) -> AIConfig:
+        """Convert dict config to AIConfig object.
+
+        Args:
+            config_dict: Configuration dictionary
+
+        Returns:
+            AIConfig object
+        """
+        model_dict = config_dict.get("model", {})
+        model_config = ModelConfig(
+            name=model_dict.get("name", "claude-3-5-sonnet"),
+            parameters=model_dict.get("parameters", {"temperature": 0.7, "maxTokens": 2000})
+        )
+        provider_config = ProviderConfig(name=config_dict.get("provider", "bedrock"))
+        return AIConfig(
+            enabled=config_dict.get("enabled", True),
+            model=model_config,
+            provider=provider_config
+        )
+
+    def _ai_config_to_dict(self, ai_config: AIConfig) -> dict[str, Any]:
+        """Convert AIConfig object to dict.
+
+        Args:
+            ai_config: AIConfig object
+
+        Returns:
+            Configuration dictionary
+        """
+        # Use to_dict() method which handles all the conversion
+        config_dict = ai_config.to_dict()
+        
+        # Extract the structure we need
+        result = {
+            "enabled": config_dict.get("_ldMeta", {}).get("enabled", True),
+        }
+
+        if config_dict.get("model"):
+            model_dict = config_dict["model"]
+            result["model"] = {
+                "name": model_dict.get("name", ""),
+                "parameters": model_dict.get("parameters", {}),
+            }
+
+        if config_dict.get("provider"):
+            provider_dict = config_dict["provider"]
+            result["provider"] = provider_dict.get("name", "")
+
+        return result
 
     def close(self):
         """Close the LaunchDarkly client."""

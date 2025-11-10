@@ -28,8 +28,6 @@ langchain-aws>=0.1.0
 # tiktoken>=0.5.0   # Token counting
 
 # Development
-pytest>=7.4.0
-pytest-asyncio>=0.21.0
 black>=23.0.0
 ruff>=0.1.0
 mypy>=1.7.0
