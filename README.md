@@ -55,6 +55,25 @@ cp .env.example .env
 
 #### AWS Bedrock Setup (Default Provider)
 
+**Quick Setup (Recommended):**
+
+```bash
+# Run the interactive setup script
+python setup_aws_sso.py
+
+# Test your connection
+python test_aws_bedrock.py
+```
+
+The setup script will guide you through:
+- AWS CLI installation verification
+- AWS SSO configuration
+- Credential validation
+- Bedrock access verification
+- Environment file setup
+
+**Manual Setup:**
+
 1. **Configure AWS SSO**:
    ```bash
    aws configure sso
@@ -74,7 +93,9 @@ cp .env.example .env
    LAUNCHDARKLY_SDK_KEY=your_launchdarkly_sdk_key_here
    ```
 
-See [AWS_BEDROCK.md](AWS_BEDROCK.md) for detailed Bedrock setup instructions.
+**Detailed Documentation:**
+- [AWS_SSO_SETUP.md](AWS_SSO_SETUP.md) - Comprehensive SSO setup guide with troubleshooting
+- [AWS_BEDROCK.md](AWS_BEDROCK.md) - Bedrock integration and model details
 
 #### Alternative Providers
 
