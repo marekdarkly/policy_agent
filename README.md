@@ -53,23 +53,50 @@ cp .env.example .env
 
 ### Configuration
 
-Edit `.env` file:
+#### AWS Bedrock Setup (Default Provider)
+
+1. **Configure AWS SSO**:
+   ```bash
+   aws configure sso
+   aws sso login --profile agent
+   ```
+
+2. **Edit `.env` file**:
+   ```bash
+   # AWS Bedrock Configuration
+   AWS_PROFILE=agent
+   AWS_REGION=us-east-1
+   LLM_PROVIDER=bedrock
+   LLM_MODEL=claude-3-5-sonnet
+
+   # LaunchDarkly AI Config (Optional but Recommended)
+   LAUNCHDARKLY_ENABLED=false
+   LAUNCHDARKLY_SDK_KEY=your_launchdarkly_sdk_key_here
+   ```
+
+See [AWS_BEDROCK.md](AWS_BEDROCK.md) for detailed Bedrock setup instructions.
+
+#### Alternative Providers
+
+<details>
+<summary>OpenAI Configuration</summary>
 
 ```bash
-# LaunchDarkly AI Config (Optional but Recommended)
-LAUNCHDARKLY_ENABLED=false
-LAUNCHDARKLY_SDK_KEY=your_launchdarkly_sdk_key_here
-
-# For OpenAI
 OPENAI_API_KEY=your_key_here
 LLM_PROVIDER=openai
 LLM_MODEL=gpt-4-turbo-preview
+```
+</details>
 
-# Or for Anthropic
+<details>
+<summary>Anthropic Configuration</summary>
+
+```bash
 ANTHROPIC_API_KEY=your_key_here
 LLM_PROVIDER=anthropic
 LLM_MODEL=claude-3-5-sonnet-20241022
 ```
+</details>
 
 ### LaunchDarkly AI Config (Recommended)
 

@@ -26,10 +26,25 @@ def get_llm(temperature: float = 0.7) -> BaseChatModel:
     Raises:
         ValueError: If LLM provider is not configured correctly
     """
-    provider = os.getenv("LLM_PROVIDER", "openai").lower()
+    provider = os.getenv("LLM_PROVIDER", "bedrock").lower()
     model = os.getenv("LLM_MODEL")
 
-    if provider == "openai":
+    if provider == "bedrock":
+        from .bedrock_llm import BedrockConverseLLM, get_bedrock_model_id
+
+        model_id = get_bedrock_model_id(model or "claude-3-5-sonnet")
+        region = os.getenv("AWS_REGION", "us-east-1")
+        profile = os.getenv("AWS_PROFILE")
+
+        return BedrockConverseLLM(
+            model_id=model_id,
+            temperature=temperature,
+            max_tokens=2000,
+            region=region,
+            profile_name=profile,
+        )
+
+    elif provider == "openai":
         from langchain_openai import ChatOpenAI
 
         api_key = os.getenv("OPENAI_API_KEY")
@@ -143,8 +158,8 @@ def _create_llm_for_provider(
     """Create LLM instance for the specified provider.
 
     Args:
-        provider: Provider name (openai, anthropic, etc.)
-        model_name: Model name
+        provider: Provider name (bedrock, openai, anthropic, etc.)
+        model_name: Model name or Bedrock model ID
         temperature: Sampling temperature
         max_tokens: Maximum tokens to generate
 
@@ -154,7 +169,25 @@ def _create_llm_for_provider(
     Raises:
         ValueError: If provider is not supported
     """
-    if provider == "openai":
+    if provider == "bedrock":
+        from .bedrock_llm import BedrockConverseLLM, get_bedrock_model_id
+
+        # Get full Bedrock model ID
+        model_id = get_bedrock_model_id(model_name)
+
+        # Get AWS configuration
+        region = os.getenv("AWS_REGION", "us-east-1")
+        profile = os.getenv("AWS_PROFILE")
+
+        return BedrockConverseLLM(
+            model_id=model_id,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            region=region,
+            profile_name=profile,
+        )
+
+    elif provider == "openai":
         from langchain_openai import ChatOpenAI
 
         api_key = os.getenv("OPENAI_API_KEY")
