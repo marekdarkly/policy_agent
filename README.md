@@ -22,10 +22,12 @@ See [SDD.md](SDD.md) for detailed architecture documentation.
 
 - Multi-agent orchestration using LangGraph
 - State management with Pydantic
+- **LaunchDarkly AI Config integration** for per-agent model management
 - Modular agent design for easy extension
 - Simulated backends (policy DB, provider directory, calendar)
 - Configurable LLM providers (OpenAI or Anthropic)
 - Confidence-based routing and escalation
+- Automated metrics tracking for token usage and performance
 - Comprehensive test suite
 
 ## Quick Start
@@ -54,6 +56,10 @@ cp .env.example .env
 Edit `.env` file:
 
 ```bash
+# LaunchDarkly AI Config (Optional but Recommended)
+LAUNCHDARKLY_ENABLED=false
+LAUNCHDARKLY_SDK_KEY=your_launchdarkly_sdk_key_here
+
 # For OpenAI
 OPENAI_API_KEY=your_key_here
 LLM_PROVIDER=openai
@@ -64,6 +70,27 @@ ANTHROPIC_API_KEY=your_key_here
 LLM_PROVIDER=anthropic
 LLM_MODEL=claude-3-5-sonnet-20241022
 ```
+
+### LaunchDarkly AI Config (Recommended)
+
+Each agent can retrieve its own AI configuration from LaunchDarkly, enabling:
+- Different models for different agents (e.g., GPT-4 for complex tasks, GPT-3.5 for simple ones)
+- A/B testing different models
+- User-based targeting (premium users get better models)
+- Real-time configuration updates without code changes
+- Automatic metrics tracking
+
+**Quick Setup:**
+
+1. Sign up at [LaunchDarkly](https://launchdarkly.com/)
+2. Create AI Configs with these keys:
+   - `triage-router` - For query classification
+   - `policy-specialist` - For policy questions
+   - `provider-specialist` - For provider lookup
+   - `scheduler-specialist` - For scheduling
+3. Enable in `.env`: `LAUNCHDARKLY_ENABLED=true`
+
+See [LAUNCHDARKLY.md](LAUNCHDARKLY.md) for detailed setup instructions.
 
 ### Running Examples
 

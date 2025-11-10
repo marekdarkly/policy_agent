@@ -1,13 +1,14 @@
 """Provider lookup specialist agent."""
 
 import json
+import os
 from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage
 
 from ..graph.state import AgentState
 from ..tools.provider_db import search_providers
-from ..utils.llm_config import get_llm
+from ..utils.llm_config import get_llm, get_model_invoker
 from ..utils.prompts import PROVIDER_SPECIALIST_PROMPT
 
 
@@ -82,9 +83,22 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
         query=query,
     )
 
-    # Get LLM response
-    llm = get_llm(temperature=0.7)
-    response = llm.invoke([HumanMessage(content=prompt)])
+    # Get LLM response with LaunchDarkly AI Config
+    use_ld = os.getenv("LAUNCHDARKLY_ENABLED", "false").lower() == "true"
+
+    if use_ld:
+        # Use LaunchDarkly AI Config for this agent
+        model_invoker = get_model_invoker(
+            config_key="provider-specialist",
+            context=user_context,
+            default_temperature=0.7,
+        )
+        response = model_invoker.invoke([HumanMessage(content=prompt)])
+    else:
+        # Fallback to default configuration
+        llm = get_llm(temperature=0.7)
+        response = llm.invoke([HumanMessage(content=prompt)])
+
     response_text = response.content
 
     # Update state

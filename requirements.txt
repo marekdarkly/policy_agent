@@ -13,6 +13,10 @@ pydantic-settings>=2.0.0
 python-dotenv>=1.0.0
 typing-extensions>=4.8.0
 
+# LaunchDarkly AI Configs
+launchdarkly-server-sdk>=9.0.0
+ld-ai-sdk-python>=0.1.0
+
 # Optional: For enhanced features
 # faiss-cpu>=1.7.4  # For RAG/vector storage
 # chromadb>=0.4.0   # Alternative vector store

@@ -117,6 +117,7 @@ A LangGraph-based multi-agent system for triaging and handling medical insurance
 
 - **LangGraph**: Orchestration and state machine management
 - **LangChain**: LLM integration and prompt management
+- **LaunchDarkly**: AI Config management for per-agent model configuration
 - **Python 3.11+**: Core implementation language
 - **Pydantic**: State validation and data models
 - **OpenAI/Anthropic API**: LLM backend (configurable)
