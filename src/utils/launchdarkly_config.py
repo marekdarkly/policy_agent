@@ -89,8 +89,44 @@ class LaunchDarklyClient:
         else:
             default_ai_config = self._get_default_ai_config()
 
+        # Try agent-based config first (using .agents() method)
         try:
-            # Get AI config from LaunchDarkly (returns AIConfig object)
+            result = self.ai_client.agents([config_key], ld_context, {})
+            agents = result.get("agents", {})
+            
+            if config_key in agents and agents[config_key].get("enabled"):
+                agent = agents[config_key]
+                
+                # Extract and convert agent config to standard dict format
+                config_dict = {
+                    "enabled": agent.get("enabled", True),
+                    "provider": agent.get("provider", {}).get("name", "") if isinstance(agent.get("provider"), dict) else str(agent.get("provider", "")),
+                }
+                
+                # Extract model config
+                if agent.get("model"):
+                    model = agent["model"]
+                    config_dict["model"] = {
+                        "name": model.get("name", ""),
+                        "parameters": model.get("parameters", {}),
+                    }
+                    if model.get("custom"):
+                        config_dict["model"]["custom"] = model["custom"]
+                
+                # Convert instructions to messages format for consistency
+                if agent.get("instructions"):
+                    config_dict["messages"] = [
+                        {"role": "system", "content": agent["instructions"]}
+                    ]
+                
+                tracker = agent.get("tracker")
+                print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly (agent-based)")
+                return config_dict, tracker
+        except Exception as e:
+            print(f"  ℹ️  Agent-based config not found, trying completion-based...")
+
+        # Fall back to completion-based config (using .config() method)
+        try:
             config_value, tracker = self.ai_client.config(
                 config_key, ld_context, default_ai_config, {}
             )
@@ -98,22 +134,20 @@ class LaunchDarklyClient:
             # Convert AIConfig to dict
             config_dict = self._ai_config_to_dict(config_value)
             
-            # Check if config came from LaunchDarkly by comparing to default
-            # If it's different from default, it must have come from LD
+            # Check if config came from LaunchDarkly
             default_dict = self._ai_config_to_dict(default_ai_config)
             
-            # Compare key attributes to detect if it's actually from LD
             is_from_ld = (
                 config_dict.get("model", {}).get("name") != default_dict.get("model", {}).get("name") or
                 config_dict.get("provider") != default_dict.get("provider") or
-                "custom" in config_dict.get("model", {})  # Custom params = definitely from LD
+                "custom" in config_dict.get("model", {}) or
+                config_dict.get("messages")
             )
             
             if is_from_ld:
-                print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly")
+                print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly (completion-based)")
             else:
-                # If truly using default, this should be CATASTROPHIC
-                error_msg = f"CATASTROPHIC: AI config '{config_key}' not found in LaunchDarkly! Ensure the config exists in your LD dashboard."
+                error_msg = f"CATASTROPHIC: AI config '{config_key}' not found in LaunchDarkly!"
                 print(f"❌ {error_msg}")
                 raise RuntimeError(error_msg)
             
@@ -121,8 +155,6 @@ class LaunchDarklyClient:
             
         except Exception as e:
             print(f"❌ CATASTROPHIC: Error retrieving AI config '{config_key}': {e}")
-            import traceback
-            traceback.print_exc()
             raise RuntimeError(f"Failed to retrieve AI config '{config_key}' from LaunchDarkly: {e}")
 
     def _create_context(self, context_dict: dict[str, Any]) -> Context:
