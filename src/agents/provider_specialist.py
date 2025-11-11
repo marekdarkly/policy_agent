@@ -98,13 +98,7 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
         default_temperature=0.7,
     )
     
-    # Use messages from LaunchDarkly AI Config
-    ld_messages = ld_config.get("messages", [])
-    
-    if not ld_messages:
-        raise RuntimeError("CATASTROPHIC: No messages found in LaunchDarkly AI Config for provider_agent. Please configure messages in LaunchDarkly.")
-    
-    # Format messages with context variables (including RAG documents)
+    # Build LangChain messages from LaunchDarkly config (supports both agent-based and completion-based)
     context_vars = {
         **user_context,
         "query": query,
@@ -112,19 +106,8 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
         "network": network,
         "location": location or "Not specified",
         "provider_info": provider_info_str,
-        "user_context": json.dumps(user_context, indent=2),
     }
-    formatted_messages = ld_client.format_messages(ld_messages, context_vars)
-    
-    # Convert to LangChain message format
-    langchain_messages = []
-    for msg in formatted_messages:
-        if msg["role"] == "system":
-            langchain_messages.append(SystemMessage(content=msg["content"]))
-        elif msg["role"] == "user":
-            langchain_messages.append(HumanMessage(content=msg["content"]))
-        else:
-            langchain_messages.append(AIMessage(content=msg["content"]))
+    langchain_messages = ld_client.build_langchain_messages(ld_config, context_vars)
 
     response = model_invoker.invoke(langchain_messages)
     response_text = response.content

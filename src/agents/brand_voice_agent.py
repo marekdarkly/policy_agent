@@ -45,13 +45,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         default_temperature=0.7,  # Slightly creative for natural language
     )
     
-    # Use messages from LaunchDarkly AI Config
-    ld_messages = ld_config.get("messages", [])
-    
-    if not ld_messages:
-        raise RuntimeError("CATASTROPHIC: No messages found in LaunchDarkly AI Config for brand_agent. Please configure messages in LaunchDarkly.")
-    
-    # Format messages with context variables
+    # Build LangChain messages from LaunchDarkly config (supports both agent-based and completion-based)
     ld_client = get_ld_client()
     context_vars = {
         **user_context,
@@ -59,19 +53,8 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         "original_query": original_query,
         "query_type": str(query_type),
         "specialist_response": specialist_response,
-        "user_context": str(user_context),
     }
-    formatted_messages = ld_client.format_messages(ld_messages, context_vars)
-    
-    # Convert to LangChain message format
-    langchain_messages = []
-    for msg in formatted_messages:
-        if msg["role"] == "system":
-            langchain_messages.append(SystemMessage(content=msg["content"]))
-        elif msg["role"] == "user":
-            langchain_messages.append(HumanMessage(content=msg["content"]))
-        else:
-            langchain_messages.append(AIMessage(content=msg["content"]))
+    langchain_messages = ld_client.build_langchain_messages(ld_config, context_vars)
 
     response = model_invoker.invoke(langchain_messages)
 

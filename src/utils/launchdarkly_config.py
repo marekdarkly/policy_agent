@@ -108,9 +108,19 @@ class LaunchDarklyClient:
                 agent = agents[config_key]
                 
                 # Extract and convert agent config to standard dict format
+                # Provider can be a ProviderConfig object with a 'name' attribute
+                provider_value = ""
+                if hasattr(agent, 'provider') and agent.provider:
+                    if hasattr(agent.provider, 'name'):
+                        provider_value = agent.provider.name
+                    elif isinstance(agent.provider, dict):
+                        provider_value = agent.provider.get('name', '')
+                    else:
+                        provider_value = str(agent.provider)
+                
                 config_dict = {
                     "enabled": agent.enabled,
-                    "provider": "",
+                    "provider": provider_value,
                 }
                 
                 # Extract model config if present
@@ -122,11 +132,10 @@ class LaunchDarklyClient:
                     if hasattr(agent.model, 'custom'):
                         config_dict["model"]["custom"] = agent.model.custom
                 
-                # Convert instructions to messages format for consistency
+                # Store instructions separately (not as messages)
+                # Instructions should be used as system prompts, not conversation messages
                 if hasattr(agent, 'instructions') and agent.instructions:
-                    config_dict["messages"] = [
-                        {"role": "system", "content": agent.instructions}
-                    ]
+                    config_dict["_instructions"] = agent.instructions
                 
                 tracker = agent.tracker
                 print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly (agent-based)")
@@ -292,6 +301,54 @@ class LaunchDarklyClient:
             result["provider"] = provider_dict.get("name", "")
 
         return result
+
+    def build_langchain_messages(self, ld_config: dict[str, Any], context_vars: dict[str, Any]) -> list:
+        """Build LangChain messages from LaunchDarkly config (agent-based or completion-based).
+        
+        Args:
+            ld_config: The LaunchDarkly AI config dict
+            context_vars: Variables for template replacement
+            
+        Returns:
+            List of LangChain message objects (SystemMessage, HumanMessage, AIMessage)
+        """
+        from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+        import json
+        
+        langchain_messages = []
+        
+        if "_instructions" in ld_config:
+            # Agent-based config: instructions + user query
+            instructions = ld_config["_instructions"]
+            # Replace template variables in instructions
+            for key, value in context_vars.items():
+                instructions = instructions.replace(f"{{{{{key}}}}}", str(value))
+                instructions = instructions.replace(f"{{{{ldctx.{key}}}}}", str(value))
+            
+            # System message with instructions, then user message with query
+            query = context_vars.get("query", "")
+            user_context = {k: v for k, v in context_vars.items() if k != "query"}
+            langchain_messages = [
+                SystemMessage(content=instructions),
+                HumanMessage(content=f"User query: {query}\n\nUser context:\n{json.dumps(user_context, indent=2, default=str)}")
+            ]
+        elif "messages" in ld_config:
+            # Completion-based config: use messages from LaunchDarkly
+            ld_messages = ld_config["messages"]
+            formatted_messages = self.format_messages(ld_messages, context_vars)
+            
+            # Convert to LangChain message format
+            for msg in formatted_messages:
+                if msg["role"] == "system":
+                    langchain_messages.append(SystemMessage(content=msg["content"]))
+                elif msg["role"] == "user":
+                    langchain_messages.append(HumanMessage(content=msg["content"]))
+                else:
+                    langchain_messages.append(AIMessage(content=msg["content"]))
+        else:
+            raise RuntimeError("CATASTROPHIC: No messages or instructions found in LaunchDarkly AI Config.")
+        
+        return langchain_messages
 
     def format_messages(self, messages: list[dict], context_vars: dict[str, Any]) -> list[dict]:
         """Format LaunchDarkly messages with context variables.
