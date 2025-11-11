@@ -79,17 +79,26 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
     )
 
     # Format RAG documents from Bedrock Knowledge Base
-    if rag_documents:
-        print(f"  📄 Retrieved {len(rag_documents)} provider documents from Bedrock KB")
-        provider_info_str = "\n\n=== PROVIDER NETWORK INFORMATION (from Bedrock Knowledge Base) ===\n"
-        for i, doc in enumerate(rag_documents, 1):
-            score = doc.get("score", 0.0)
-            content = doc.get("content", "")
-            print(f"    Doc {i}: Score {score:.3f}, Length {len(content)} chars")
-            provider_info_str += f"\n[Document {i} - Relevance: {score:.2f}]\n{content}\n"
-    else:
-        print(f"  ⚠️  No provider documents retrieved from Bedrock KB")
-        provider_info_str = "No providers found matching the criteria in the knowledge base."
+    if not rag_documents:
+        raise RuntimeError(
+            f"❌ CATASTROPHIC: No provider documents retrieved from Bedrock Knowledge Base!\n"
+            f"  Query: {query}\n"
+            f"  Location: {location}\n"
+            f"  Network: {network}\n"
+            f"  Specialty: {specialty}\n"
+            f"  This indicates either:\n"
+            f"  1. The Knowledge Base is empty\n"
+            f"  2. The query doesn't match any documents\n"
+            f"  3. The KB is not properly configured"
+        )
+    
+    print(f"  📄 Retrieved {len(rag_documents)} provider documents from Bedrock KB")
+    provider_info_str = "\n\n=== PROVIDER NETWORK INFORMATION (from Bedrock Knowledge Base) ===\n"
+    for i, doc in enumerate(rag_documents, 1):
+        score = doc.get("score", 0.0)
+        content = doc.get("content", "")
+        print(f"    Doc {i}: Score {score:.3f}, Length {len(content)} chars")
+        provider_info_str += f"\n[Document {i} - Relevance: {score:.2f}]\n{content}\n"
 
     # Get LLM and messages from LaunchDarkly AI Config
     model_invoker, ld_config = get_model_invoker(

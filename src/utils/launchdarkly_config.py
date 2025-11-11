@@ -365,7 +365,13 @@ class LaunchDarklyClient:
                 user_msg = f"User query: {query}\n\nContext:\n{json.dumps(user_context_minimal, indent=2, default=str)}"
                 langchain_messages.append(HumanMessage(content=user_msg))
         else:
-            raise RuntimeError("CATASTROPHIC: No messages or instructions found in LaunchDarkly AI Config.")
+            raise RuntimeError(
+                f"❌ CATASTROPHIC: No messages or instructions found in LaunchDarkly AI Config!\n"
+                f"  This means the config exists but has no prompt/instructions configured.\n"
+                f"  Please configure either:\n"
+                f"  - For agent-based: Set 'Goal or task' field\n"
+                f"  - For completion-based: Add messages in 'Prompt' section"
+            )
         
         return langchain_messages
 
