@@ -1,0 +1,1128 @@
+{
+  "company_info": {
+    "name": "ToggleHealth Insurance",
+    "founded": "2015",
+    "headquarters": "Seattle, WA",
+    "service_areas": [
+      "Washington",
+      "Oregon",
+      "California",
+      "Idaho",
+      "Montana"
+    ],
+    "member_services_phone": "1-800-TOGGLE-1",
+    "website": "www.togglehealth.com",
+    "license_numbers": {
+      "WA": "WA-INS-2015-8472",
+      "OR": "OR-INS-2015-9234",
+      "CA": "CA-INS-2015-7621",
+      "ID": "ID-INS-2016-4512",
+      "MT": "MT-INS-2016-3398"
+    }
+  },
+  "plan_types": [
+    {
+      "plan_id": "TH-HMO-GOLD-2024",
+      "plan_name": "ToggleHealth Gold HMO",
+      "plan_type": "HMO",
+      "metal_tier": "Gold",
+      "year": 2024,
+      "status": "active",
+      "effective_date": "2024-01-01",
+      "termination_date": null,
+      "description": "Comprehensive HMO plan with low out-of-pocket costs and coordinated care through primary care physician",
+      "network_id": "TH-HMO-PRIMARY",
+      "requires_pcp": true,
+      "requires_referrals": true,
+      "coverage": {
+        "individual": {
+          "monthly_premium": 485.00,
+          "annual_deductible": 1000.00,
+          "out_of_pocket_maximum": 6500.00,
+          "coinsurance_rate": 0.20
+        },
+        "family": {
+          "monthly_premium": 1245.00,
+          "annual_deductible": 2000.00,
+          "out_of_pocket_maximum": 13000.00,
+          "coinsurance_rate": 0.20
+        }
+      },
+      "copays": {
+        "primary_care_visit": 25.00,
+        "specialist_visit": 45.00,
+        "urgent_care": 75.00,
+        "emergency_room": 350.00,
+        "generic_prescription": 10.00,
+        "preferred_brand_prescription": 35.00,
+        "non_preferred_brand_prescription": 70.00,
+        "specialty_prescription": 150.00
+      },
+      "covered_services": {
+        "preventive_care": {
+          "coverage_level": "100%",
+          "requires_deductible": false,
+          "annual_limit": null,
+          "description": "Annual physicals, immunizations, screening tests, wellness visits",
+          "notes": "Must use in-network providers"
+        },
+        "primary_care": {
+          "coverage_level": "80% after deductible",
+          "requires_deductible": true,
+          "copay_applies": true,
+          "annual_limit": null,
+          "description": "Office visits, consultations, routine care"
+        },
+        "specialist_care": {
+          "coverage_level": "80% after deductible",
+          "requires_deductible": true,
+          "requires_referral": true,
+          "copay_applies": true,
+          "annual_limit": null,
+          "description": "Specialist consultations and treatment"
+        },
+        "hospitalization": {
+          "coverage_level": "80% after deductible",
+          "requires_deductible": true,
+          "per_admission_copay": 500.00,
+          "annual_limit": null,
+          "description": "Inpatient hospital stays, surgery, room and board",
+          "requires_preauthorization": true
+        },
+        "emergency_services": {
+          "coverage_level": "80% after deductible",
+          "requires_deductible": true,
+          "copay_applies": true,
+          "annual_limit": null,
+          "description": "Emergency room visits, ambulance services",
+          "out_of_network_coverage": true,
+          "notes": "Out-of-network emergency services covered at in-network rates"
+        },
+        "mental_health_outpatient": {
+          "coverage_level": "80% after deductible",
+          "requires_deductible": true,
+          "copay_applies": true,
+          "session_copay": 45.00,
+          "annual_limit": null,
+          "description": "Psychotherapy, counseling sessions"
+        },
+        "mental_health_inpatient": {
+          "coverage_level": "80% after deductible",
+          "requires_deductible": true,
+          "per_admission_copay": 500.00,
+          "annual_limit": null,
+          "description": "Inpatient psychiatric hospitalization",
+          "requires_preauthorization": true
+        },
+        "substance_abuse_treatment": {
+          "coverage_level": "80% after deductible",
+          "requires_deductible": true,
+          "annual_limit": null,
+          "description": "Inpatient and outpatient substance abuse treatment",
+          "requires_preauthorization": true
+        },
+        "maternity_care": {
+          "coverage_level": "80% after deductible",
+          "requires_deductible": true,
+          "prenatal_visits_copay": 25.00,
+          "delivery_copay": 500.00,
+          "annual_limit": null,
+          "description": "Prenatal care, delivery, postnatal care",
+          "requires_preauthorization": false
+        },
+        "diagnostic_tests": {
+          "coverage_level": "80% after deductible",
+          "requires_deductible": true,
+          "annual_limit": null,
+          "description": "X-rays, MRI, CT scans, lab work",
+          "requires_preauthorization": true,
+          "notes": "Advanced imaging requires preauthorization"
+        },
+        "physical_therapy": {
+          "coverage_level": "80% after deductible",
+          "requires_deductible": true,
+          "copay_applies": true,
+          "session_copay": 35.00,
+          "annual_limit": 60,
+          "description": "Physical, occupational, and speech therapy",
+          "requires_referral": true
+        },
+        "chiropractic_care": {
+          "coverage_level": "80% after deductible",
+          "requires_deductible": true,
+          "copay_applies": true,
+          "session_copay": 35.00,
+          "annual_limit": 20,
+          "description": "Chiropractic adjustments and treatment",
+          "requires_referral": true
+        },
+        "durable_medical_equipment": {
+          "coverage_level": "80% after deductible",
+          "requires_deductible": true,
+          "annual_limit": null,
+          "description": "Wheelchairs, walkers, hospital beds, oxygen equipment",
+          "requires_preauthorization": true
+        },
+        "home_health_care": {
+          "coverage_level": "80% after deductible",
+          "requires_deductible": true,
+          "annual_limit": 100,
+          "description": "Skilled nursing care at home",
+          "requires_preauthorization": true
+        },
+        "hospice_care": {
+          "coverage_level": "100%",
+          "requires_deductible": false,
+          "annual_limit": null,
+          "description": "End-of-life care services",
+          "requires_preauthorization": false
+        }
+      },
+      "exclusions": [
+        "Cosmetic procedures not medically necessary",
+        "Experimental or investigational treatments",
+        "Fertility treatments and services",
+        "Weight loss programs and surgery (unless medically necessary)",
+        "Dental care (except for accidental injury)",
+        "Vision care (except for eye exams)",
+        "Hearing aids",
+        "Private duty nursing",
+        "Custodial care",
+        "Acupuncture",
+        "Services received outside service area (except emergency)",
+        "Services from out-of-network providers without referral"
+      ],
+      "special_programs": [
+        {
+          "program_name": "Diabetes Management Program",
+          "program_id": "DMP-2024",
+          "description": "Comprehensive diabetes care coordination",
+          "eligibility": "Members diagnosed with Type 1 or Type 2 diabetes",
+          "benefits": [
+            "Quarterly care coordinator check-ins",
+            "Free glucose monitor and test strips",
+            "100% coverage for diabetes education classes",
+            "Nutritionist consultations (6 per year at no cost)"
+          ]
+        },
+        {
+          "program_name": "Heart Health Program",
+          "program_id": "HHP-2024",
+          "description": "Cardiac care management for heart disease patients",
+          "eligibility": "Members with diagnosed cardiovascular disease",
+          "benefits": [
+            "Monthly nurse hotline access",
+            "Cardiac rehabilitation coverage up to 36 sessions",
+            "Free blood pressure monitor",
+            "Waived copays for cardiac specialist visits"
+          ]
+        },
+        {
+          "program_name": "Maternity Support Program",
+          "program_id": "MSP-2024",
+          "description": "Comprehensive support for expectant mothers",
+          "eligibility": "Pregnant members",
+          "benefits": [
+            "24/7 nurse hotline",
+            "Prenatal vitamins covered 100%",
+            "Breast pump provided at no cost",
+            "Postpartum depression screening and support"
+          ]
+        }
+      ]
+    },
+    {
+      "plan_id": "TH-PPO-PLATINUM-2024",
+      "plan_name": "ToggleHealth Platinum PPO",
+      "plan_type": "PPO",
+      "metal_tier": "Platinum",
+      "year": 2024,
+      "status": "active",
+      "effective_date": "2024-01-01",
+      "termination_date": null,
+      "description": "Premium PPO plan with maximum flexibility and lowest out-of-pocket costs",
+      "network_id": "TH-PPO-PREMIER",
+      "requires_pcp": false,
+      "requires_referrals": false,
+      "coverage": {
+        "individual": {
+          "monthly_premium": 685.00,
+          "annual_deductible": 500.00,
+          "out_of_pocket_maximum": 4500.00,
+          "coinsurance_rate": 0.10
+        },
+        "family": {
+          "monthly_premium": 1785.00,
+          "annual_deductible": 1000.00,
+          "out_of_pocket_maximum": 9000.00,
+          "coinsurance_rate": 0.10
+        }
+      },
+      "copays": {
+        "primary_care_visit": 20.00,
+        "specialist_visit": 35.00,
+        "urgent_care": 50.00,
+        "emergency_room": 250.00,
+        "generic_prescription": 5.00,
+        "preferred_brand_prescription": 25.00,
+        "non_preferred_brand_prescription": 50.00,
+        "specialty_prescription": 100.00
+      },
+      "out_of_network_coverage": {
+        "coverage_level": "60%",
+        "annual_deductible_individual": 1500.00,
+        "annual_deductible_family": 3000.00,
+        "out_of_pocket_maximum_individual": 9000.00,
+        "out_of_pocket_maximum_family": 18000.00,
+        "notes": "Members may see out-of-network providers but will pay higher costs"
+      },
+      "covered_services": {
+        "preventive_care": {
+          "coverage_level": "100%",
+          "requires_deductible": false,
+          "annual_limit": null,
+          "description": "Annual physicals, immunizations, screening tests, wellness visits",
+          "notes": "Covered in-network and out-of-network"
+        },
+        "primary_care": {
+          "coverage_level": "90% after deductible",
+          "requires_deductible": true,
+          "copay_applies": true,
+          "annual_limit": null,
+          "description": "Office visits, consultations, routine care"
+        },
+        "specialist_care": {
+          "coverage_level": "90% after deductible",
+          "requires_deductible": true,
+          "requires_referral": false,
+          "copay_applies": true,
+          "annual_limit": null,
+          "description": "Specialist consultations and treatment"
+        },
+        "hospitalization": {
+          "coverage_level": "90% after deductible",
+          "requires_deductible": true,
+          "per_admission_copay": 350.00,
+          "annual_limit": null,
+          "description": "Inpatient hospital stays, surgery, room and board",
+          "requires_preauthorization": true
+        },
+        "emergency_services": {
+          "coverage_level": "90% after deductible",
+          "requires_deductible": true,
+          "copay_applies": true,
+          "annual_limit": null,
+          "description": "Emergency room visits, ambulance services",
+          "out_of_network_coverage": true,
+          "notes": "Out-of-network emergency services covered at in-network rates"
+        },
+        "mental_health_outpatient": {
+          "coverage_level": "90% after deductible",
+          "requires_deductible": true,
+          "copay_applies": true,
+          "session_copay": 35.00,
+          "annual_limit": null,
+          "description": "Psychotherapy, counseling sessions"
+        },
+        "mental_health_inpatient": {
+          "coverage_level": "90% after deductible",
+          "requires_deductible": true,
+          "per_admission_copay": 350.00,
+          "annual_limit": null,
+          "description": "Inpatient psychiatric hospitalization",
+          "requires_preauthorization": true
+        },
+        "substance_abuse_treatment": {
+          "coverage_level": "90% after deductible",
+          "requires_deductible": true,
+          "annual_limit": null,
+          "description": "Inpatient and outpatient substance abuse treatment",
+          "requires_preauthorization": true
+        },
+        "maternity_care": {
+          "coverage_level": "90% after deductible",
+          "requires_deductible": true,
+          "prenatal_visits_copay": 20.00,
+          "delivery_copay": 350.00,
+          "annual_limit": null,
+          "description": "Prenatal care, delivery, postnatal care",
+          "requires_preauthorization": false
+        },
+        "diagnostic_tests": {
+          "coverage_level": "90% after deductible",
+          "requires_deductible": true,
+          "annual_limit": null,
+          "description": "X-rays, MRI, CT scans, lab work",
+          "requires_preauthorization": true,
+          "notes": "Advanced imaging requires preauthorization"
+        },
+        "physical_therapy": {
+          "coverage_level": "90% after deductible",
+          "requires_deductible": true,
+          "copay_applies": true,
+          "session_copay": 30.00,
+          "annual_limit": 80,
+          "description": "Physical, occupational, and speech therapy",
+          "requires_referral": false
+        },
+        "chiropractic_care": {
+          "coverage_level": "90% after deductible",
+          "requires_deductible": true,
+          "copay_applies": true,
+          "session_copay": 30.00,
+          "annual_limit": 30,
+          "description": "Chiropractic adjustments and treatment",
+          "requires_referral": false
+        },
+        "acupuncture": {
+          "coverage_level": "90% after deductible",
+          "requires_deductible": true,
+          "copay_applies": true,
+          "session_copay": 30.00,
+          "annual_limit": 20,
+          "description": "Acupuncture treatments for pain management",
+          "requires_referral": false
+        },
+        "durable_medical_equipment": {
+          "coverage_level": "90% after deductible",
+          "requires_deductible": true,
+          "annual_limit": null,
+          "description": "Wheelchairs, walkers, hospital beds, oxygen equipment",
+          "requires_preauthorization": true
+        },
+        "home_health_care": {
+          "coverage_level": "90% after deductible",
+          "requires_deductible": true,
+          "annual_limit": 150,
+          "description": "Skilled nursing care at home",
+          "requires_preauthorization": true
+        },
+        "hospice_care": {
+          "coverage_level": "100%",
+          "requires_deductible": false,
+          "annual_limit": null,
+          "description": "End-of-life care services",
+          "requires_preauthorization": false
+        }
+      },
+      "exclusions": [
+        "Cosmetic procedures not medically necessary",
+        "Experimental or investigational treatments",
+        "Dental care (except for accidental injury)",
+        "Routine vision care (except for eye exams)",
+        "Hearing aids (limited coverage available)",
+        "Private duty nursing",
+        "Custodial care",
+        "Services received outside service area (except emergency)"
+      ],
+      "special_programs": [
+        {
+          "program_name": "Diabetes Management Program",
+          "program_id": "DMP-2024",
+          "description": "Comprehensive diabetes care coordination",
+          "eligibility": "Members diagnosed with Type 1 or Type 2 diabetes",
+          "benefits": [
+            "Quarterly care coordinator check-ins",
+            "Free glucose monitor and test strips",
+            "100% coverage for diabetes education classes",
+            "Nutritionist consultations (12 per year at no cost)"
+          ]
+        },
+        {
+          "program_name": "Heart Health Program",
+          "program_id": "HHP-2024",
+          "description": "Cardiac care management for heart disease patients",
+          "eligibility": "Members with diagnosed cardiovascular disease",
+          "benefits": [
+            "Monthly nurse hotline access",
+            "Cardiac rehabilitation coverage up to 48 sessions",
+            "Free blood pressure monitor and fitness tracker",
+            "Waived copays for cardiac specialist visits"
+          ]
+        },
+        {
+          "program_name": "Maternity Support Program",
+          "program_id": "MSP-2024",
+          "description": "Comprehensive support for expectant mothers",
+          "eligibility": "Pregnant members",
+          "benefits": [
+            "24/7 nurse hotline",
+            "Prenatal vitamins covered 100%",
+            "Breast pump provided at no cost",
+            "Postpartum depression screening and support",
+            "Doula services covered up to $1000"
+          ]
+        },
+        {
+          "program_name": "Premium Concierge Service",
+          "program_id": "PCS-2024",
+          "description": "Dedicated health navigation and appointment coordination",
+          "eligibility": "All Platinum PPO members",
+          "benefits": [
+            "Dedicated care navigator",
+            "Appointment scheduling assistance",
+            "Second opinion coordination",
+            "Travel assistance for specialized care"
+          ]
+        }
+      ]
+    },
+    {
+      "plan_id": "TH-EPO-SILVER-2024",
+      "plan_name": "ToggleHealth Silver EPO",
+      "plan_type": "EPO",
+      "metal_tier": "Silver",
+      "year": 2024,
+      "status": "active",
+      "effective_date": "2024-01-01",
+      "termination_date": null,
+      "description": "Affordable EPO plan with moderate costs and no referrals required",
+      "network_id": "TH-EPO-SELECT",
+      "requires_pcp": false,
+      "requires_referrals": false,
+      "coverage": {
+        "individual": {
+          "monthly_premium": 385.00,
+          "annual_deductible": 3000.00,
+          "out_of_pocket_maximum": 8500.00,
+          "coinsurance_rate": 0.30
+        },
+        "family": {
+          "monthly_premium": 985.00,
+          "annual_deductible": 6000.00,
+          "out_of_pocket_maximum": 17000.00,
+          "coinsurance_rate": 0.30
+        }
+      },
+      "copays": {
+        "primary_care_visit": 35.00,
+        "specialist_visit": 65.00,
+        "urgent_care": 100.00,
+        "emergency_room": 450.00,
+        "generic_prescription": 15.00,
+        "preferred_brand_prescription": 45.00,
+        "non_preferred_brand_prescription": 85.00,
+        "specialty_prescription": 200.00
+      },
+      "out_of_network_coverage": {
+        "coverage_level": "0%",
+        "notes": "No coverage for out-of-network services except emergency care"
+      },
+      "covered_services": {
+        "preventive_care": {
+          "coverage_level": "100%",
+          "requires_deductible": false,
+          "annual_limit": null,
+          "description": "Annual physicals, immunizations, screening tests, wellness visits",
+          "notes": "Must use in-network providers"
+        },
+        "primary_care": {
+          "coverage_level": "70% after deductible",
+          "requires_deductible": true,
+          "copay_applies": true,
+          "annual_limit": null,
+          "description": "Office visits, consultations, routine care"
+        },
+        "specialist_care": {
+          "coverage_level": "70% after deductible",
+          "requires_deductible": true,
+          "requires_referral": false,
+          "copay_applies": true,
+          "annual_limit": null,
+          "description": "Specialist consultations and treatment"
+        },
+        "hospitalization": {
+          "coverage_level": "70% after deductible",
+          "requires_deductible": true,
+          "per_admission_copay": 750.00,
+          "annual_limit": null,
+          "description": "Inpatient hospital stays, surgery, room and board",
+          "requires_preauthorization": true
+        },
+        "emergency_services": {
+          "coverage_level": "70% after deductible",
+          "requires_deductible": true,
+          "copay_applies": true,
+          "annual_limit": null,
+          "description": "Emergency room visits, ambulance services",
+          "out_of_network_coverage": true,
+          "notes": "Out-of-network emergency services covered at in-network rates"
+        },
+        "mental_health_outpatient": {
+          "coverage_level": "70% after deductible",
+          "requires_deductible": true,
+          "copay_applies": true,
+          "session_copay": 65.00,
+          "annual_limit": null,
+          "description": "Psychotherapy, counseling sessions"
+        },
+        "mental_health_inpatient": {
+          "coverage_level": "70% after deductible",
+          "requires_deductible": true,
+          "per_admission_copay": 750.00,
+          "annual_limit": null,
+          "description": "Inpatient psychiatric hospitalization",
+          "requires_preauthorization": true
+        },
+        "substance_abuse_treatment": {
+          "coverage_level": "70% after deductible",
+          "requires_deductible": true,
+          "annual_limit": null,
+          "description": "Inpatient and outpatient substance abuse treatment",
+          "requires_preauthorization": true
+        },
+        "maternity_care": {
+          "coverage_level": "70% after deductible",
+          "requires_deductible": true,
+          "prenatal_visits_copay": 35.00,
+          "delivery_copay": 750.00,
+          "annual_limit": null,
+          "description": "Prenatal care, delivery, postnatal care",
+          "requires_preauthorization": false
+        },
+        "diagnostic_tests": {
+          "coverage_level": "70% after deductible",
+          "requires_deductible": true,
+          "annual_limit": null,
+          "description": "X-rays, MRI, CT scans, lab work",
+          "requires_preauthorization": true,
+          "notes": "Advanced imaging requires preauthorization"
+        },
+        "physical_therapy": {
+          "coverage_level": "70% after deductible",
+          "requires_deductible": true,
+          "copay_applies": true,
+          "session_copay": 45.00,
+          "annual_limit": 40,
+          "description": "Physical, occupational, and speech therapy",
+          "requires_referral": false
+        },
+        "chiropractic_care": {
+          "coverage_level": "70% after deductible",
+          "requires_deductible": true,
+          "copay_applies": true,
+          "session_copay": 45.00,
+          "annual_limit": 15,
+          "description": "Chiropractic adjustments and treatment",
+          "requires_referral": false
+        },
+        "durable_medical_equipment": {
+          "coverage_level": "70% after deductible",
+          "requires_deductible": true,
+          "annual_limit": null,
+          "description": "Wheelchairs, walkers, hospital beds, oxygen equipment",
+          "requires_preauthorization": true
+        },
+        "home_health_care": {
+          "coverage_level": "70% after deductible",
+          "requires_deductible": true,
+          "annual_limit": 60,
+          "description": "Skilled nursing care at home",
+          "requires_preauthorization": true
+        },
+        "hospice_care": {
+          "coverage_level": "100%",
+          "requires_deductible": false,
+          "annual_limit": null,
+          "description": "End-of-life care services",
+          "requires_preauthorization": false
+        }
+      },
+      "exclusions": [
+        "Cosmetic procedures not medically necessary",
+        "Experimental or investigational treatments",
+        "Fertility treatments and services",
+        "Weight loss programs and surgery (unless medically necessary)",
+        "Dental care (except for accidental injury)",
+        "Vision care (except for eye exams)",
+        "Hearing aids",
+        "Private duty nursing",
+        "Custodial care",
+        "Acupuncture",
+        "Services from out-of-network providers (except emergency)",
+        "Services received outside service area (except emergency)"
+      ],
+      "special_programs": [
+        {
+          "program_name": "Diabetes Management Program",
+          "program_id": "DMP-2024",
+          "description": "Comprehensive diabetes care coordination",
+          "eligibility": "Members diagnosed with Type 1 or Type 2 diabetes",
+          "benefits": [
+            "Quarterly care coordinator check-ins",
+            "Discounted glucose monitor and test strips",
+            "100% coverage for diabetes education classes",
+            "Nutritionist consultations (4 per year at no cost)"
+          ]
+        },
+        {
+          "program_name": "Maternity Support Program",
+          "program_id": "MSP-2024",
+          "description": "Comprehensive support for expectant mothers",
+          "eligibility": "Pregnant members",
+          "benefits": [
+            "24/7 nurse hotline",
+            "Prenatal vitamins covered 80%",
+            "Breast pump rental program",
+            "Postpartum depression screening"
+          ]
+        }
+      ]
+    },
+    {
+      "plan_id": "TH-HDHP-BRONZE-2024",
+      "plan_name": "ToggleHealth Bronze HDHP",
+      "plan_type": "HDHP",
+      "metal_tier": "Bronze",
+      "year": 2024,
+      "status": "active",
+      "effective_date": "2024-01-01",
+      "termination_date": null,
+      "description": "High-deductible health plan with HSA eligibility and lowest premiums",
+      "network_id": "TH-HDHP-CORE",
+      "requires_pcp": false,
+      "requires_referrals": false,
+      "hsa_eligible": true,
+      "coverage": {
+        "individual": {
+          "monthly_premium": 245.00,
+          "annual_deductible": 6500.00,
+          "out_of_pocket_maximum": 6500.00,
+          "coinsurance_rate": 0.00,
+          "hsa_employer_contribution": 750.00
+        },
+        "family": {
+          "monthly_premium": 625.00,
+          "annual_deductible": 13000.00,
+          "out_of_pocket_maximum": 13000.00,
+          "coinsurance_rate": 0.00,
+          "hsa_employer_contribution": 1500.00
+        }
+      },
+      "copays": {
+        "note": "No copays - all services subject to deductible except preventive care"
+      },
+      "out_of_network_coverage": {
+        "coverage_level": "Subject to deductible",
+        "annual_deductible_individual": 13000.00,
+        "annual_deductible_family": 26000.00,
+        "out_of_pocket_maximum_individual": 13000.00,
+        "out_of_pocket_maximum_family": 26000.00,
+        "notes": "Out-of-network services count toward separate deductible"
+      },
+      "covered_services": {
+        "preventive_care": {
+          "coverage_level": "100%",
+          "requires_deductible": false,
+          "annual_limit": null,
+          "description": "Annual physicals, immunizations, screening tests, wellness visits",
+          "notes": "Only service not subject to deductible"
+        },
+        "primary_care": {
+          "coverage_level": "100% after deductible",
+          "requires_deductible": true,
+          "copay_applies": false,
+          "annual_limit": null,
+          "description": "Office visits, consultations, routine care"
+        },
+        "specialist_care": {
+          "coverage_level": "100% after deductible",
+          "requires_deductible": true,
+          "requires_referral": false,
+          "copay_applies": false,
+          "annual_limit": null,
+          "description": "Specialist consultations and treatment"
+        },
+        "hospitalization": {
+          "coverage_level": "100% after deductible",
+          "requires_deductible": true,
+          "annual_limit": null,
+          "description": "Inpatient hospital stays, surgery, room and board",
+          "requires_preauthorization": true
+        },
+        "emergency_services": {
+          "coverage_level": "100% after deductible",
+          "requires_deductible": true,
+          "annual_limit": null,
+          "description": "Emergency room visits, ambulance services",
+          "out_of_network_coverage": true,
+          "notes": "Out-of-network emergency services covered at in-network rates"
+        },
+        "mental_health_outpatient": {
+          "coverage_level": "100% after deductible",
+          "requires_deductible": true,
+          "annual_limit": null,
+          "description": "Psychotherapy, counseling sessions"
+        },
+        "mental_health_inpatient": {
+          "coverage_level": "100% after deductible",
+          "requires_deductible": true,
+          "annual_limit": null,
+          "description": "Inpatient psychiatric hospitalization",
+          "requires_preauthorization": true
+        },
+        "substance_abuse_treatment": {
+          "coverage_level": "100% after deductible",
+          "requires_deductible": true,
+          "annual_limit": null,
+          "description": "Inpatient and outpatient substance abuse treatment",
+          "requires_preauthorization": true
+        },
+        "maternity_care": {
+          "coverage_level": "100% after deductible",
+          "requires_deductible": true,
+          "annual_limit": null,
+          "description": "Prenatal care, delivery, postnatal care",
+          "requires_preauthorization": false
+        },
+        "diagnostic_tests": {
+          "coverage_level": "100% after deductible",
+          "requires_deductible": true,
+          "annual_limit": null,
+          "description": "X-rays, MRI, CT scans, lab work",
+          "requires_preauthorization": true,
+          "notes": "Advanced imaging requires preauthorization"
+        },
+        "physical_therapy": {
+          "coverage_level": "100% after deductible",
+          "requires_deductible": true,
+          "annual_limit": 30,
+          "description": "Physical, occupational, and speech therapy",
+          "requires_referral": false
+        },
+        "chiropractic_care": {
+          "coverage_level": "100% after deductible",
+          "requires_deductible": true,
+          "annual_limit": 12,
+          "description": "Chiropractic adjustments and treatment",
+          "requires_referral": false
+        },
+        "durable_medical_equipment": {
+          "coverage_level": "100% after deductible",
+          "requires_deductible": true,
+          "annual_limit": null,
+          "description": "Wheelchairs, walkers, hospital beds, oxygen equipment",
+          "requires_preauthorization": true
+        },
+        "home_health_care": {
+          "coverage_level": "100% after deductible",
+          "requires_deductible": true,
+          "annual_limit": 40,
+          "description": "Skilled nursing care at home",
+          "requires_preauthorization": true
+        },
+        "hospice_care": {
+          "coverage_level": "100%",
+          "requires_deductible": false,
+          "annual_limit": null,
+          "description": "End-of-life care services",
+          "requires_preauthorization": false
+        }
+      },
+      "prescription_coverage": {
+        "note": "All prescriptions subject to deductible",
+        "generic": "100% after deductible",
+        "preferred_brand": "100% after deductible",
+        "non_preferred_brand": "100% after deductible",
+        "specialty": "100% after deductible"
+      },
+      "exclusions": [
+        "Cosmetic procedures not medically necessary",
+        "Experimental or investigational treatments",
+        "Fertility treatments and services",
+        "Weight loss programs and surgery",
+        "Dental care (except for accidental injury)",
+        "Vision care (except for eye exams)",
+        "Hearing aids",
+        "Private duty nursing",
+        "Custodial care",
+        "Acupuncture",
+        "Services received outside service area (except emergency)"
+      ],
+      "special_programs": [
+        {
+          "program_name": "HSA Support Program",
+          "program_id": "HSA-2024",
+          "description": "Health Savings Account education and support",
+          "eligibility": "All HDHP members",
+          "benefits": [
+            "Free HSA account setup",
+            "HSA contribution matching up to $750 (individual) or $1500 (family)",
+            "Financial planning consultations",
+            "Online HSA management tools"
+          ]
+        }
+      ]
+    }
+  ],
+  "pharmacy_benefits": {
+    "pharmacy_benefit_manager": "ToggleHealth PharmaCare",
+    "mail_order_pharmacy": "ToggleHealth Mail Order",
+    "retail_network": "ToggleHealth Pharmacy Network",
+    "formulary_tiers": {
+      "tier_1_generic": {
+        "description": "Generic medications",
+        "examples": [
+          "Lisinopril",
+          "Metformin",
+          "Atorvastatin",
+          "Amlodipine",
+          "Omeprazole",
+          "Levothyroxine",
+          "Sertraline",
+          "Gabapentin"
+        ]
+      },
+      "tier_2_preferred_brand": {
+        "description": "Preferred brand-name medications",
+        "examples": [
+          "Januvia",
+          "Synthroid",
+          "Advair Diskus",
+          "Symbicort",
+          "Lyrica",
+          "Eliquis"
+        ]
+      },
+      "tier_3_non_preferred_brand": {
+        "description": "Non-preferred brand-name medications",
+        "examples": [
+          "Nexium",
+          "Celebrex",
+          "Crestor",
+          "Viagra",
+          "Cialis"
+        ]
+      },
+      "tier_4_specialty": {
+        "description": "Specialty medications for complex conditions",
+        "examples": [
+          "Humira",
+          "Enbrel",
+          "Copaxone",
+          "Gleevec",
+          "Harvoni"
+        ],
+        "notes": "Specialty medications require preauthorization and must be obtained through specialty pharmacy"
+      }
+    },
+    "mail_order_benefits": {
+      "description": "90-day supply at reduced cost",
+      "copay_discount": "2x monthly copay for 3-month supply",
+      "available_for": [
+        "Maintenance medications",
+        "Chronic condition medications"
+      ]
+    },
+    "prior_authorization_required": [
+      "All specialty medications",
+      "Brand medications with generic alternatives",
+      "Medications over $500 per month",
+      "Compound medications",
+      "Growth hormones",
+      "Fertility medications"
+    ]
+  },
+  "claims_procedures": {
+    "claims_address": "ToggleHealth Claims Department, PO Box 98234, Seattle, WA 98109",
+    "electronic_claims_submission": "Available through provider portal at portal.togglehealth.com",
+    "claim_filing_deadline": "365 days from date of service",
+    "claim_processing_time": {
+      "electronic_claims": "14-21 days",
+      "paper_claims": "30-45 days"
+    },
+    "required_documentation": [
+      "Itemized bill or receipt",
+      "Provider name and tax ID",
+      "Date of service",
+      "Diagnosis code (ICD-10)",
+      "Procedure code (CPT)",
+      "Member ID number"
+    ],
+    "appeals_process": {
+      "first_level_appeal": {
+        "timeframe": "180 days from claim denial",
+        "address": "ToggleHealth Appeals, PO Box 98235, Seattle, WA 98109",
+        "response_time": "30 days"
+      },
+      "second_level_appeal": {
+        "timeframe": "60 days from first level denial",
+        "review_type": "Independent external review",
+        "response_time": "45 days"
+      }
+    }
+  },
+  "preauthorization_requirements": {
+    "services_requiring_preauth": [
+      "Inpatient hospital admissions",
+      "Surgical procedures",
+      "Advanced imaging (MRI, CT, PET scans)",
+      "Home health care",
+      "Durable medical equipment over $500",
+      "Mental health inpatient treatment",
+      "Substance abuse inpatient treatment",
+      "Transplant services",
+      "Bariatric surgery",
+      "Sleep studies",
+      "Genetic testing",
+      "Specialty medications"
+    ],
+    "preauth_phone": "1-800-TOGGLE-2",
+    "preauth_fax": "1-206-555-0199",
+    "online_preauth": "portal.togglehealth.com/preauth",
+    "processing_time": "3-5 business days for standard requests",
+    "urgent_processing_time": "24-48 hours for urgent requests"
+  },
+  "networks": [
+    {
+      "network_id": "TH-HMO-PRIMARY",
+      "network_name": "ToggleHealth HMO Primary Network",
+      "network_type": "HMO",
+      "description": "Comprehensive HMO network with coordinated care",
+      "plan_ids": ["TH-HMO-GOLD-2024"],
+      "provider_count": {
+        "primary_care": 2847,
+        "specialists": 8934,
+        "hospitals": 87,
+        "urgent_care": 156,
+        "mental_health": 1243
+      },
+      "geographic_coverage": [
+        "Washington - All counties",
+        "Oregon - Multnomah, Clackamas, Washington counties",
+        "California - San Francisco Bay Area, Sacramento region"
+      ]
+    },
+    {
+      "network_id": "TH-PPO-PREMIER",
+      "network_name": "ToggleHealth PPO Premier Network",
+      "network_type": "PPO",
+      "description": "Largest network with maximum provider choice",
+      "plan_ids": ["TH-PPO-PLATINUM-2024"],
+      "provider_count": {
+        "primary_care": 4521,
+        "specialists": 14789,
+        "hospitals": 142,
+        "urgent_care": 234,
+        "mental_health": 2156
+      },
+      "geographic_coverage": [
+        "Washington - All counties",
+        "Oregon - All counties west of Cascades",
+        "California - All major metropolitan areas",
+        "Idaho - Boise metro area",
+        "Montana - Missoula, Billings metro areas"
+      ]
+    },
+    {
+      "network_id": "TH-EPO-SELECT",
+      "network_name": "ToggleHealth EPO Select Network",
+      "network_type": "EPO",
+      "description": "Curated network of high-quality providers",
+      "plan_ids": ["TH-EPO-SILVER-2024"],
+      "provider_count": {
+        "primary_care": 1923,
+        "specialists": 6234,
+        "hospitals": 64,
+        "urgent_care": 98,
+        "mental_health": 876
+      },
+      "geographic_coverage": [
+        "Washington - King, Pierce, Snohomish, Spokane counties",
+        "Oregon - Multnomah, Clackamas, Washington, Marion counties",
+        "California - San Francisco Bay Area"
+      ]
+    },
+    {
+      "network_id": "TH-HDHP-CORE",
+      "network_name": "ToggleHealth HDHP Core Network",
+      "network_type": "HDHP",
+      "description": "Value-focused network for high-deductible plans",
+      "plan_ids": ["TH-HDHP-BRONZE-2024"],
+      "provider_count": {
+        "primary_care": 3234,
+        "specialists": 9876,
+        "hospitals": 98,
+        "urgent_care": 167,
+        "mental_health": 1432
+      },
+      "geographic_coverage": [
+        "Washington - All counties",
+        "Oregon - Western Oregon counties",
+        "California - SF Bay Area, Sacramento, San Diego"
+      ]
+    }
+  ],
+  "member_resources": {
+    "online_portal": "my.togglehealth.com",
+    "mobile_app": "ToggleHealth Mobile (iOS and Android)",
+    "nurse_hotline": "1-800-TOGGLE-3 (24/7)",
+    "care_navigation": "Available for Gold, Platinum plans",
+    "telemedicine": {
+      "provider": "ToggleHealth Virtual Care",
+      "cost": {
+        "TH-HMO-GOLD-2024": 0.00,
+        "TH-PPO-PLATINUM-2024": 0.00,
+        "TH-EPO-SILVER-2024": 25.00,
+        "TH-HDHP-BRONZE-2024": "Subject to deductible"
+      },
+      "services": [
+        "General medical consultations",
+        "Mental health counseling",
+        "Dermatology consultations",
+        "Nutritionist consultations"
+      ],
+      "availability": "24/7"
+    },
+    "wellness_programs": [
+      {
+        "program_name": "ToggleFit Rewards",
+        "description": "Earn rewards for healthy activities",
+        "benefits": [
+          "Up to $500 annual rewards",
+          "Gym membership discounts",
+          "Fitness tracker discounts",
+          "Healthy food delivery discounts"
+        ]
+      },
+      {
+        "program_name": "Tobacco Cessation",
+        "description": "Comprehensive smoking cessation support",
+        "benefits": [
+          "Nicotine replacement therapy covered 100%",
+          "Counseling sessions (8 per year)",
+          "Mobile app support",
+          "$200 completion bonus"
+        ]
+      },
+      {
+        "program_name": "Weight Management",
+        "description": "Medically supervised weight management",
+        "benefits": [
+          "Nutritionist consultations",
+          "Weight loss medication coverage (if medically necessary)",
+          "Fitness program access",
+          "Bariatric surgery coverage (if medically necessary)"
+        ]
+      }
+    ]
+  },
+  "regulatory_compliance": {
+    "aca_compliant": true,
+    "mental_health_parity_compliant": true,
+    "essential_health_benefits_covered": [
+      "Ambulatory patient services",
+      "Emergency services",
+      "Hospitalization",
+      "Maternity and newborn care",
+      "Mental health and substance use disorder services",
+      "Prescription drugs",
+      "Rehabilitative services and devices",
+      "Laboratory services",
+      "Preventive and wellness services",
+      "Pediatric services including dental and vision"
+    ],
+    "hipaa_compliant": true,
+    "state_mandates_covered": true
+  }
+}
