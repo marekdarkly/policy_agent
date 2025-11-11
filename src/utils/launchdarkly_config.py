@@ -98,7 +98,7 @@ class LaunchDarklyClient:
                 key=config_key,
                 default_value=LDAIAgentDefaults(
                     enabled=True,
-                    instructions="Default instructions"
+                    instructions="__DEFAULT_INSTRUCTIONS__"  # Sentinel value to detect if it's actually from LD
                 )
             )
             
@@ -107,39 +107,49 @@ class LaunchDarklyClient:
             if config_key in agents and agents[config_key].enabled:
                 agent = agents[config_key]
                 
-                # Extract and convert agent config to standard dict format
-                # Provider can be a ProviderConfig object with a 'name' attribute
-                provider_value = ""
-                if hasattr(agent, 'provider') and agent.provider:
-                    if hasattr(agent.provider, 'name'):
-                        provider_value = agent.provider.name
-                    elif isinstance(agent.provider, dict):
-                        provider_value = agent.provider.get('name', '')
-                    else:
-                        provider_value = str(agent.provider)
+                # Check if this is actually an agent-based config (has non-default instructions)
+                has_instructions = (
+                    hasattr(agent, 'instructions') and 
+                    agent.instructions and 
+                    agent.instructions != "__DEFAULT_INSTRUCTIONS__"
+                )
                 
-                config_dict = {
-                    "enabled": agent.enabled,
-                    "provider": provider_value,
-                }
-                
-                # Extract model config if present
-                if hasattr(agent, 'model') and agent.model:
-                    config_dict["model"] = {
-                        "name": getattr(agent.model, 'name', ''),
-                        "parameters": getattr(agent.model, 'parameters', {}),
+                if has_instructions:
+                    # This is truly an agent-based config
+                    # Extract and convert agent config to standard dict format
+                    # Provider can be a ProviderConfig object with a 'name' attribute
+                    provider_value = ""
+                    if hasattr(agent, 'provider') and agent.provider:
+                        if hasattr(agent.provider, 'name'):
+                            provider_value = agent.provider.name
+                        elif isinstance(agent.provider, dict):
+                            provider_value = agent.provider.get('name', '')
+                        else:
+                            provider_value = str(agent.provider)
+                    
+                    config_dict = {
+                        "enabled": agent.enabled,
+                        "provider": provider_value,
                     }
-                    if hasattr(agent.model, 'custom'):
-                        config_dict["model"]["custom"] = agent.model.custom
-                
-                # Store instructions separately (not as messages)
-                # Instructions should be used as system prompts, not conversation messages
-                if hasattr(agent, 'instructions') and agent.instructions:
+                    
+                    # Extract model config if present
+                    if hasattr(agent, 'model') and agent.model:
+                        config_dict["model"] = {
+                            "name": getattr(agent.model, 'name', ''),
+                            "parameters": getattr(agent.model, 'parameters', {}),
+                        }
+                        if hasattr(agent.model, 'custom'):
+                            config_dict["model"]["custom"] = agent.model.custom
+                    
+                    # Store instructions separately (not as messages)
                     config_dict["_instructions"] = agent.instructions
-                
-                tracker = agent.tracker
-                print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly (agent-based)")
-                return config_dict, tracker
+                    
+                    tracker = agent.tracker
+                    print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly (agent-based)")
+                    return config_dict, tracker
+                else:
+                    # Has default instructions - fall through to completion-based
+                    print(f"  ℹ️  No agent instructions found, trying completion-based...")
         except Exception as e:
             print(f"  ℹ️  Agent-based config not found, trying completion-based...")
 
@@ -338,13 +348,23 @@ class LaunchDarklyClient:
             formatted_messages = self.format_messages(ld_messages, context_vars)
             
             # Convert to LangChain message format
+            has_user_message = False
             for msg in formatted_messages:
                 if msg["role"] == "system":
                     langchain_messages.append(SystemMessage(content=msg["content"]))
                 elif msg["role"] == "user":
                     langchain_messages.append(HumanMessage(content=msg["content"]))
+                    has_user_message = True
                 else:
                     langchain_messages.append(AIMessage(content=msg["content"]))
+            
+            # AWS Bedrock requires conversations to start with a user message
+            # If we only have a system message, add a user message with query
+            if not has_user_message and langchain_messages:
+                query = context_vars.get("query", "")
+                user_context_minimal = {k: v for k, v in context_vars.items() if k not in ["query"]}
+                user_msg = f"User query: {query}\n\nContext:\n{json.dumps(user_context_minimal, indent=2, default=str)}"
+                langchain_messages.append(HumanMessage(content=user_msg))
         else:
             raise RuntimeError("CATASTROPHIC: No messages or instructions found in LaunchDarkly AI Config.")
         
