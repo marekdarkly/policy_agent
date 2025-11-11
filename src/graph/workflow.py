@@ -9,6 +9,7 @@ from ..agents import (
     provider_specialist_node,
     scheduler_specialist_node,
     triage_node,
+    brand_voice_node,
 )
 from .state import AgentState
 
@@ -48,6 +49,7 @@ def create_workflow() -> StateGraph:
     workflow.add_node("policy_specialist", policy_specialist_node)
     workflow.add_node("provider_specialist", provider_specialist_node)
     workflow.add_node("scheduler_specialist", scheduler_specialist_node)
+    workflow.add_node("brand_voice", brand_voice_node)
 
     # Set entry point
     workflow.set_entry_point("triage")
@@ -63,10 +65,13 @@ def create_workflow() -> StateGraph:
         },
     )
 
-    # Add edges from specialists to END
-    workflow.add_edge("policy_specialist", END)
-    workflow.add_edge("provider_specialist", END)
-    workflow.add_edge("scheduler_specialist", END)
+    # Add edges from specialists to brand voice agent (final synthesis)
+    workflow.add_edge("policy_specialist", "brand_voice")
+    workflow.add_edge("provider_specialist", "brand_voice")
+    workflow.add_edge("scheduler_specialist", "brand_voice")
+    
+    # Brand voice agent produces final customer response
+    workflow.add_edge("brand_voice", END)
 
     # Compile the graph
     return workflow.compile()

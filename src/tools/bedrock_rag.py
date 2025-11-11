@@ -1,10 +1,13 @@
 """Bedrock Knowledge Base RAG tools for policy and provider retrieval."""
 
 import os
+import sys
 from typing import Any, Optional
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# No need for special import handling - bedrock_rag.py is always imported as a module
 
 
 class BedrockKnowledgeBaseRetriever:
@@ -182,62 +185,106 @@ class BedrockKnowledgeBaseRetriever:
             raise
 
 
-# Bedrock Knowledge Base IDs (configure in .env or here)
+# Bedrock Knowledge Base IDs (fallback from .env)
 POLICY_KB_ID = os.getenv("BEDROCK_POLICY_KB_ID", "")
 PROVIDER_KB_ID = os.getenv("BEDROCK_PROVIDER_KB_ID", "")
 
 
-def get_policy_retriever(top_k: int = 5) -> Optional[BedrockKnowledgeBaseRetriever]:
+def get_kb_id_from_ld_config(config: dict, fallback_env_var: str = "") -> Optional[str]:
+    """Get KB ID from LaunchDarkly config custom parameters.
+    
+    Args:
+        config: LaunchDarkly AI config dictionary
+        fallback_env_var: Environment variable to use as fallback
+        
+    Returns:
+        KB ID or None if not found
+    """
+    # Check LaunchDarkly custom parameters first
+    # Custom params are nested under model.custom in the to_dict() output
+    if config:
+        model = config.get("model", {})
+        custom = model.get("custom", {})
+        kb_id = custom.get("awskbid") or custom.get("aws_kb_id")
+        if kb_id:
+            return kb_id
+    
+    # Fallback to environment variable
+    return fallback_env_var if fallback_env_var else None
+
+
+def get_policy_retriever(
+    top_k: int = 5,
+    ld_config: Optional[dict] = None
+) -> Optional[BedrockKnowledgeBaseRetriever]:
     """Get retriever for policy knowledge base.
 
     Args:
         top_k: Number of documents to retrieve
+        ld_config: LaunchDarkly AI config (checks custom.awskbid)
 
     Returns:
         Bedrock KB retriever for policies, or None if not configured
     """
-    if not POLICY_KB_ID:
-        print("  ⚠️  BEDROCK_POLICY_KB_ID not configured, RAG disabled for policy")
+    # Get KB ID from LaunchDarkly or environment
+    kb_id = get_kb_id_from_ld_config(ld_config, POLICY_KB_ID)
+    
+    if not kb_id:
+        print("  ⚠️  Policy KB ID not configured (check LaunchDarkly custom.awskbid or BEDROCK_POLICY_KB_ID)")
         return None
     
+    print(f"  📚 Using Policy KB from LaunchDarkly: {kb_id[:20]}...")
     return BedrockKnowledgeBaseRetriever(
-        knowledge_base_id=POLICY_KB_ID,
+        knowledge_base_id=kb_id,
         top_k=top_k
     )
 
 
-def get_provider_retriever(top_k: int = 5) -> Optional[BedrockKnowledgeBaseRetriever]:
+def get_provider_retriever(
+    top_k: int = 5,
+    ld_config: Optional[dict] = None
+) -> Optional[BedrockKnowledgeBaseRetriever]:
     """Get retriever for provider network knowledge base.
 
     Args:
         top_k: Number of documents to retrieve
+        ld_config: LaunchDarkly AI config (checks custom.awskbid)
 
     Returns:
         Bedrock KB retriever for providers, or None if not configured
     """
-    if not PROVIDER_KB_ID:
-        print("  ⚠️  BEDROCK_PROVIDER_KB_ID not configured, RAG disabled for providers")
+    # Get KB ID from LaunchDarkly or environment
+    kb_id = get_kb_id_from_ld_config(ld_config, PROVIDER_KB_ID)
+    
+    if not kb_id:
+        print("  ⚠️  Provider KB ID not configured (check LaunchDarkly custom.awskbid or BEDROCK_PROVIDER_KB_ID)")
         return None
     
+    print(f"  📚 Using Provider KB from LaunchDarkly: {kb_id[:20]}...")
     return BedrockKnowledgeBaseRetriever(
-        knowledge_base_id=PROVIDER_KB_ID,
+        knowledge_base_id=kb_id,
         top_k=top_k
     )
 
 
-def retrieve_policy_documents(query: str, policy_id: Optional[str] = None) -> list[dict[str, Any]]:
+def retrieve_policy_documents(
+    query: str,
+    policy_id: Optional[str] = None,
+    ld_config: Optional[dict] = None
+) -> list[dict[str, Any]]:
     """Retrieve relevant policy documents using RAG.
 
     Args:
         query: The user's query about their policy
         policy_id: Optional policy ID to filter results
+        ld_config: LaunchDarkly AI config (for KB ID in custom.awskbid)
 
     Returns:
         List of relevant policy documents with content and metadata
     """
     print(f"📚 Retrieving policy documents via RAG...")
     
-    retriever = get_policy_retriever()
+    retriever = get_policy_retriever(ld_config=ld_config)
     if not retriever:
         print("  ℹ️  Falling back to simulated policy database")
         return []
@@ -259,7 +306,8 @@ def retrieve_provider_documents(
     query: str,
     specialty: Optional[str] = None,
     location: Optional[str] = None,
-    network: Optional[str] = None
+    network: Optional[str] = None,
+    ld_config: Optional[dict] = None
 ) -> list[dict[str, Any]]:
     """Retrieve relevant provider network documents using RAG.
 
@@ -268,13 +316,14 @@ def retrieve_provider_documents(
         specialty: Provider specialty filter
         location: Location filter
         network: Insurance network filter
+        ld_config: LaunchDarkly AI config (for KB ID in custom.awskbid)
 
     Returns:
         List of relevant provider documents with content and metadata
     """
     print(f"📚 Retrieving provider documents via RAG...")
     
-    retriever = get_provider_retriever()
+    retriever = get_provider_retriever(ld_config=ld_config)
     if not retriever:
         print("  ℹ️  Falling back to simulated provider database")
         return []

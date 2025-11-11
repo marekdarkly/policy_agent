@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from dotenv import load_dotenv
 from src.graph.workflow import run_workflow
+from src.utils.user_profile import create_user_profile, format_profile_summary
 
 # Load environment variables
 load_dotenv()
@@ -141,6 +142,8 @@ def explain_system():
     print(f"  {Colors.AGENT}3. Provider Specialist{Colors.ENDC} - Helps find in-network doctors and providers")
     print(f"     📚 RAG-Enhanced: Searches provider network semantically")
     print(f"  {Colors.AGENT}4. Scheduler Specialist{Colors.ENDC} - Schedules callbacks with human agents")
+    print(f"  {Colors.AGENT}5. Brand Voice Agent{Colors.ENDC} - Transforms responses into ToggleHealth's brand voice")
+    print(f"     ✨ Final quality gate for all customer-facing responses")
     
     print(f"\n{Colors.BOLD}LaunchDarkly AI Configs:{Colors.ENDC}")
     print("  • Each agent retrieves its own AI configuration from LaunchDarkly")
@@ -164,14 +167,24 @@ def explain_system():
 
 
 def create_default_context():
-    """Create default user context for the conversation."""
-    return {
-        "policy_id": "POL-12345",
-        "coverage_type": "Gold Plan",
-        "network": "Premier Network",
-        "location": "Boston, MA",
-        "user_key": f"demo-user-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
-    }
+    """Create default user context for the conversation.
+    
+    Creates a rich, LaunchDarkly-optimized user profile with comprehensive
+    attributes for targeting, personalization, and RAG enhancement.
+    """
+    # Create comprehensive user profile following LaunchDarkly best practices
+    profile = create_user_profile(
+        name="Marek Poliks",
+        location="San Francisco, CA",
+        policy_id="POL-12345",
+        coverage_type="Gold Plan"
+    )
+    
+    # Update session ID to be current
+    profile["session_id"] = f"session-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    profile["user_key"] = f"marek-poliks-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    
+    return profile
 
 
 def display_context(context: dict):
@@ -227,6 +240,16 @@ def process_query(user_query: str, user_context: dict):
             print_debug("Agent-Specific Data", "Available", indent=1)
             for agent_name, agent_info in result["agent_data"].items():
                 print_debug(f"  {agent_name}", f"{len(str(agent_info))} bytes", indent=2)
+                
+                # Show brand voice metadata if available
+                if agent_name == "brand_voice_agent":
+                    try:
+                        import json
+                        brand_info = json.loads(agent_info)
+                        if brand_info.get("brand_applied"):
+                            print_success(f"    ✨ Brand Voice Applied: Transformed {brand_info.get('specialist_type', 'unknown')} specialist response", indent=2)
+                    except:
+                        pass
                 
                 # Show RAG information if available
                 if "rag_enabled" in agent_info:

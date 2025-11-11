@@ -7,7 +7,7 @@ A production-ready LangGraph-based multi-agent system for intelligent medical in
 - 🤖 **Multi-Agent Orchestration** with LangGraph
 - 🎯 **LaunchDarkly AI Configs** - Dynamic model management per agent
 - 📚 **RAG with Bedrock Knowledge Base** - Semantic search over policy & provider docs
-- 🔄 **Hybrid Retrieval** - Combines RAG + structured databases
+- ✨ **Brand Voice Synthesis** - Consistent, personalized customer responses
 - 💬 **Interactive Terminal Chatbot** - Beautiful UI with extensive debug logging
 - 📊 **Observability** - Full metrics tracking via LaunchDarkly
 - 🔐 **AWS SSO Integration** - Automatic token refresh
@@ -77,17 +77,20 @@ Triage Router (LaunchDarkly: triage_agent)
 [Routing Decision based on confidence]
     ↓
     ├─→ Policy Specialist (LaunchDarkly: policy_agent)
-    │   ├─ RAG: Bedrock KB semantic search
-    │   └─ Database: Structured policy data
+    │   └─ RAG: Bedrock KB semantic search (RAG-only)
     │
     ├─→ Provider Specialist (LaunchDarkly: provider_agent)
-    │   ├─ RAG: Bedrock KB semantic search
-    │   └─ Database: Structured provider data
+    │   └─ RAG: Bedrock KB semantic search (RAG-only)
     │
     └─→ Scheduler Specialist (LaunchDarkly: scheduler_agent)
         └─ Calendar: Available time slots
              ↓
-        Final Response
+        Brand Voice Agent (LaunchDarkly: brand_agent)
+             ├─ Transforms specialist response
+             ├─ Applies ToggleHealth brand voice
+             └─ Personalizes and structures output
+             ↓
+        Final Customer Response
 ```
 
 ### Agent Responsibilities
@@ -98,6 +101,7 @@ Triage Router (LaunchDarkly: triage_agent)
 | **Policy Specialist** | `policy_agent` | ✅ | Coverage, benefits, claims questions |
 | **Provider Specialist** | `provider_agent` | ✅ | Find doctors, check network |
 | **Scheduler Specialist** | `scheduler_agent` | ❌ | Schedule callbacks, escalate |
+| **Brand Voice Agent** | `brand_agent` | ❌ | Final response transformation & brand voice |
 
 ## 📖 Documentation
 

@@ -36,6 +36,9 @@ class BedrockConverseLLM(BaseChatModel):
     aws_sso_manager: Any = None
     """AWS SSO manager instance"""
 
+    _bedrock_client: Any = None
+    """Cached Bedrock client to avoid creating new connections on every call"""
+
     def __init__(self, **kwargs):
         """Initialize Bedrock Converse LLM."""
         super().__init__(**kwargs)
@@ -43,6 +46,9 @@ class BedrockConverseLLM(BaseChatModel):
         self.aws_sso_manager = get_sso_manager(
             profile_name=self.profile_name, region=self.region
         )
+        # Create and cache the Bedrock client ONCE
+        self._bedrock_client = self.aws_sso_manager.get_bedrock_client("bedrock-runtime")
+        print(f"✅ Bedrock client cached for model {self.model_id}")
 
     @property
     def _llm_type(self) -> str:
@@ -110,8 +116,8 @@ class BedrockConverseLLM(BaseChatModel):
         Returns:
             ChatResult with the response
         """
-        # Get Bedrock client with valid credentials
-        bedrock_client = self.aws_sso_manager.get_bedrock_client("bedrock-runtime")
+        # Use cached Bedrock client (created once in __init__)
+        bedrock_client = self._bedrock_client
 
         # Convert messages to Converse format
         converse_messages, system_messages = self._convert_messages_to_converse_format(
@@ -182,10 +188,11 @@ class BedrockConverseLLM(BaseChatModel):
             if "credentials" in str(e).lower() or "expired" in str(e).lower():
                 print("🔄 Credentials may be expired, attempting refresh...")
                 if self.aws_sso_manager.force_refresh():
-                    bedrock_client = self.aws_sso_manager.get_bedrock_client(
+                    # Recreate and cache the client with fresh credentials
+                    self._bedrock_client = self.aws_sso_manager.get_bedrock_client(
                         "bedrock-runtime"
                     )
-                    response = bedrock_client.converse(**api_params)
+                    response = self._bedrock_client.converse(**api_params)
 
                     output_message = response["output"]["message"]
                     response_text = output_message["content"][0]["text"]
