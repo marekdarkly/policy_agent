@@ -141,8 +141,8 @@ def get_model_invoker(
     config_key: str,
     context: Optional[dict[str, Any]] = None,
     default_temperature: float = 0.7,
-) -> ModelInvoker:
-    """Get a ModelInvoker with tracking for the specified config.
+) -> Tuple[ModelInvoker, dict[str, Any]]:
+    """Get a ModelInvoker with tracking and full config (including messages) from LaunchDarkly.
 
     Args:
         config_key: The AI config key in LaunchDarkly
@@ -150,10 +150,12 @@ def get_model_invoker(
         default_temperature: Default temperature if not specified in config
 
     Returns:
-        ModelInvoker instance with tracking
+        Tuple of (ModelInvoker instance with tracking, full config dict including messages)
     """
-    llm, tracker = get_llm_from_config(config_key, context, default_temperature)
-    return ModelInvoker(llm, tracker)
+    ld_client = get_ld_client()
+    config, tracker = ld_client.get_ai_config(config_key, context)
+    llm, _ = get_llm_from_config(config_key, context, default_temperature)
+    return ModelInvoker(llm, tracker), config
 
 
 def _create_llm_for_provider(

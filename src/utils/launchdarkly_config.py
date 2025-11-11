@@ -222,6 +222,10 @@ class LaunchDarklyClient:
         result = {
             "enabled": config_dict.get("_ldMeta", {}).get("enabled", True),
         }
+        
+        # Extract messages (prompts) from LaunchDarkly AI Config
+        if config_dict.get("messages"):
+            result["messages"] = config_dict["messages"]
 
         if config_dict.get("model"):
             model_dict = config_dict["model"]
@@ -239,6 +243,45 @@ class LaunchDarklyClient:
             result["provider"] = provider_dict.get("name", "")
 
         return result
+
+    def format_messages(self, messages: list[dict], context_vars: dict[str, Any]) -> list[dict]:
+        """Format LaunchDarkly messages with context variables.
+        
+        Replaces template variables like {{ldctx.name}} or {{variable_name}} with actual values.
+        
+        Args:
+            messages: List of message dicts with 'role' and 'content' from LaunchDarkly
+            context_vars: Dictionary of variables to substitute
+            
+        Returns:
+            List of formatted messages
+        """
+        import re
+        
+        formatted_messages = []
+        for msg in messages:
+            content = msg.get("content", "")
+            
+            # Replace {{ldctx.attribute}} with context values
+            def replace_ldctx(match):
+                attr = match.group(1)
+                return str(context_vars.get(attr, f"{{{{ldctx.{attr}}}}}"))  # Keep original if not found
+            
+            content = re.sub(r'\{\{ldctx\.(\w+)\}\}', replace_ldctx, content)
+            
+            # Replace {{variable_name}} with values
+            def replace_var(match):
+                var = match.group(1)
+                return str(context_vars.get(var, f"{{{{{var}}}}}"))  # Keep original if not found
+            
+            content = re.sub(r'\{\{(\w+)\}\}', replace_var, content)
+            
+            formatted_messages.append({
+                "role": msg.get("role", "user"),
+                "content": content
+            })
+        
+        return formatted_messages
 
     def close(self):
         """Close the LaunchDarkly client."""
