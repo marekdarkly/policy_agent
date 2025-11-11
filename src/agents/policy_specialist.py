@@ -55,17 +55,24 @@ def policy_specialist_node(state: AgentState) -> dict[str, Any]:
     rag_documents = retrieve_policy_documents(query, policy_id, ld_config=ld_config)
 
     # Format RAG documents from Bedrock Knowledge Base
-    if rag_documents:
-        print(f"  📄 Retrieved {len(rag_documents)} policy documents from Bedrock KB")
-        policy_info_str = "\n\n=== POLICY DOCUMENTATION (from Bedrock Knowledge Base) ===\n"
-        for i, doc in enumerate(rag_documents, 1):
-            score = doc.get("score", 0.0)
-            content = doc.get("content", "")
-            print(f"    Doc {i}: Score {score:.3f}, Length {len(content)} chars")
-            policy_info_str += f"\n[Document {i} - Relevance: {score:.2f}]\n{content}\n"
-    else:
-        print(f"  ⚠️  No policy documents retrieved from Bedrock KB")
-        policy_info_str = "No policy information found in the knowledge base."
+    if not rag_documents:
+        raise RuntimeError(
+            f"❌ CATASTROPHIC: No policy documents retrieved from Bedrock Knowledge Base!\n"
+            f"  Query: {query}\n"
+            f"  Policy ID: {policy_id}\n"
+            f"  This indicates either:\n"
+            f"  1. The Knowledge Base is empty\n"
+            f"  2. The query doesn't match any documents\n"
+            f"  3. The KB is not properly configured"
+        )
+    
+    print(f"  📄 Retrieved {len(rag_documents)} policy documents from Bedrock KB")
+    policy_info_str = "\n\n=== POLICY DOCUMENTATION (from Bedrock Knowledge Base) ===\n"
+    for i, doc in enumerate(rag_documents, 1):
+        score = doc.get("score", 0.0)
+        content = doc.get("content", "")
+        print(f"    Doc {i}: Score {score:.3f}, Length {len(content)} chars")
+        policy_info_str += f"\n[Document {i} - Relevance: {score:.2f}]\n{content}\n"
 
     # Get LLM and messages from LaunchDarkly AI Config
     model_invoker, ld_config = get_model_invoker(
