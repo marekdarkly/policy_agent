@@ -196,7 +196,7 @@ AWS SSO tokens typically expire after 8-12 hours. The system will:
 
 ### Example AI Config for Bedrock
 
-**Config Key**: `triage-router`
+**Config Key**: `triage_router`
 
 ```json
 {

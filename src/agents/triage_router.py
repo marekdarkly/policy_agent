@@ -1,13 +1,12 @@
 """Triage router agent for query classification."""
 
 import json
-import os
 from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage
 
 from ..graph.state import AgentState, QueryType
-from ..utils.llm_config import get_llm_from_config, get_structured_llm
+from ..utils.llm_config import get_model_invoker
 from ..utils.prompts import TRIAGE_ROUTER_PROMPT
 
 
@@ -38,25 +37,18 @@ def triage_node(state: AgentState) -> dict[str, Any]:
     # Prepare prompt
     prompt = TRIAGE_ROUTER_PROMPT.format(query=query, user_context=context_str)
 
-    # Get LLM response with LaunchDarkly AI Config
-    use_ld = os.getenv("LAUNCHDARKLY_ENABLED", "false").lower() == "true"
+    # Get LLM response with LaunchDarkly AI Config (required)
+    model_invoker = get_model_invoker(
+        config_key="triage_agent",
+        context=user_context,
+        default_temperature=0.0,
+    )
+    # Configure for JSON output if OpenAI (check the actual model type)
+    from langchain_openai import ChatOpenAI
+    if isinstance(model_invoker.model, ChatOpenAI):
+        model_invoker.model.model_kwargs = {"response_format": {"type": "json_object"}}
 
-    if use_ld:
-        # Use LaunchDarkly AI Config for this agent
-        llm, tracker = get_llm_from_config(
-            config_key="triage-router",
-            context=user_context,
-            default_temperature=0.0,
-        )
-        # Configure for JSON output if OpenAI
-        if hasattr(llm, 'model_kwargs'):
-            llm.model_kwargs = {"response_format": {"type": "json_object"}}
-
-        response = llm.invoke([HumanMessage(content=prompt)])
-    else:
-        # Fallback to default configuration
-        llm = get_structured_llm(temperature=0.0)
-        response = llm.invoke([HumanMessage(content=prompt)])
+    response = model_invoker.invoke([HumanMessage(content=prompt)])
 
     # Parse the JSON response
     try:

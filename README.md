@@ -23,12 +23,13 @@ See [SDD.md](SDD.md) for detailed architecture documentation.
 - Multi-agent orchestration using LangGraph
 - State management with Pydantic
 - **LaunchDarkly AI Config integration** for per-agent model management
+- **RAG (Retrieval-Augmented Generation)** with AWS Bedrock Knowledge Base
 - Modular agent design for easy extension
-- Simulated backends (policy DB, provider directory, calendar)
-- Configurable LLM providers (OpenAI or Anthropic)
+- Hybrid retrieval: RAG + structured databases
+- Configurable LLM providers (AWS Bedrock, OpenAI, Anthropic)
 - Confidence-based routing and escalation
 - Automated metrics tracking for token usage and performance
-- Comprehensive test suite
+- Interactive terminal chatbot with extensive debug logging
 
 ## Quick Start
 
@@ -132,24 +133,64 @@ Each agent can retrieve its own AI configuration from LaunchDarkly, enabling:
 
 1. Sign up at [LaunchDarkly](https://launchdarkly.com/)
 2. Create AI Configs with these keys:
-   - `triage-router` - For query classification
-   - `policy-specialist` - For policy questions
-   - `provider-specialist` - For provider lookup
-   - `scheduler-specialist` - For scheduling
+   - `triage_router` - For query classification
+   - `policy_specialist` - For policy questions
+   - `provider_specialist` - For provider lookup
+   - `scheduler_specialist` - For scheduling
 3. Enable in `.env`: `LAUNCHDARKLY_ENABLED=true`
 
 See [LAUNCHDARKLY.md](LAUNCHDARKLY.md) for detailed setup instructions.
 
+### RAG with Bedrock Knowledge Base (Optional)
+
+Enhance Policy and Provider specialists with semantic search:
+
+1. Create Bedrock Knowledge Bases in AWS Console
+2. Upload policy documents and provider data
+3. Add KB IDs to `.env`:
+   ```bash
+   BEDROCK_POLICY_KB_ID=your-policy-kb-id
+   BEDROCK_PROVIDER_KB_ID=your-provider-kb-id
+   ```
+
+**Benefits:**
+- 📚 Semantic search over comprehensive documentation
+- 🎯 Better accuracy with relevant context
+- 🔍 Handles complex queries
+- 💾 Hybrid approach: RAG + structured databases
+
+See [BEDROCK_RAG.md](BEDROCK_RAG.md) and [RAG_SETUP_GUIDE.md](RAG_SETUP_GUIDE.md) for complete setup instructions.
+
 ### Running Examples
 
-Run predefined examples:
+**Interactive Chatbot** (Recommended):
+
+```bash
+python interactive_chatbot.py
+```
+
+Features:
+- Beautiful terminal UI with colored output
+- Extensive debug logging showing RAG retrieval
+- Real-time agent routing and decision-making
+- Commands: `help`, `context`, `quit`
+
+**Example Queries**:
+
 ```bash
 python examples/run_example.py
 ```
 
-Run in interactive mode:
+Or interactive mode:
+
 ```bash
 python examples/run_example.py interactive
+```
+
+**Test RAG Integration**:
+
+```bash
+python test_rag_integration.py
 ```
 
 ### Basic Usage
@@ -176,15 +217,16 @@ policy_agent/
 ├── src/
 │   ├── agents/              # Agent implementations
 │   │   ├── triage_router.py
-│   │   ├── policy_specialist.py
-│   │   ├── provider_specialist.py
+│   │   ├── policy_specialist.py      # 📚 RAG-enhanced
+│   │   ├── provider_specialist.py    # 📚 RAG-enhanced
 │   │   └── scheduler_specialist.py
 │   ├── graph/               # LangGraph workflow
 │   │   ├── state.py        # State management
 │   │   └── workflow.py     # Graph orchestration
-│   ├── tools/               # Backend tools (simulated)
-│   │   ├── policy_db.py
-│   │   ├── provider_db.py
+│   ├── tools/               # Backend tools
+│   │   ├── policy_db.py              # Structured DB
+│   │   ├── provider_db.py            # Structured DB
+│   │   ├── bedrock_rag.py            # 📚 RAG retrieval
 │   │   └── calendar.py
 │   └── utils/               # Utilities
 │       ├── prompts.py

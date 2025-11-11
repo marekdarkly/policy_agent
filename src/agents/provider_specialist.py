@@ -1,14 +1,14 @@
 """Provider lookup specialist agent."""
 
 import json
-import os
 from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage
 
 from ..graph.state import AgentState
 from ..tools.provider_db import search_providers
-from ..utils.llm_config import get_llm, get_model_invoker
+from ..tools.bedrock_rag import retrieve_provider_documents
+from ..utils.llm_config import get_model_invoker
 from ..utils.prompts import PROVIDER_SPECIALIST_PROMPT
 
 
@@ -59,7 +59,20 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
         elif "primary care" in query_lower or "family doctor" in query_lower:
             specialty = "primary care"
 
-    # Search for providers
+    # Retrieve provider information using RAG + traditional database
+    print(f"\n{'─'*80}")
+    print(f"🔍 PROVIDER SPECIALIST: Searching for providers")
+    print(f"{'─'*80}")
+    
+    # Try RAG retrieval first
+    rag_documents = retrieve_provider_documents(
+        query,
+        specialty=specialty,
+        location=location,
+        network=network if network != "Unknown" else None
+    )
+    
+    # Also search structured provider database
     providers = search_providers(
         specialty=specialty,
         location=location,
@@ -70,11 +83,26 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
     # Format provider information
     if providers:
         provider_info_str = json.dumps(providers, indent=2)
+        print(f"  📋 Found {len(providers)} providers in structured database")
     else:
         provider_info_str = "No providers found matching the criteria."
+        print(f"  ⚠️  No providers found in structured database")
+    
+    # Format RAG documents if available
+    rag_context = ""
+    if rag_documents:
+        print(f"  📄 Retrieved {len(rag_documents)} relevant provider documents via RAG")
+        rag_context = "\n\n=== RELEVANT PROVIDER NETWORK INFORMATION ===\n"
+        for i, doc in enumerate(rag_documents, 1):
+            score = doc.get("score", 0.0)
+            content = doc.get("content", "")
+            print(f"    Doc {i}: Score {score:.3f}, Length {len(content)} chars")
+            rag_context += f"\n[Document {i} - Relevance: {score:.2f}]\n{content}\n"
+    else:
+        print(f"  ℹ️  No RAG documents retrieved, using database only")
 
-    # Prepare prompt
-    prompt = PROVIDER_SPECIALIST_PROMPT.format(
+    # Enhanced prompt with RAG context
+    enhanced_prompt = PROVIDER_SPECIALIST_PROMPT.format(
         policy_id=policy_id or "Not provided",
         network=network,
         location=location or "Not specified",
@@ -82,22 +110,20 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
         provider_info=provider_info_str,
         query=query,
     )
+    
+    # Add RAG context if available
+    if rag_context:
+        enhanced_prompt = f"{rag_context}\n\n{enhanced_prompt}"
+    
+    prompt = enhanced_prompt
 
-    # Get LLM response with LaunchDarkly AI Config
-    use_ld = os.getenv("LAUNCHDARKLY_ENABLED", "false").lower() == "true"
-
-    if use_ld:
-        # Use LaunchDarkly AI Config for this agent
-        model_invoker = get_model_invoker(
-            config_key="provider-specialist",
-            context=user_context,
-            default_temperature=0.7,
-        )
-        response = model_invoker.invoke([HumanMessage(content=prompt)])
-    else:
-        # Fallback to default configuration
-        llm = get_llm(temperature=0.7)
-        response = llm.invoke([HumanMessage(content=prompt)])
+    # Get LLM response with LaunchDarkly AI Config (required)
+    model_invoker = get_model_invoker(
+        config_key="provider_agent",
+        context=user_context,
+        default_temperature=0.7,
+    )
+    response = model_invoker.invoke([HumanMessage(content=prompt)])
 
     response_text = response.content
 
@@ -110,6 +136,8 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
             **state.get("agent_data", {}),
             "provider_specialist": {
                 "providers_found": providers,
+                "rag_documents_retrieved": len(rag_documents),
+                "rag_enabled": len(rag_documents) > 0,
                 "search_params": {
                     "specialty": specialty,
                     "location": location,

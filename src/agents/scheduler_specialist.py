@@ -1,14 +1,13 @@
 """Live agent scheduler specialist."""
 
 import json
-import os
 from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage
 
 from ..graph.state import AgentState
 from ..tools.calendar import get_available_slots
-from ..utils.llm_config import get_llm, get_model_invoker
+from ..utils.llm_config import get_model_invoker
 from ..utils.prompts import SCHEDULER_SPECIALIST_PROMPT
 
 
@@ -60,21 +59,13 @@ def scheduler_specialist_node(state: AgentState) -> dict[str, Any]:
         query=query,
     )
 
-    # Get LLM response with LaunchDarkly AI Config
-    use_ld = os.getenv("LAUNCHDARKLY_ENABLED", "false").lower() == "true"
-
-    if use_ld:
-        # Use LaunchDarkly AI Config for this agent
-        model_invoker = get_model_invoker(
-            config_key="scheduler-specialist",
-            context=user_context,
-            default_temperature=0.7,
-        )
-        response = model_invoker.invoke([HumanMessage(content=prompt)])
-    else:
-        # Fallback to default configuration
-        llm = get_llm(temperature=0.7)
-        response = llm.invoke([HumanMessage(content=prompt)])
+    # Get LLM response with LaunchDarkly AI Config (required)
+    model_invoker = get_model_invoker(
+        config_key="scheduler_agent",
+        context=user_context,
+        default_temperature=0.7,
+    )
+    response = model_invoker.invoke([HumanMessage(content=prompt)])
 
     response_text = response.content
 

@@ -17,10 +17,10 @@ The system uses the following AI Config keys in LaunchDarkly:
 
 | Agent | Config Key | Purpose |
 |-------|-----------|---------|
-| Triage Router | `triage-router` | Classifies and routes customer queries |
-| Policy Specialist | `policy-specialist` | Answers policy-related questions |
-| Provider Specialist | `provider-specialist` | Helps find in-network providers |
-| Scheduler Specialist | `scheduler-specialist` | Schedules live agent callbacks |
+| Triage Router | `triage_router` | Classifies and routes customer queries |
+| Policy Specialist | `policy_specialist` | Answers policy-related questions |
+| Provider Specialist | `provider_specialist` | Helps find in-network providers |
+| Scheduler Specialist | `scheduler_specialist` | Schedules live agent callbacks |
 
 ## Setup Instructions
 
@@ -51,7 +51,7 @@ For each agent, create an AI Config in LaunchDarkly:
 
 #### Example: Triage Router Config
 
-**Config Key:** `triage-router`
+**Config Key:** `triage_router`
 
 **Default Configuration (AWS Bedrock):**
 ```json
@@ -70,7 +70,7 @@ For each agent, create an AI Config in LaunchDarkly:
 
 #### Example: Policy Specialist Config
 
-**Config Key:** `policy-specialist`
+**Config Key:** `policy_specialist`
 
 **Default Configuration (AWS Bedrock):**
 ```json
@@ -89,7 +89,7 @@ For each agent, create an AI Config in LaunchDarkly:
 
 #### Example: Provider Specialist Config
 
-**Config Key:** `provider-specialist`
+**Config Key:** `provider_specialist`
 
 **Default Configuration (AWS Bedrock):**
 ```json
@@ -108,7 +108,7 @@ For each agent, create an AI Config in LaunchDarkly:
 
 #### Example: Scheduler Specialist Config
 
-**Config Key:** `scheduler-specialist`
+**Config Key:** `scheduler_specialist`
 
 **Default Configuration (AWS Bedrock):**
 ```json
@@ -302,7 +302,7 @@ If LaunchDarkly is unavailable or disabled:
 ### AI Config Not Found
 
 ```
-⚠️  Error retrieving AI config 'triage-router'
+⚠️  Error retrieving AI config 'triage_router'
 ```
 
 **Solution:** Create the AI Config in LaunchDarkly with the exact key name.
