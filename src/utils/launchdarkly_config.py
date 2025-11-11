@@ -21,27 +21,42 @@ class LaunchDarklyClient:
     """LaunchDarkly client wrapper for AI Configs."""
 
     def __init__(self):
-        """Initialize LaunchDarkly client."""
+        """Initialize LaunchDarkly client.
+        
+        Raises:
+            ValueError: If LaunchDarkly is not enabled or SDK key is missing
+        """
         self.sdk_key = os.getenv("LAUNCHDARKLY_SDK_KEY")
         self.enabled = os.getenv("LAUNCHDARKLY_ENABLED", "false").lower() == "true"
 
-        if self.enabled and self.sdk_key:
-            # Initialize LaunchDarkly SDK
-            ldclient.set_config(Config(self.sdk_key))
-            if ldclient.get().is_initialized():
-                self.client = ldclient.get()
-                self.ai_client = LDAIClient(self.client)
-                print("✅ LaunchDarkly AI Config initialized")
-            else:
-                print("⚠️  LaunchDarkly SDK failed to initialize")
-                self.enabled = False
-                self.client = None
-                self.ai_client = None
-        else:
-            self.client = None
-            self.ai_client = None
-            if not self.enabled:
-                print("ℹ️  LaunchDarkly AI Config disabled (using default LLM config)")
+        if not self.enabled:
+            raise ValueError(
+                "LaunchDarkly is required. Set LAUNCHDARKLY_ENABLED=true in your environment."
+            )
+        
+        if not self.sdk_key:
+            raise ValueError(
+                "LAUNCHDARKLY_SDK_KEY is required. Set it in your environment variables."
+            )
+
+        # Initialize LaunchDarkly SDK (following LaunchDarkly Python SDK pattern)
+        ldclient.set_config(Config(self.sdk_key))
+        
+        # Wait briefly for async initialization (LaunchDarkly SDK initializes asynchronously)
+        import time
+        max_wait = 5  # seconds
+        start_time = time.time()
+        while not ldclient.get().is_initialized():
+            if time.time() - start_time > max_wait:
+                raise RuntimeError(
+                    "LaunchDarkly SDK failed to initialize. Please check your internet connection "
+                    "and SDK credential for any typo."
+                )
+            time.sleep(0.1)
+        
+        self.client = ldclient.get()
+        self.ai_client = LDAIClient(self.client)
+        print("✅ LaunchDarkly AI Config initialized")
 
     def get_ai_config(
         self,
@@ -54,15 +69,16 @@ class LaunchDarklyClient:
         Args:
             config_key: The AI config key in LaunchDarkly
             context: User/session context for targeting
-            default_config: Default configuration if LaunchDarkly is unavailable
+            default_config: Default configuration fallback
 
         Returns:
             Tuple of (config_value, tracker) for the AI config
+            
+        Raises:
+            RuntimeError: If LaunchDarkly client is not initialized
         """
-        if not self.enabled or not self.ai_client:
-            # Return default config with no-op tracker
-            default = default_config or self._get_default_config()
-            return default, NoOpTracker()
+        if not self.ai_client:
+            raise RuntimeError("LaunchDarkly client is not initialized. Check your SDK key.")
 
         # Create LaunchDarkly context
         ld_context = self._create_context(context or {})
@@ -78,14 +94,25 @@ class LaunchDarklyClient:
             config_value, tracker = self.ai_client.config(
                 config_key, ld_context, default_ai_config, {}
             )
+            
+            # Check if we got the config from LaunchDarkly or if it's using the default
+            # The AIConfig has metadata that tells us if it was found
+            config_dict = self._ai_config_to_dict(config_value)
+            
+            # Log whether we're using LD config or default
+            # If the config doesn't exist in LD, it returns the default we provided
+            if hasattr(config_value, '_ldMeta') or hasattr(config_value, '_ld_meta'):
+                print(f"ℹ️  Retrieved AI config '{config_key}' from LaunchDarkly")
+            else:
+                print(f"⚠️  Using default config for '{config_key}' (config may not exist in LaunchDarkly)")
+            
             # Convert AIConfig back to dict for compatibility
-            return self._ai_config_to_dict(config_value), tracker
+            return config_dict, tracker
         except Exception as e:
             print(f"⚠️  Error retrieving AI config '{config_key}': {e}")
             import traceback
             traceback.print_exc()
-            default = default_config or self._get_default_config()
-            return default, NoOpTracker()
+            raise RuntimeError(f"Failed to retrieve AI config '{config_key}' from LaunchDarkly: {e}")
 
     def _create_context(self, context_dict: dict[str, Any]) -> Context:
         """Create LaunchDarkly context from dictionary.
@@ -205,23 +232,34 @@ class LaunchDarklyClient:
 
 
 class NoOpTracker:
-    """No-op tracker for when LaunchDarkly is disabled."""
+    """No-op tracker for when LaunchDarkly is disabled.
+    
+    Matches LaunchDarkly tracker API.
+    """
 
-    def track_success(self, duration: float, tokens: dict[str, int]):
-        """No-op track success."""
+    def track_duration_of(self, func):
+        """Execute function and return result (no tracking)."""
+        return func()
+
+    def track_success(self):
+        """No-op track success (no arguments)."""
         pass
 
-    def track_error(self, error: Exception):
-        """No-op track error."""
+    def track_error(self):
+        """No-op track error (no arguments)."""
         pass
 
-    def track_duration(self, duration: float):
-        """No-op track duration."""
+    def track_tokens(self, token_usage):
+        """No-op track tokens."""
         pass
 
 
 class ModelInvoker:
-    """Helper class to invoke models with tracking."""
+    """Helper class to invoke models with tracking.
+    
+    Follows the LaunchDarkly AI SDK tracking pattern from:
+    https://github.com/launchdarkly/hello-python-ai/blob/main/examples/langchain_example.py
+    """
 
     def __init__(self, model: BaseChatModel, tracker: Any):
         """Initialize model invoker.
@@ -242,26 +280,30 @@ class ModelInvoker:
         Returns:
             Model response
         """
-        start_time = time.time()
-
         try:
-            # Invoke the model
-            response = self.model.invoke(messages)
+            # Use track_duration_of to wrap the model call (LaunchDarkly API)
+            result = self.tracker.track_duration_of(lambda: self.model.invoke(messages))
+            
+            # Track success (no arguments)
+            self.tracker.track_success()
+            
+            # Extract and track token usage if available
+            if hasattr(result, "usage_metadata") and result.usage_metadata:
+                from ldai.tracker import TokenUsage
+                
+                usage_data = result.usage_metadata
+                token_usage = TokenUsage(
+                    input=usage_data.get("input_tokens", 0),
+                    output=usage_data.get("output_tokens", 0),
+                    total=usage_data.get("total_tokens", 0)
+                )
+                self.tracker.track_tokens(token_usage)
+            
+            return result
 
-            # Calculate duration
-            duration = time.time() - start_time
-
-            # Extract token usage if available
-            tokens = self._extract_tokens(response)
-
-            # Track success
-            self.tracker.track_success(duration=duration, tokens=tokens)
-
-            return response
-
-        except Exception as e:
-            # Track error
-            self.tracker.track_error(e)
+        except Exception:
+            # Track error (no arguments)
+            self.tracker.track_error()
             raise
 
     def _extract_tokens(self, response: Any) -> dict[str, int]:

@@ -120,7 +120,11 @@ def get_llm_from_config(
     # Extract model configuration
     model_config = config.get("model", {})
     model_name = model_config.get("name", os.getenv("LLM_MODEL", "gpt-4-turbo-preview"))
-    provider = config.get("provider", os.getenv("LLM_PROVIDER", "openai")).lower()
+    provider_raw = config.get("provider", os.getenv("LLM_PROVIDER", "openai"))
+    
+    # Parse provider - LaunchDarkly returns formats like "Bedrock:Anthropic" or "Bedrock:Nova"
+    # We need to extract just the main provider (the part before the colon)
+    provider = provider_raw.split(':')[0].lower() if ':' in provider_raw else provider_raw.lower()
 
     # Extract parameters
     params = model_config.get("parameters", {})
@@ -159,7 +163,8 @@ def _create_llm_for_provider(
 
     Args:
         provider: Provider name (bedrock, openai, anthropic, etc.)
-        model_name: Model name or Bedrock model ID
+                 Note: LaunchDarkly may return "Bedrock:Anthropic" format, but we parse it to just "bedrock"
+        model_name: Model name or Bedrock model ID (e.g., "us.anthropic.claude-sonnet-4-20250514-v1:0")
         temperature: Sampling temperature
         max_tokens: Maximum tokens to generate
 
@@ -169,7 +174,10 @@ def _create_llm_for_provider(
     Raises:
         ValueError: If provider is not supported
     """
-    if provider == "bedrock":
+    # Normalize provider name - handle formats like "Bedrock:Anthropic" from LaunchDarkly
+    provider_normalized = provider.split(':')[0].lower() if ':' in provider else provider.lower()
+    
+    if provider_normalized == "bedrock":
         from .bedrock_llm import BedrockConverseLLM, get_bedrock_model_id
 
         # Get full Bedrock model ID
@@ -187,7 +195,7 @@ def _create_llm_for_provider(
             profile_name=profile,
         )
 
-    elif provider == "openai":
+    elif provider_normalized == "openai":
         from langchain_openai import ChatOpenAI
 
         api_key = os.getenv("OPENAI_API_KEY")
@@ -201,7 +209,7 @@ def _create_llm_for_provider(
             api_key=api_key,
         )
 
-    elif provider == "anthropic":
+    elif provider_normalized == "anthropic":
         from langchain_anthropic import ChatAnthropic
 
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -216,4 +224,7 @@ def _create_llm_for_provider(
         )
 
     else:
-        raise ValueError(f"Unsupported LLM provider: {provider}")
+        raise ValueError(
+            f"Unsupported LLM provider: {provider} (normalized: {provider_normalized}). "
+            f"Supported providers: bedrock, openai, anthropic"
+        )
