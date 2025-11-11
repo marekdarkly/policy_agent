@@ -214,8 +214,9 @@ docs: ## Show available documentation
 	@echo "$(COLOR_BOLD)$(COLOR_CYAN)📚 Available Documentation$(COLOR_RESET)"
 	@echo "$(COLOR_BOLD)========================$(COLOR_RESET)"
 	@echo ""
-	@echo "$(COLOR_BOLD)Core Guides:$(COLOR_RESET)"
-	@echo "  • README.md                      - Project overview"
+	@echo "$(COLOR_BOLD)Getting Started:$(COLOR_RESET)"
+	@echo "  • QUICKSTART.md                   - 2-minute setup"
+	@echo "  • README.md                       - Project overview"
 	@echo "  • SDD.md                          - System Design Document"
 	@echo ""
 	@echo "$(COLOR_BOLD)LaunchDarkly:$(COLOR_RESET)"
@@ -223,15 +224,63 @@ docs: ## Show available documentation
 	@echo ""
 	@echo "$(COLOR_BOLD)AWS & Bedrock:$(COLOR_RESET)"
 	@echo "  • AWS_BEDROCK.md                  - Bedrock LLM setup"
-	@echo "  • AWS_SSO_SETUP.md                - AWS SSO configuration"
 	@echo ""
 	@echo "$(COLOR_BOLD)RAG (Retrieval-Augmented Generation):$(COLOR_RESET)"
 	@echo "  • BEDROCK_RAG.md                  - Complete RAG guide"
 	@echo "  • RAG_SETUP_GUIDE.md              - Quick start for RAG"
-	@echo "  • RAG_IMPLEMENTATION_SUMMARY.md   - Technical details"
+	@echo "  • bedrock_setup/QUICK_START.md    - Bedrock KB automated setup"
+	@echo "  • bedrock_setup/README_BEDROCK_SETUP.md - Detailed KB setup"
+	@echo "  • data/README.md                  - Dataset documentation"
 	@echo ""
-	@echo "$(COLOR_BOLD)Chatbot:$(COLOR_RESET)"
-	@echo "  • README_CHATBOT.md               - Chatbot usage guide"
+	@echo "$(COLOR_BOLD)Data Available:$(COLOR_RESET)"
+	@echo "  • data/markdown/ - 10 markdown files for Bedrock KB"
+	@echo "  • data/*.json - Structured databases"
+	@echo ""
+
+##@ RAG Setup
+
+setup-rag: ## Setup Bedrock Knowledge Bases with included data
+	@echo "$(COLOR_BOLD)$(COLOR_CYAN)📚 Setting up Bedrock Knowledge Bases...$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)This will:$(COLOR_RESET)"
+	@echo "  1. Create S3 buckets for policy and provider data"
+	@echo "  2. Upload markdown files from data/markdown/"
+	@echo "  3. Save configuration for Bedrock KB creation"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Prerequisites:$(COLOR_RESET)"
+	@echo "  • AWS CLI configured with appropriate permissions"
+	@echo "  • Access to create S3 buckets, IAM roles, and Bedrock KBs"
+	@echo ""
+	@read -p "Continue? (y/N): " confirm; \
+	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
+		chmod +x bedrock_setup/setup_s3_buckets.sh; \
+		./bedrock_setup/setup_s3_buckets.sh; \
+		echo ""; \
+		echo "$(COLOR_GREEN)$(COLOR_BOLD)✅ S3 setup complete!$(COLOR_RESET)"; \
+		echo "$(COLOR_CYAN)Next: Follow bedrock_setup/QUICK_START.md to create Bedrock KBs$(COLOR_RESET)"; \
+	else \
+		echo "$(COLOR_YELLOW)⏭️  Skipped RAG setup$(COLOR_RESET)"; \
+	fi
+
+rag-help: ## Show RAG setup instructions
+	@echo "$(COLOR_BOLD)$(COLOR_CYAN)📚 Bedrock Knowledge Base Setup$(COLOR_RESET)"
+	@echo "$(COLOR_BOLD)==============================$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_BOLD)Quick Setup:$(COLOR_RESET)"
+	@echo "  1. Run: $(COLOR_CYAN)make setup-rag$(COLOR_RESET)          (Creates S3 buckets, uploads data)"
+	@echo "  2. Follow: bedrock_setup/QUICK_START.md  (Create Bedrock KBs in console)"
+	@echo "  3. Add KB IDs to .env"
+	@echo "  4. Run: $(COLOR_CYAN)make verify-rag$(COLOR_RESET)         (Test RAG)"
+	@echo ""
+	@echo "$(COLOR_BOLD)Data Available:$(COLOR_RESET)"
+	@echo "  • data/markdown/ - Markdown files ready for Bedrock KB"
+	@echo "  • data/*.json - Structured JSON for databases"
+	@echo ""
+	@echo "$(COLOR_BOLD)Documentation:$(COLOR_RESET)"
+	@echo "  • bedrock_setup/QUICK_START.md"
+	@echo "  • bedrock_setup/README_BEDROCK_SETUP.md"
+	@echo "  • BEDROCK_RAG.md"
+	@echo "  • RAG_SETUP_GUIDE.md"
 	@echo ""
 
 ##@ Quick Commands
