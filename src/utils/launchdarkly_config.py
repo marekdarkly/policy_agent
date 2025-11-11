@@ -115,43 +115,42 @@ class LaunchDarklyClient:
                 )
                 
                 if has_instructions:
-                    # This is truly an agent-based config
-                    # Extract and convert agent config to standard dict format
-                    # Provider can be a ProviderConfig object with a 'name' attribute
+                    # This is truly an agent-based config (has "Goal or task" field)
+                    # Use agent.to_dict() to get all data including custom parameters
+                    agent_dict = agent.to_dict()
+                    
+                    # Extract provider
                     provider_value = ""
-                    if hasattr(agent, 'provider') and agent.provider:
-                        if hasattr(agent.provider, 'name'):
-                            provider_value = agent.provider.name
-                        elif isinstance(agent.provider, dict):
-                            provider_value = agent.provider.get('name', '')
-                        else:
-                            provider_value = str(agent.provider)
+                    if agent_dict.get("provider"):
+                        provider_dict = agent_dict["provider"]
+                        provider_value = provider_dict.get("name", "") if isinstance(provider_dict, dict) else str(provider_dict)
                     
                     config_dict = {
-                        "enabled": agent.enabled,
+                        "enabled": agent_dict.get("_ldMeta", {}).get("enabled", True),
                         "provider": provider_value,
                     }
                     
-                    # Extract model config if present
-                    if hasattr(agent, 'model') and agent.model:
+                    # Extract model config with custom parameters
+                    if agent_dict.get("model"):
+                        model_dict = agent_dict["model"]
                         config_dict["model"] = {
-                            "name": getattr(agent.model, 'name', ''),
-                            "parameters": getattr(agent.model, 'parameters', {}),
+                            "name": model_dict.get("name", ""),
+                            "parameters": model_dict.get("parameters", {}),
                         }
-                        if hasattr(agent.model, 'custom'):
-                            config_dict["model"]["custom"] = agent.model.custom
+                        # Custom parameters (like awskbid) are available in agent.to_dict()!
+                        if model_dict.get("custom"):
+                            config_dict["model"]["custom"] = model_dict["custom"]
                     
                     # Store instructions separately (not as messages)
-                    config_dict["_instructions"] = agent.instructions
+                    config_dict["_instructions"] = agent_dict.get("instructions", "")
                     
                     tracker = agent.tracker
-                    print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly (agent-based)")
+                    print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly (agent-based with 'Goal or task')")
                     return config_dict, tracker
-                else:
-                    # Has default instructions - fall through to completion-based
-                    print(f"  ℹ️  No agent instructions found, trying completion-based...")
+                # If no instructions, this is a completion-based config, fall through
         except Exception as e:
-            print(f"  ℹ️  Agent-based config not found, trying completion-based...")
+            # Agent-based retrieval failed, will try completion-based
+            pass
 
         # Fall back to completion-based config (using .config() method)
         try:
