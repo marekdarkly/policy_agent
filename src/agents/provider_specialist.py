@@ -6,7 +6,7 @@ from typing import Any
 from langchain_core.messages import AIMessage, HumanMessage
 
 from ..graph.state import AgentState
-from ..tools.provider_db import search_providers
+# Note: Using RAG (Bedrock KB) only - no structured database queries
 from ..tools.bedrock_rag import retrieve_provider_documents
 from ..utils.llm_config import get_model_invoker
 from ..utils.prompts import PROVIDER_SPECIALIST_PROMPT
@@ -64,44 +64,34 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
     print(f"🔍 PROVIDER SPECIALIST: Searching for providers")
     print(f"{'─'*80}")
     
-    # Try RAG retrieval first
+    # Get LaunchDarkly config to extract KB ID from custom parameters
+    from ..utils.launchdarkly_config import get_ld_client
+    ld_client = get_ld_client()
+    ld_config, _ = ld_client.get_ai_config("provider_agent", user_context)
+    
+    # Retrieve from Bedrock Knowledge Base via RAG (ONLY source)
     rag_documents = retrieve_provider_documents(
         query,
         specialty=specialty,
         location=location,
-        network=network if network != "Unknown" else None
-    )
-    
-    # Also search structured provider database
-    providers = search_providers(
-        specialty=specialty,
-        location=location,
         network=network if network != "Unknown" else None,
-        accepting_new_patients=True,
+        ld_config=ld_config
     )
 
-    # Format provider information
-    if providers:
-        provider_info_str = json.dumps(providers, indent=2)
-        print(f"  📋 Found {len(providers)} providers in structured database")
-    else:
-        provider_info_str = "No providers found matching the criteria."
-        print(f"  ⚠️  No providers found in structured database")
-    
-    # Format RAG documents if available
-    rag_context = ""
+    # Format RAG documents from Bedrock Knowledge Base
     if rag_documents:
-        print(f"  📄 Retrieved {len(rag_documents)} relevant provider documents via RAG")
-        rag_context = "\n\n=== RELEVANT PROVIDER NETWORK INFORMATION ===\n"
+        print(f"  📄 Retrieved {len(rag_documents)} provider documents from Bedrock KB")
+        provider_info_str = "\n\n=== PROVIDER NETWORK INFORMATION (from Bedrock Knowledge Base) ===\n"
         for i, doc in enumerate(rag_documents, 1):
             score = doc.get("score", 0.0)
             content = doc.get("content", "")
             print(f"    Doc {i}: Score {score:.3f}, Length {len(content)} chars")
-            rag_context += f"\n[Document {i} - Relevance: {score:.2f}]\n{content}\n"
+            provider_info_str += f"\n[Document {i} - Relevance: {score:.2f}]\n{content}\n"
     else:
-        print(f"  ℹ️  No RAG documents retrieved, using database only")
+        print(f"  ⚠️  No provider documents retrieved from Bedrock KB")
+        provider_info_str = "No providers found matching the criteria in the knowledge base."
 
-    # Enhanced prompt with RAG context
+    # Enhanced prompt with RAG context from Bedrock Knowledge Base
     enhanced_prompt = PROVIDER_SPECIALIST_PROMPT.format(
         policy_id=policy_id or "Not provided",
         network=network,
@@ -110,10 +100,6 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
         provider_info=provider_info_str,
         query=query,
     )
-    
-    # Add RAG context if available
-    if rag_context:
-        enhanced_prompt = f"{rag_context}\n\n{enhanced_prompt}"
     
     prompt = enhanced_prompt
 
@@ -135,7 +121,7 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
         "agent_data": {
             **state.get("agent_data", {}),
             "provider_specialist": {
-                "providers_found": providers,
+                "source": "bedrock_kb_only",
                 "rag_documents_retrieved": len(rag_documents),
                 "rag_enabled": len(rag_documents) > 0,
                 "search_params": {

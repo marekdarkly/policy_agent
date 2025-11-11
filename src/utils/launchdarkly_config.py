@@ -95,21 +95,32 @@ class LaunchDarklyClient:
                 config_key, ld_context, default_ai_config, {}
             )
             
-            # Check if we got the config from LaunchDarkly or if it's using the default
-            # The AIConfig has metadata that tells us if it was found
+            # Convert AIConfig to dict
             config_dict = self._ai_config_to_dict(config_value)
             
-            # Log whether we're using LD config or default
-            # If the config doesn't exist in LD, it returns the default we provided
-            if hasattr(config_value, '_ldMeta') or hasattr(config_value, '_ld_meta'):
-                print(f"ℹ️  Retrieved AI config '{config_key}' from LaunchDarkly")
-            else:
-                print(f"⚠️  Using default config for '{config_key}' (config may not exist in LaunchDarkly)")
+            # Check if config came from LaunchDarkly by comparing to default
+            # If it's different from default, it must have come from LD
+            default_dict = self._ai_config_to_dict(default_ai_config)
             
-            # Convert AIConfig back to dict for compatibility
+            # Compare key attributes to detect if it's actually from LD
+            is_from_ld = (
+                config_dict.get("model", {}).get("name") != default_dict.get("model", {}).get("name") or
+                config_dict.get("provider") != default_dict.get("provider") or
+                "custom" in config_dict.get("model", {})  # Custom params = definitely from LD
+            )
+            
+            if is_from_ld:
+                print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly")
+            else:
+                # If truly using default, this should be CATASTROPHIC
+                error_msg = f"CATASTROPHIC: AI config '{config_key}' not found in LaunchDarkly! Ensure the config exists in your LD dashboard."
+                print(f"❌ {error_msg}")
+                raise RuntimeError(error_msg)
+            
             return config_dict, tracker
+            
         except Exception as e:
-            print(f"⚠️  Error retrieving AI config '{config_key}': {e}")
+            print(f"❌ CATASTROPHIC: Error retrieving AI config '{config_key}': {e}")
             import traceback
             traceback.print_exc()
             raise RuntimeError(f"Failed to retrieve AI config '{config_key}' from LaunchDarkly: {e}")
@@ -218,6 +229,10 @@ class LaunchDarklyClient:
                 "name": model_dict.get("name", ""),
                 "parameters": model_dict.get("parameters", {}),
             }
+            
+            # Extract custom parameters from model.custom
+            if model_dict.get("custom"):
+                result["model"]["custom"] = model_dict["custom"]
 
         if config_dict.get("provider"):
             provider_dict = config_dict["provider"]
