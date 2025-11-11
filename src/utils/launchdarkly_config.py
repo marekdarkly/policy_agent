@@ -91,35 +91,44 @@ class LaunchDarklyClient:
 
         # Try agent-based config first (using .agents() method)
         try:
-            result = self.ai_client.agents([config_key], ld_context, {})
-            agents = result.get("agents", {})
+            from ldai.client import LDAIAgentConfig, LDAIAgentDefaults
             
-            if config_key in agents and agents[config_key].get("enabled"):
+            # Create agent config with defaults
+            agent_config = LDAIAgentConfig(
+                key=config_key,
+                default_value=LDAIAgentDefaults(
+                    enabled=True,
+                    instructions="Default instructions"
+                )
+            )
+            
+            agents = self.ai_client.agents([agent_config], ld_context)
+            
+            if config_key in agents and agents[config_key].enabled:
                 agent = agents[config_key]
                 
                 # Extract and convert agent config to standard dict format
                 config_dict = {
-                    "enabled": agent.get("enabled", True),
-                    "provider": agent.get("provider", {}).get("name", "") if isinstance(agent.get("provider"), dict) else str(agent.get("provider", "")),
+                    "enabled": agent.enabled,
+                    "provider": "",
                 }
                 
-                # Extract model config
-                if agent.get("model"):
-                    model = agent["model"]
+                # Extract model config if present
+                if hasattr(agent, 'model') and agent.model:
                     config_dict["model"] = {
-                        "name": model.get("name", ""),
-                        "parameters": model.get("parameters", {}),
+                        "name": getattr(agent.model, 'name', ''),
+                        "parameters": getattr(agent.model, 'parameters', {}),
                     }
-                    if model.get("custom"):
-                        config_dict["model"]["custom"] = model["custom"]
+                    if hasattr(agent.model, 'custom'):
+                        config_dict["model"]["custom"] = agent.model.custom
                 
                 # Convert instructions to messages format for consistency
-                if agent.get("instructions"):
+                if hasattr(agent, 'instructions') and agent.instructions:
                     config_dict["messages"] = [
-                        {"role": "system", "content": agent["instructions"]}
+                        {"role": "system", "content": agent.instructions}
                     ]
                 
-                tracker = agent.get("tracker")
+                tracker = agent.tracker
                 print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly (agent-based)")
                 return config_dict, tracker
         except Exception as e:
