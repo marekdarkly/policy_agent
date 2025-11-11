@@ -153,8 +153,26 @@ def get_model_invoker(
         Tuple of (ModelInvoker instance with tracking, full config dict including messages)
     """
     ld_client = get_ld_client()
+    # Get config once from LaunchDarkly
     config, tracker = ld_client.get_ai_config(config_key, context)
-    llm, _ = get_llm_from_config(config_key, context, default_temperature)
+    
+    # Create LLM directly from the config (don't call get_llm_from_config which would retrieve again)
+    provider = config.get("provider", "bedrock")
+    # Parse provider name (e.g., "Bedrock:Anthropic" -> "bedrock")
+    if ":" in provider:
+        provider = provider.split(":")[0]
+    provider = provider.lower().strip()
+    
+    model_config = config.get("model", {})
+    model_name = model_config.get("name", "claude-3-5-sonnet")
+    
+    # Get temperature from config or use default
+    parameters = model_config.get("parameters", {})
+    temperature = parameters.get("temperature", default_temperature)
+    max_tokens = parameters.get("max_tokens") or parameters.get("maxTokens", 2000)
+    
+    llm = _create_llm_for_provider(provider, model_name, temperature, max_tokens)
+    
     return ModelInvoker(llm, tracker), config
 
 
