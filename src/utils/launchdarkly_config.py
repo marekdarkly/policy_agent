@@ -223,9 +223,17 @@ class LaunchDarklyClient:
             "enabled": config_dict.get("_ldMeta", {}).get("enabled", True),
         }
         
-        # Extract messages (prompts) from LaunchDarkly AI Config
+        # Extract prompts from LaunchDarkly AI Config
+        # Support both prompt-based (messages array) and agent-based (_prompt field)
         if config_dict.get("messages"):
+            # Prompt-based AI Config: uses messages array with roles
             result["messages"] = config_dict["messages"]
+        elif config_dict.get("_prompt"):
+            # Agent-based AI Config: uses _prompt field (Goal or task in UI)
+            # Convert to messages format for consistency
+            result["messages"] = [
+                {"role": "system", "content": config_dict["_prompt"]}
+            ]
 
         if config_dict.get("model"):
             model_dict = config_dict["model"]
