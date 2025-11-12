@@ -176,8 +176,8 @@ def create_default_context():
     profile = create_user_profile(
         name="Marek Poliks",
         location="San Francisco, CA",
-        policy_id="POL-12345",
-        coverage_type="Gold Plan"
+        policy_id="TH-HMO-GOLD-2024",
+        coverage_type="Gold HMO"
     )
     
     # Update session ID to be current
