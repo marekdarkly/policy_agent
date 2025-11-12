@@ -14,6 +14,11 @@ interface AgentStep {
   confidence?: number;
   rag_docs?: number;
   icon: string;
+  duration?: number;
+  tokens?: {
+    input: number;
+    output: number;
+  };
 }
 
 interface ChatResponse {
@@ -25,6 +30,15 @@ interface ChatResponse {
     confidence: number;
     agent_count: number;
     rag_enabled: boolean;
+    accuracy_score?: number;
+    accuracy_reasoning?: string;
+    accuracy_issues?: string[];
+    coherence_score?: number;
+    coherence_reasoning?: string;
+    coherence_issues?: string[];
+    judge_model_name?: string;
+    judge_input_tokens?: number;
+    judge_output_tokens?: number;
   };
   error?: string;
 }
@@ -43,6 +57,7 @@ function App() {
   const [lastMetrics, setLastMetrics] = useState<ChatResponse['metrics'] | null>(null);
   const [lastAgentFlow, setLastAgentFlow] = useState<AgentStep[]>([]);
   const [showMetrics, setShowMetrics] = useState(false);
+  const [showEvalReasoning, setShowEvalReasoning] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContentRef = useRef<HTMLDivElement>(null);
 
@@ -285,7 +300,7 @@ function App() {
       <header className="chat-header">
         <div className="header-content">
           <div className="header-text">
-            <h2 className="chat-title">AI Assistant</h2>
+            <h2 className="chat-title">Coverage Concierge</h2>
             <p className="header-subtitle">
               Powered by <span className="provider-badge">Amazon Bedrock</span>
             </p>
@@ -364,42 +379,130 @@ function App() {
             </button>
             {showMetrics && (
               <div className="metrics-content">
-                <div className="metric-row">
-                  <span className="metric-label">Query Type:</span>
-                  <span className="metric-value">{lastMetrics.query_type}</span>
-                </div>
-                <div className="metric-row">
-                  <span className="metric-label">Confidence:</span>
-                  <span className="metric-value">
-                    {(lastMetrics.confidence * 100).toFixed(1)}%
-                  </span>
-                </div>
-                <div className="metric-row">
-                  <span className="metric-label">Agents Used:</span>
-                  <span className="metric-value">{lastMetrics.agent_count}</span>
-                </div>
-                {lastMetrics.rag_enabled && (
+                {/* Overall Metrics */}
+                <div className="metrics-section">
+                  <h4 className="metrics-section-title">Overall</h4>
                   <div className="metric-row">
-                    <span className="metric-label">RAG Enabled:</span>
-                    <span className="metric-value">✅ Yes</span>
+                    <span className="metric-label">Query Type:</span>
+                    <span className="metric-value">{lastMetrics.query_type}</span>
                   </div>
-                )}
-                
-                {/* Agent Flow */}
-                <div className="agent-flow">
-                  <p className="agent-flow-title">Agent Flow:</p>
-                  <div className="agent-badges">
-                    {lastAgentFlow.map((agent, idx) => (
-                      <div key={idx} className="agent-badge">
+                  <div className="metric-row">
+                    <span className="metric-label">Confidence:</span>
+                    <span className={`metric-value ${lastMetrics.confidence >= 0.7 ? 'metric-good' : 'metric-warning'}`}>
+                      {(lastMetrics.confidence * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  {lastMetrics.accuracy_score !== undefined && (
+                    <div className="metric-row">
+                      <span className="metric-label">Accuracy:</span>
+                      <span className={`metric-value ${lastMetrics.accuracy_score >= 0.8 ? 'metric-good' : 'metric-bad'}`}>
+                        {(lastMetrics.accuracy_score * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                  )}
+                  {lastMetrics.coherence_score !== undefined && (
+                    <div className="metric-row">
+                      <span className="metric-label">Coherence:</span>
+                      <span className={`metric-value ${lastMetrics.coherence_score >= 0.7 ? 'metric-good' : 'metric-bad'}`}>
+                        {(lastMetrics.coherence_score * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Per-Agent Metrics */}
+                <div className="metrics-section">
+                  <h4 className="metrics-section-title">Per-Agent Performance</h4>
+                  {lastAgentFlow.map((agent, idx) => (
+                    <div key={idx} className="agent-metric-card">
+                      <div className="agent-metric-header">
                         <span className="agent-icon">{agent.icon}</span>
                         <span className="agent-name">{agent.name}</span>
+                      </div>
+                      <div className="agent-metric-details">
+                        {agent.confidence !== undefined && (
+                          <div className="agent-metric-item">
+                            <span>Confidence:</span>
+                            <span className={agent.confidence >= 0.7 ? 'metric-good' : 'metric-warning'}>
+                              {(agent.confidence * 100).toFixed(1)}%
+                            </span>
+                          </div>
+                        )}
                         {agent.rag_docs !== undefined && (
-                          <span className="agent-docs">({agent.rag_docs} docs)</span>
+                          <div className="agent-metric-item">
+                            <span>RAG Documents:</span>
+                            <span>{agent.rag_docs}</span>
+                          </div>
+                        )}
+                        {agent.duration && (
+                          <div className="agent-metric-item">
+                            <span>Duration:</span>
+                            <span>{agent.duration}ms</span>
+                          </div>
+                        )}
+                        {agent.tokens && (
+                          <div className="agent-metric-item">
+                            <span>Tokens:</span>
+                            <span>{agent.tokens.input}/{agent.tokens.output}</span>
+                          </div>
                         )}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
+
+                {/* Evaluation Reasoning (collapsible) */}
+                {(lastMetrics.accuracy_reasoning || lastMetrics.coherence_reasoning) && (
+                  <div className="metrics-section">
+                    <button
+                      className="metrics-subsection-toggle"
+                      onClick={() => setShowEvalReasoning(!showEvalReasoning)}
+                    >
+                      {showEvalReasoning ? '▼' : '▶'} Evaluation Reasoning
+                    </button>
+                    {showEvalReasoning && (
+                      <div className="eval-reasoning-content">
+                        {lastMetrics.accuracy_reasoning && (
+                          <div className="eval-reasoning-item">
+                            <h5>Accuracy</h5>
+                            <p>{lastMetrics.accuracy_reasoning}</p>
+                            {lastMetrics.accuracy_issues && lastMetrics.accuracy_issues.length > 0 && (
+                              <div className="eval-issues">
+                                <strong>Issues:</strong>
+                                <ul>
+                                  {lastMetrics.accuracy_issues.map((issue: string, idx: number) => (
+                                    <li key={idx}>{issue}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {lastMetrics.coherence_reasoning && (
+                          <div className="eval-reasoning-item">
+                            <h5>Coherence</h5>
+                            <p>{lastMetrics.coherence_reasoning}</p>
+                            {lastMetrics.coherence_issues && lastMetrics.coherence_issues.length > 0 && (
+                              <div className="eval-issues">
+                                <strong>Issues:</strong>
+                                <ul>
+                                  {lastMetrics.coherence_issues.map((issue: string, idx: number) => (
+                                    <li key={idx}>{issue}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {lastMetrics.judge_model_name && (
+                          <div className="judge-info">
+                            <small>Judge Model: {lastMetrics.judge_model_name} | Tokens: {lastMetrics.judge_input_tokens}/{lastMetrics.judge_output_tokens}</small>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
