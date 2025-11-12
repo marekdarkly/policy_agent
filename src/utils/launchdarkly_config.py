@@ -558,6 +558,24 @@ class ModelInvoker:
                 )
                 self.tracker.track_tokens(token_usage)
             
+            # Extract and track Time to First Token (TTFT) if available
+            ttft_ms = None
+            if hasattr(result, "response_metadata") and isinstance(result.response_metadata, dict):
+                ttft_ms = result.response_metadata.get("ttft_ms")
+            elif hasattr(result, "generations") and len(result.generations) > 0:
+                gen = result.generations[0]
+                if hasattr(gen, "message") and hasattr(gen.message, "response_metadata"):
+                    ttft_ms = gen.message.response_metadata.get("ttft_ms")
+            
+            # Track TTFT in LaunchDarkly if available
+            if ttft_ms is not None:
+                try:
+                    self.tracker.track_time_to_first_token(ttft_ms)
+                except Exception as e:
+                    # Don't fail if TTFT tracking fails
+                    import logging
+                    logging.debug(f"Failed to track TTFT: {e}")
+            
             return result
 
         except Exception as e:
