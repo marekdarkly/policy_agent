@@ -94,8 +94,12 @@ function App() {
 
     setMessages((prev) => [...prev, userMessage, loadingMessage]);
 
-    // Simulate agent progression
-    setTimeout(() => setCurrentAgent('🔍 Analyzing your question...'), 500);
+    // Start progressive agent status updates
+    setCurrentAgent('🔍 Analyzing your question...');
+    
+    // Set up estimated timing for status updates (will update with actual timing when response arrives)
+    const triageTimer = setTimeout(() => setCurrentAgent('📋 Checking policy details...'), 800);
+    const specialistTimer = setTimeout(() => setCurrentAgent('✨ Writing up my thoughts...'), 2500);
 
     try {
       const response = await fetch('http://localhost:8000/api/chat', {
@@ -108,23 +112,30 @@ function App() {
         }),
       });
 
+      // Clear the estimated timers
+      clearTimeout(triageTimer);
+      clearTimeout(specialistTimer);
+
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
       }
 
       const data: ChatResponse = await response.json();
 
-      // Simulate specialist agent
+      // Now use actual agent flow to show final status updates
       if (data.agentFlow.length > 1) {
-        const specialist = data.agentFlow[1];
-        setCurrentAgent(`${specialist.icon} Reaching out to ${specialist.name}...`);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const specialist = data.agentFlow.find(a => a.agent.includes('specialist'));
+        if (specialist) {
+          setCurrentAgent(`${specialist.icon} Finalizing with ${specialist.name}...`);
+          await new Promise((resolve) => setTimeout(resolve, 400));
+        }
       }
 
-      // Simulate brand voice
-      if (data.agentFlow.some((a) => a.agent === 'brand_voice')) {
-        setCurrentAgent('✨ Putting an answer together...');
-        await new Promise((resolve) => setTimeout(resolve, 800));
+      // Show brand voice status if present
+      const brandVoice = data.agentFlow.find((a) => a.agent === 'brand_voice');
+      if (brandVoice) {
+        setCurrentAgent('✨ Polishing the response...');
+        await new Promise((resolve) => setTimeout(resolve, 300));
       }
 
       // Clear agent status
