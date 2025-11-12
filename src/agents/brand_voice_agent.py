@@ -60,13 +60,19 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
 
     response = model_invoker.invoke(langchain_messages)
 
-    # Extract token usage if available
+    # Extract token usage and TTFT if available
     tokens = {"input": 0, "output": 0}
+    ttft_ms = None
+    
     if hasattr(response, "usage_metadata") and response.usage_metadata:
         tokens = {
             "input": response.usage_metadata.get("input_tokens", 0),
             "output": response.usage_metadata.get("output_tokens", 0)
         }
+    
+    # Extract Time to First Token (TTFT) from response metadata
+    if hasattr(response, "response_metadata") and isinstance(response.response_metadata, dict):
+        ttft_ms = response.response_metadata.get("ttft_ms")
 
     # Store the brand-voiced response
     final_response = response.content
@@ -89,6 +95,12 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         # Get request_id and results_store from state for evaluation tracking
         request_id = state.get("request_id")
         results_store = state.get("evaluation_results_store")
+        
+        # Store the brand voice tracker for feedback tracking (if request_id available)
+        trackers_store = state.get("brand_trackers_store")
+        if request_id and trackers_store is not None:
+            trackers_store[request_id] = model_invoker.tracker
+            print(f"✅ Stored brand voice tracker for request {request_id[:8]}...")
         
         # Handle both sync and async contexts
         try:
@@ -138,6 +150,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         "final_customer_response": final_response[:500] + "..." if len(final_response) > 500 else final_response,
         "brand_voice_applied": True,
         "tokens": tokens,
+        "ttft_ms": ttft_ms,  # Time to first token from Bedrock streaming
         "personalization": {
             "customer_name": customer_name,
             "query_type": str(query_type),

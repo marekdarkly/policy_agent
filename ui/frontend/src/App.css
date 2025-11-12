@@ -18,6 +18,12 @@ body {
   overflow-x: hidden;
 }
 
+/* ====== TERMINAL OFFSET ====== */
+.terminal-offset {
+  margin-left: 400px;
+  transition: margin-left 0.3s ease;
+}
+
 /* ====== HOMEPAGE BACKGROUND ====== */
 .homepage-background {
   position: fixed;
@@ -423,8 +429,19 @@ body {
   transition: background-color 0.2s ease;
 }
 
-.feedback-btn:hover {
+.feedback-btn:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.3);
+}
+
+.feedback-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.feedback-btn.active {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 /* Chat Content */

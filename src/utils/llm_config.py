@@ -114,8 +114,8 @@ def get_llm_from_config(
     """
     ld_client = get_ld_client()
 
-    # Get AI config from LaunchDarkly
-    config, tracker = ld_client.get_ai_config(config_key, context)
+    # Get AI config from LaunchDarkly (context returned but not used here)
+    config, tracker, _ = ld_client.get_ai_config(config_key, context)
 
     # Extract model configuration
     model_config = config.get("model", {})
@@ -141,6 +141,7 @@ def get_model_invoker(
     config_key: str,
     context: Optional[dict[str, Any]] = None,
     default_temperature: float = 0.7,
+    skip_span_annotation: bool = False,
 ) -> Tuple[ModelInvoker, dict[str, Any]]:
     """Get a ModelInvoker with tracking and full config (including messages) from LaunchDarkly.
 
@@ -148,13 +149,14 @@ def get_model_invoker(
         config_key: The AI config key in LaunchDarkly
         context: User/session context for targeting
         default_temperature: Default temperature if not specified in config
+        skip_span_annotation: If True, skip all span annotation (for background threads like judges)
 
     Returns:
         Tuple of (ModelInvoker instance with tracking, full config dict including messages)
     """
     ld_client = get_ld_client()
-    # Get config once from LaunchDarkly
-    config, tracker = ld_client.get_ai_config(config_key, context)
+    # Get config once from LaunchDarkly (now returns context too)
+    config, tracker, ld_context = ld_client.get_ai_config(config_key, context)
     
     # Create LLM directly from the config (don't call get_llm_from_config which would retrieve again)
     provider = config.get("provider", "bedrock")
@@ -173,7 +175,18 @@ def get_model_invoker(
     
     llm = _create_llm_for_provider(provider, model_name, temperature, max_tokens)
     
-    return ModelInvoker(llm, tracker), config
+    # Determine if this is an agent-based config (has _instructions vs messages)
+    is_agent_config = "_instructions" in config or config.get("_enabled", False)
+    
+    # Pass ld_context to ModelInvoker for ld.variation() correlation
+    return ModelInvoker(
+        llm,
+        tracker,
+        config_key=config_key,
+        is_agent_config=is_agent_config,
+        user_context=ld_context,
+        skip_span_annotation=skip_span_annotation
+    ), config
 
 
 def _create_llm_for_provider(

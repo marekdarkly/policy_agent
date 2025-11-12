@@ -71,35 +71,53 @@ class BrandVoiceEvaluator:
                 user_context
             )
             
-            accuracy_result, coherence_result = await asyncio.gather(
+            results = await asyncio.gather(
                 accuracy_task,
                 coherence_task,
                 return_exceptions=True
             )
             
-            # Handle any exceptions
-            if isinstance(accuracy_result, Exception):
-                print(f"⚠️  Accuracy evaluation failed: {accuracy_result}")
-                accuracy_result = {"score": 0.0, "passed": False, "reason": str(accuracy_result)}
+            # Unpack results
+            accuracy_data = results[0]
+            coherence_data = results[1]
             
-            if isinstance(coherence_result, Exception):
-                print(f"⚠️  Coherence evaluation failed: {coherence_result}")
-                coherence_result = {"score": 0.0, "passed": False, "reason": str(coherence_result)}
+            # Handle any exceptions and extract data
+            if isinstance(accuracy_data, Exception):
+                print(f"⚠️  Accuracy evaluation failed: {accuracy_data}")
+                accuracy_result = {"score": 0.0, "passed": False, "reason": str(accuracy_data)}
+                accuracy_model = "unknown"
+                accuracy_tokens = {"input": 0, "output": 0}
+            else:
+                accuracy_result, accuracy_model, accuracy_tokens = accuracy_data
+            
+            if isinstance(coherence_data, Exception):
+                print(f"⚠️  Coherence evaluation failed: {coherence_data}")
+                coherence_result = {"score": 0.0, "passed": False, "reason": str(coherence_data)}
+                coherence_model = "unknown"
+                coherence_tokens = {"input": 0, "output": 0}
+            else:
+                coherence_result, coherence_model, coherence_tokens = coherence_data
             
             # Send judgment metrics to LaunchDarkly using brand_tracker
             self._send_judgment_to_ld(brand_tracker, accuracy_result, coherence_result)
             
             print(f"✅ Evaluation completed: Accuracy={accuracy_result['score']:.2f}, Coherence={coherence_result['score']:.2f}")
             
+            # Calculate total tokens from both judges
+            total_input_tokens = accuracy_tokens["input"] + coherence_tokens["input"]
+            total_output_tokens = accuracy_tokens["output"] + coherence_tokens["output"]
+            
+            # Use accuracy model as primary (they should be the same)
+            judge_model_name = accuracy_model if accuracy_model != "unknown" else coherence_model
+            
             # Return flattened structure that matches frontend expectations
             return {
                 "accuracy": accuracy_result,
                 "coherence": coherence_result,
                 "overall_passed": accuracy_result["passed"] and coherence_result["passed"],
-                # Add judge model info (TODO: track actual model used)
-                "judge_model_name": "claude-3-5-sonnet-20241022",  
-                "judge_input_tokens": 0,  # TODO: track from judge LLM calls
-                "judge_output_tokens": 0,  # TODO: track from judge LLM calls
+                "judge_model_name": judge_model_name,
+                "judge_input_tokens": total_input_tokens,
+                "judge_output_tokens": total_output_tokens,
             }
             
         except Exception as e:
@@ -116,19 +134,27 @@ class BrandVoiceEvaluator:
         rag_documents: List[Dict[str, Any]],
         brand_voice_output: str,
         user_context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    ) -> tuple[Dict[str, Any], str, Dict[str, int]]:
         """
         Evaluate global system accuracy: Is the final output factually accurate against RAG documents?
         
         This evaluates the ENTIRE system (specialist + brand voice) against the source of truth (RAG docs).
         Uses G-Eval methodology with evaluation steps from LaunchDarkly.
+        
+        Returns:
+            Tuple of (result_dict, model_name, tokens_dict)
         """
         # Get the judge LLM and config (with prompts from LaunchDarkly)
+        # Skip span annotation for judges since they run in background threads
         model_invoker, judge_config = get_model_invoker(
             config_key="ai-judge-accuracy",
             context=user_context,
-            default_temperature=0.0  # Deterministic for evaluation
+            default_temperature=0.0,  # Deterministic for evaluation
+            skip_span_annotation=True  # Background thread - don't try to annotate closed request spans
         )
+        
+        # Extract model name from config
+        model_name = judge_config.get("model", {}).get("name", "unknown") if isinstance(judge_config, dict) else "unknown"
         
         # Format RAG documents as context
         rag_context = self._format_rag_context(rag_documents)
@@ -147,25 +173,42 @@ class BrandVoiceEvaluator:
         # Run evaluation
         response = model_invoker.invoke(langchain_messages)
         
+        # Extract tokens from response
+        tokens = {"input": 0, "output": 0}
+        if hasattr(response, "usage_metadata") and response.usage_metadata:
+            tokens = {
+                "input": response.usage_metadata.get("input_tokens", 0),
+                "output": response.usage_metadata.get("output_tokens", 0)
+            }
+        
         # Parse result
-        return self._parse_eval_response(response.content, threshold=0.8)
+        result = self._parse_eval_response(response.content, threshold=0.8)
+        return result, model_name, tokens
     
     async def _evaluate_coherence(
         self,
         brand_voice_output: str,
         user_context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    ) -> tuple[Dict[str, Any], str, Dict[str, int]]:
         """
         Evaluate coherence: Is the output clear, well-structured, professional?
         
         Uses G-Eval methodology with evaluation steps from LaunchDarkly.
+        
+        Returns:
+            Tuple of (result_dict, model_name, tokens_dict)
         """
         # Get the judge LLM and config (with prompts from LaunchDarkly)
+        # Skip span annotation for judges since they run in background threads
         model_invoker, judge_config = get_model_invoker(
             config_key="ai-judge-coherence",
             context=user_context,
-            default_temperature=0.0
+            default_temperature=0.0,
+            skip_span_annotation=True  # Background thread - don't try to annotate closed request spans
         )
+        
+        # Extract model name from config
+        model_name = judge_config.get("model", {}).get("name", "unknown") if isinstance(judge_config, dict) else "unknown"
         
         # Build messages from LaunchDarkly config with coherence evaluation context
         context_vars = {
@@ -179,8 +222,17 @@ class BrandVoiceEvaluator:
         # Run evaluation
         response = model_invoker.invoke(langchain_messages)
         
+        # Extract tokens from response
+        tokens = {"input": 0, "output": 0}
+        if hasattr(response, "usage_metadata") and response.usage_metadata:
+            tokens = {
+                "input": response.usage_metadata.get("input_tokens", 0),
+                "output": response.usage_metadata.get("output_tokens", 0)
+            }
+        
         # Parse result
-        return self._parse_eval_response(response.content, threshold=0.7)
+        result = self._parse_eval_response(response.content, threshold=0.7)
+        return result, model_name, tokens
     
     
     def _format_rag_context(self, rag_documents: List[Dict[str, Any]]) -> str:

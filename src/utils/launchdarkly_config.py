@@ -39,8 +39,9 @@ class LaunchDarklyClient:
                 "LAUNCHDARKLY_SDK_KEY is required. Set it in your environment variables."
             )
 
-        # Initialize LaunchDarkly SDK (following LaunchDarkly Python SDK pattern)
-        ldclient.set_config(Config(self.sdk_key))
+        # DON'T call ldclient.set_config() here - observability.py already initialized it!
+        # Calling set_config() again would overwrite the ObservabilityPlugin.
+        # Just get the existing client that was initialized with the plugin.
         
         # Wait briefly for async initialization (LaunchDarkly SDK initializes asynchronously)
         import time
@@ -54,16 +55,17 @@ class LaunchDarklyClient:
                 )
             time.sleep(0.1)
         
+        # Use the already-initialized client (with ObservabilityPlugin from observability.py)
         self.client = ldclient.get()
         self.ai_client = LDAIClient(self.client)
-        print("✅ LaunchDarkly AI Config initialized")
+        print("✅ LaunchDarkly AI Config client ready (using observability-enabled SDK)")
 
     def get_ai_config(
         self,
         config_key: str,
         context: Optional[dict[str, Any]] = None,
         default_config: Optional[dict[str, Any]] = None,
-    ) -> tuple[dict[str, Any], Any]:
+    ) -> tuple[dict[str, Any], Any, Context]:
         """Retrieve AI configuration from LaunchDarkly.
 
         Args:
@@ -72,7 +74,7 @@ class LaunchDarklyClient:
             default_config: Default configuration fallback
 
         Returns:
-            Tuple of (config_value, tracker) for the AI config
+            Tuple of (config_value, tracker, ld_context) for the AI config
             
         Raises:
             RuntimeError: If LaunchDarkly client is not initialized
@@ -146,7 +148,7 @@ class LaunchDarklyClient:
                     
                     tracker = agent.tracker
                     print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly (agent-based with 'Goal or task')")
-                    return config_dict, tracker
+                    return config_dict, tracker, ld_context
                 # If no instructions, this is a completion-based config, fall through
         except Exception as e:
             # Agent-based retrieval failed, will try completion-based
@@ -178,7 +180,7 @@ class LaunchDarklyClient:
                 print(f"❌ {error_msg}")
                 raise RuntimeError(error_msg)
             
-            return config_dict, tracker
+            return config_dict, tracker, ld_context
             
         except Exception as e:
             print(f"❌ CATASTROPHIC: Error retrieving AI config '{config_key}': {e}")
@@ -450,15 +452,31 @@ class ModelInvoker:
     https://github.com/launchdarkly/hello-python-ai/blob/main/examples/langchain_example.py
     """
 
-    def __init__(self, model: BaseChatModel, tracker: Any):
+    def __init__(
+        self,
+        model: BaseChatModel,
+        tracker: Any,
+        config_key: str = "",
+        is_agent_config: bool = False,
+        user_context: Optional[Context] = None,
+        skip_span_annotation: bool = False
+    ):
         """Initialize model invoker.
 
         Args:
             model: The LangChain model to invoke
             tracker: LaunchDarkly tracker for metrics
+            config_key: The AI Config key (for observability linking)
+            is_agent_config: Whether this is an agent-based config
+            user_context: LaunchDarkly user context (for span annotation)
+            skip_span_annotation: If True, skip all span annotation (for background threads)
         """
         self.model = model
         self.tracker = tracker
+        self.config_key = config_key
+        self._is_agent_config = is_agent_config
+        self.user_context = user_context
+        self.skip_span_annotation = skip_span_annotation
 
     def invoke(self, messages: list[BaseMessage]) -> Any:
         """Invoke the model with tracking.
@@ -470,7 +488,59 @@ class ModelInvoker:
             Model response
         """
         try:
-            # Use track_duration_of to wrap the model call (LaunchDarkly API)
+            # Skip span annotation entirely if flag is set (background threads like judges)
+            if not self.skip_span_annotation:
+                # Set ld.ai_config.key on the CURRENT span for THIS agent
+                # Skip span annotation for background threads (judges) - they reference closed spans
+                try:
+                    from opentelemetry import trace
+                    
+                    current_span = trace.get_current_span()
+                    
+                    # Check if span is valid and recording BEFORE any operations
+                    # Background threads will have invalid/ended spans - skip them entirely
+                    if (current_span and 
+                        self.config_key and 
+                        hasattr(current_span, 'is_recording') and 
+                        current_span.is_recording()):
+                        
+                        # Additional check: is this a valid span context?
+                        span_context = current_span.get_span_context()
+                        if not span_context or not span_context.is_valid:
+                            # Invalid context - skip annotation (background thread)
+                            pass
+                        else:
+                            # Valid, recording span - safe to annotate
+                            try:
+                                current_span.set_attribute("ld.ai_config.key", self.config_key)
+                                
+                                # Add feature_flag event
+                                if self.user_context:
+                                    ctx_dict = self.user_context.to_dict() if hasattr(self.user_context, 'to_dict') else {}
+                                    ctx_id = ctx_dict.get('key') or ctx_dict.get('userKey') or 'anonymous'
+                                    
+                                    current_span.add_event(
+                                        "feature_flag",
+                                        attributes={
+                                            "feature_flag.key": self.config_key,
+                                            "feature_flag.provider.name": "LaunchDarkly",
+                                            "feature_flag.context.id": ctx_id,
+                                            "feature_flag.result.value": True,
+                                        },
+                                    )
+                                
+                                # Trigger LD variation for correlation
+                                if self.user_context:
+                                    _ = ldclient.get().variation(self.config_key, self.user_context, True)
+                            except Exception:
+                                # Silently ignore any annotation errors - don't let them break LLM calls
+                                pass
+                                
+                except Exception:
+                    # Don't fail model invocation if span annotation fails entirely
+                    pass
+            
+            # Track the LLM call
             result = self.tracker.track_duration_of(lambda: self.model.invoke(messages))
             
             # Track success (no arguments)
@@ -488,11 +558,41 @@ class ModelInvoker:
                 )
                 self.tracker.track_tokens(token_usage)
             
+            # Extract and track Time to First Token (TTFT) if available
+            ttft_ms = None
+            if hasattr(result, "response_metadata") and isinstance(result.response_metadata, dict):
+                ttft_ms = result.response_metadata.get("ttft_ms")
+            elif hasattr(result, "generations") and len(result.generations) > 0:
+                gen = result.generations[0]
+                if hasattr(gen, "message") and hasattr(gen.message, "response_metadata"):
+                    ttft_ms = gen.message.response_metadata.get("ttft_ms")
+            
+            # Track TTFT in LaunchDarkly if available
+            if ttft_ms is not None:
+                try:
+                    self.tracker.track_time_to_first_token(ttft_ms)
+                except Exception as e:
+                    # Don't fail if TTFT tracking fails
+                    import logging
+                    logging.debug(f"Failed to track TTFT: {e}")
+            
             return result
 
-        except Exception:
+        except Exception as e:
             # Track error (no arguments)
             self.tracker.track_error()
+            
+            # Mark span as error if available
+            try:
+                from opentelemetry import trace
+                span = trace.get_current_span()
+                if span and span.is_recording():
+                    from opentelemetry.trace import Status, StatusCode
+                    span.set_status(Status(StatusCode.ERROR, str(e)))
+                    span.record_exception(e)
+            except:
+                pass
+                
             raise
 
     def _extract_tokens(self, response: Any) -> dict[str, int]:

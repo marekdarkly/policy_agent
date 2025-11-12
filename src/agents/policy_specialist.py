@@ -49,7 +49,7 @@ def policy_specialist_node(state: AgentState) -> dict[str, Any]:
     
     # Get LaunchDarkly config (including messages and KB ID)
     ld_client = get_ld_client()
-    ld_config, _ = ld_client.get_ai_config("policy_agent", user_context)
+    ld_config, _, _ = ld_client.get_ai_config("policy_agent", user_context)
     
     # Retrieve from Bedrock Knowledge Base via RAG (ONLY source)
     rag_documents = retrieve_policy_documents(query, policy_id, ld_config=ld_config)
@@ -93,13 +93,19 @@ def policy_specialist_node(state: AgentState) -> dict[str, Any]:
 
     response = model_invoker.invoke(langchain_messages)
     
-    # Extract token usage if available
+    # Extract token usage and TTFT if available
     tokens = {"input": 0, "output": 0}
+    ttft_ms = None
+    
     if hasattr(response, "usage_metadata") and response.usage_metadata:
         tokens = {
             "input": response.usage_metadata.get("input_tokens", 0),
             "output": response.usage_metadata.get("output_tokens", 0)
         }
+    
+    # Extract Time to First Token (TTFT) from response metadata
+    if hasattr(response, "response_metadata") and isinstance(response.response_metadata, dict):
+        ttft_ms = response.response_metadata.get("ttft_ms")
     
     response_text = response.content
 
@@ -118,6 +124,7 @@ def policy_specialist_node(state: AgentState) -> dict[str, Any]:
                 "query": query,
                 "policy_id": policy_id,
                 "tokens": tokens,
+                "ttft_ms": ttft_ms,  # Time to first token from Bedrock streaming
             },
         },
     }

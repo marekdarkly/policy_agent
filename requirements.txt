@@ -13,9 +13,16 @@ pydantic-settings>=2.0.0
 python-dotenv>=1.0.0
 typing-extensions>=4.8.0
 
-# LaunchDarkly AI Configs
-launchdarkly-server-sdk>=9.0.0
+# LaunchDarkly AI Configs & Observability
+launchdarkly-server-sdk>=9.12.0
 launchdarkly-server-sdk-ai>=0.8.0
+launchdarkly-observability>=0.1.0
+
+# OpenTelemetry Instrumentation (for observability)
+opentelemetry-instrumentation-fastapi>=0.41b0
+opentelemetry-instrumentation-botocore>=0.41b0
+opentelemetry-instrumentation-bedrock>=0.1.0
+opentelemetry-instrumentation-langchain>=0.1.0
 
 # AWS Bedrock
 boto3>=1.34.0
