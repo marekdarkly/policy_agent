@@ -23,9 +23,6 @@ load_dotenv()
 from src.utils.observability import initialize_observability
 initialize_observability()
 
-# Import FastAPI instrumentor BEFORE FastAPI itself (for proper instrumentation)
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-
 # Now safe to import FastAPI and other modules
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -121,14 +118,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Instrument FastAPI for OpenTelemetry (CRITICAL for AI Config correlation)
-# This creates the parent HTTP request span that LLM spans attach to
-try:
-    FastAPIInstrumentor().instrument_app(app)
-    logger.info("✅ FastAPI instrumented for observability")
-except Exception as e:
-    logger.warning(f"⚠️  Failed to instrument FastAPI: {e}")
 
 
 # Pydantic models
