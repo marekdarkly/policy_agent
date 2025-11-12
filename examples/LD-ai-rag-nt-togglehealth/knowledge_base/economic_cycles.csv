@@ -1,0 +1,11 @@
+cycle_phase,description,economic_indicators,stock_performance,bond_performance,recommended_sectors,avoid_sectors
+Expansion,Growing economy,Low unemployment, rising GDP,Strong,Weak,Technology, Consumer Discretionary,Utilities, Consumer Staples
+Peak,Maximum growth,High inflation, tight labor market,Mixed,Weak,Energy, Materials,Technology, Consumer Discretionary
+Contraction,Declining economy,Rising unemployment, falling GDP,Weak,Strong,Consumer Staples, Healthcare,Utilities,Financial Services, Energy
+Trough,Bottom of cycle,High unemployment, low inflation,Mixed,Strong,Financial Services, Consumer Discretionary,Consumer Staples, Healthcare
+Early Recovery,Initial growth,Improving employment, low inflation,Strong,Weak,Financial Services, Consumer Discretionary,Consumer Staples, Healthcare
+Mid Recovery,Steady growth,Moderate employment, stable inflation,Strong,Weak,Technology, Industrials,Consumer Staples, Utilities
+Late Recovery,Slowing growth,Full employment, rising inflation,Mixed,Weak,Energy, Materials,Technology, Consumer Discretionary
+Recession,Declining activity,Falling employment, deflation risk,Weak,Strong,Consumer Staples, Healthcare,Utilities,Financial Services, Energy
+Stagflation,High inflation, low growth,High inflation, unemployment,Weak,Weak,Energy, Materials,Consumer Discretionary, Technology
+Deflation,Falling prices,Low inflation, weak demand,Weak,Strong,Consumer Staples, Healthcare,Utilities,Financial Services, Energy

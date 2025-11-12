@@ -1,0 +1,16 @@
+goal,time_horizon,risk_tolerance,recommended_allocation,key_strategies,success_metrics
+Emergency Fund,0-2 years,Very Low,100% cash/savings,High-yield savings, 3-6 months expenses,Amount saved, liquidity
+Short-term Savings,1-3 years,Low,80% bonds, 20% cash,CDs, short-term bonds, capital preservation,Amount saved, low volatility
+Home Down Payment,3-5 years,Low,60% bonds, 30% stocks, 10% cash,Target date funds, conservative allocation,Amount saved, low risk
+Car Purchase,2-4 years,Low,70% bonds, 20% stocks, 10% cash,Conservative allocation, regular contributions,Amount saved, timeline
+Education Funding,5-15 years,Medium,70% stocks, 25% bonds, 5% cash,529 plans, target date funds,Amount saved, tax efficiency
+Wedding,2-5 years,Low,60% bonds, 30% stocks, 10% cash,Conservative allocation, regular savings,Amount saved, timeline
+Business Startup,5-10 years,High,90% stocks, 10% bonds,Aggressive growth, sector focus,Capital growth, risk tolerance
+Retirement,20-40 years,Medium-High,80% stocks, 15% bonds, 5% cash,Dollar cost averaging, index funds,Portfolio value, retirement readiness
+Financial Independence,15-25 years,High,85% stocks, 10% bonds, 5% cash,Aggressive growth, passive income,Passive income, portfolio value
+Legacy Planning,20+ years,Medium,60% stocks, 35% bonds, 5% cash,Conservative growth, estate planning,Portfolio value, tax efficiency
+Travel Fund,1-3 years,Low,80% bonds, 15% stocks, 5% cash,Conservative allocation, regular contributions,Amount saved, timeline
+Major Purchase,3-7 years,Medium,70% stocks, 25% bonds, 5% cash,Moderate growth, regular contributions,Amount saved, timeline
+Debt Payoff,1-5 years,Low,100% cash/savings,Debt snowball, avalanche method,Debt reduction, interest savings
+Income Generation,10+ years,Medium,50% dividend stocks, 40% bonds, 10% cash,Dividend growth, bond laddering,Income stream, yield
+Wealth Building,20+ years,High,90% stocks, 10% bonds,Maximum growth, compound interest,Portfolio value, net worth

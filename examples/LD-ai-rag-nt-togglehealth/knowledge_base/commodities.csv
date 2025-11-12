@@ -1,0 +1,22 @@
+commodity,category,description,investment_vehicles,key_factors,risks
+Gold,Precious Metals,Safe haven asset, physical, ETFs, futures,Inflation, currency, geopolitical risk,No income, storage costs
+Silver,Precious Metals,Industrial and investment metal, physical, ETFs, futures,Industrial demand, investment demand,High volatility, storage costs
+Platinum,Precious Metals,Industrial precious metal, physical, ETFs, futures,Automotive demand, jewelry, supply constraints,High volatility, industrial dependence
+Palladium,Precious Metals,Automotive catalyst metal, physical, ETFs, futures,Automotive demand, supply constraints,High volatility, industrial dependence
+Oil,Energy,Global energy commodity, futures, ETFs, stocks,Supply, demand, geopolitical events,High volatility, geopolitical risk
+Natural Gas,Energy,Clean energy fuel, futures, ETFs, stocks,Weather, storage, production,High volatility, weather dependence
+Coal,Energy,Traditional energy source, stocks, ETFs,Environmental regulations, energy policy,Environmental regulations, declining demand
+Copper,Base Metals,Industrial metal, futures, ETFs, stocks,Economic growth, construction, infrastructure,High volatility, economic sensitivity
+Aluminum,Base Metals,Lightweight industrial metal, futures, ETFs, stocks,Transportation, packaging, construction,High volatility, energy costs
+Zinc,Base Metals,Corrosion-resistant metal, futures, ETFs, stocks,Construction, automotive, infrastructure,High volatility, supply constraints
+Nickel,Base Metals,Stainless steel component, futures, ETFs, stocks,Stainless steel, batteries, supply constraints,High volatility, supply issues
+Iron Ore,Base Metals,Steel production input, futures, stocks,Steel demand, construction, infrastructure,High volatility, economic sensitivity
+Corn,Agriculture,Food and fuel crop, futures, ETFs, stocks,Weather, ethanol demand, food demand,Weather risk, government policy
+Wheat,Agriculture,Global food staple, futures, ETFs, stocks,Weather, global demand, supply,Weather risk, trade policies
+Soybeans,Agriculture,Protein and oil crop, futures, ETFs, stocks,Weather, livestock feed, biodiesel,Weather risk, trade tensions
+Cotton,Agriculture,Textile fiber, futures, ETFs, stocks,Clothing demand, weather, trade,Weather risk, fashion trends
+Coffee,Agriculture,Beverage commodity, futures, ETFs, stocks,Weather, global demand, supply,Weather risk, currency effects
+Sugar,Agriculture,Sweetener commodity, futures, ETFs, stocks,Weather, ethanol demand, food demand,Weather risk, government subsidies
+Cocoa,Agriculture,Chocolate ingredient, futures, ETFs, stocks,Weather, chocolate demand, supply,Weather risk, political instability
+Lean Hogs,Livestock,Pork meat, futures, ETFs, stocks,Disease, feed costs, demand,Animal disease, feed price volatility
+Live Cattle,Livestock,Beef meat, futures, ETFs, stocks,Disease, feed costs, demand,Animal disease, feed price volatility

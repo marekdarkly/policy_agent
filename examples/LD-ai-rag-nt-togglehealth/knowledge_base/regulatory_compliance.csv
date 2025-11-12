@@ -1,0 +1,16 @@
+regulation,description,requirements,impact,compliance_tips
+SEC,Securities and Exchange Commission,Registration, disclosure, anti-fraud,Investor protection, market integrity,File required forms, maintain records
+FINRA,Financial Industry Regulatory Authority,Licensing, supervision, continuing education,Professional standards, investor protection,Maintain licenses, complete CE
+FDIC,Federal Deposit Insurance Corporation,Insurance for bank deposits,250,000 per account,Deposit protection, bank stability,Stay within limits
+SIPC,Securities Investor Protection Corporation,Insurance for brokerage accounts,500,000 per account,Securities protection, broker stability,Stay within limits
+ERISA,Employee Retirement Income Security Act,Fiduciary duties, disclosure, reporting,Retirement plan protection, fiduciary standards,Follow fiduciary duties
+DOL Fiduciary Rule,Fiduciary standard for retirement advice,Act in client's best interest,Enhanced investor protection,Document recommendations
+Regulation Best Interest,Best interest standard for retail customers,Disclosure, care, conflicts, conflicts mitigation,Enhanced investor protection,Document recommendations
+GDPR,General Data Protection Regulation,Data protection, privacy rights,Privacy protection, data security,Implement data protection measures
+SOX,Sarbanes-Oxley Act,Financial reporting, internal controls,Corporate accountability, financial transparency,Maintain internal controls
+GLBA,Gramm-Leach-Bliley Act,Privacy notices, data protection,Financial privacy protection,Provide privacy notices
+Patriot Act,Anti-money laundering, customer identification,AML compliance, KYC procedures,Terrorism financing prevention,Implement AML procedures
+CFTC,Commodity Futures Trading Commission,Registration, reporting, anti-fraud,Commodity market integrity,File required reports
+MSRB,Municipal Securities Rulemaking Board,Rules for municipal securities,Professional standards, market integrity,Follow MSRB rules
+State Securities Laws,Blue sky laws,Registration, disclosure, anti-fraud,State-level investor protection,Comply with state requirements
+Tax Laws,Income tax, capital gains, estate tax,Accurate reporting, proper withholding,Tax compliance, minimize liability,Maintain records, file accurately

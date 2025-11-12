@@ -1,0 +1,16 @@
+investment_type,description,minimum_investment,returns,liquidity,risks,advantages
+Private Equity,Private company ownership,250,000+,15-25%,Very Low,Illiquidity, management risk,High returns, diversification
+Venture Capital,Startup company investments,100,000+,20-40%,Very Low,High failure rate, illiquidity,High growth potential
+Hedge Funds,Alternative investment strategies,100,000+,8-15%,Low,Complex strategies, high fees,Professional management, diversification
+Commodity Futures,Derivatives on commodities,5,000+,10-30%,High,High leverage, volatility,Inflation hedge, diversification
+Art Investment,Fine art and collectibles,10,000+,5-15%,Low,Illiquidity, expertise required,Passion investment, potential appreciation
+Wine Investment,Fine wine collections,1,000+,8-15%,Low,Storage, expertise,Passion investment, potential appreciation
+Antiques,Collectible items,1,000+,5-12%,Low,Illiquidity, expertise required,Passion investment, historical value
+Stamps,Postage stamp collections,500+,5-10%,Low,Illiquidity, expertise required,Passion investment, historical value
+Coins,Numismatic collections,1,000+,5-12%,Low,Illiquidity, expertise required,Passion investment, historical value
+Peer-to-Peer Lending,Direct lending to individuals,1,000+,6-12%,Medium,Credit risk, platform risk,Regular income, diversification
+Crowdfunding,Startup and project funding,100+,10-30%,Very Low,High failure rate, illiquidity,Support innovation, potential high returns
+Farmland,Agricultural land ownership,50,000+,8-12%,Low,Weather, commodity prices,Tangible asset, inflation hedge
+Timberland,Forest land ownership,100,000+,6-10%,Low,Weather, regulatory risk,Tangible asset, environmental benefits
+Infrastructure,Public infrastructure projects,25,000+,6-10%,Low,Regulatory, political risk,Stable income, government backing
+Insurance Products,Annuities, life insurance,10,000+,3-8%,Low,Complexity, fees,Guaranteed income, death benefits

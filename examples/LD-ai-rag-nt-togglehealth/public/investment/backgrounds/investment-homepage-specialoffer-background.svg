@@ -1,0 +1,59 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="specialOfferGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#dc2626;stop-opacity:0.1" />
+      <stop offset="50%" style="stop-color:#ef4444;stop-opacity:0.2" />
+      <stop offset="100%" style="stop-color:#f87171;stop-opacity:0.1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="400" height="300" fill="url(#specialOfferGradient)"/>
+  
+  <!-- Special offer elements -->
+  <g opacity="0.3">
+    <!-- Star symbols -->
+    <path d="M 50 50 L 55 60 L 65 60 L 57.5 67.5 L 60 77.5 L 50 72.5 L 40 77.5 L 42.5 67.5 L 35 60 L 45 60 Z" fill="#dc2626"/>
+    <path d="M 320 80 L 325 90 L 335 90 L 327.5 97.5 L 330 107.5 L 320 102.5 L 310 107.5 L 312.5 97.5 L 305 90 L 315 90 Z" fill="#ef4444"/>
+    <path d="M 200 120 L 205 130 L 215 130 L 207.5 137.5 L 210 147.5 L 200 142.5 L 190 147.5 L 192.5 137.5 L 185 130 L 195 130 Z" fill="#f87171"/>
+    
+    <!-- Percentage off symbols -->
+    <text x="80" y="100" font-family="Arial" font-size="20" font-weight="bold" fill="#dc2626" opacity="0.6">25%</text>
+    <text x="280" y="140" font-family="Arial" font-size="16" font-weight="bold" fill="#ef4444" opacity="0.6">OFF</text>
+    <text x="150" y="180" font-family="Arial" font-size="18" font-weight="bold" fill="#f87171" opacity="0.6">BONUS</text>
+    
+    <!-- Investment growth lines -->
+    <path d="M 30 200 L 80 180 L 130 160 L 180 140 L 230 120 L 280 100 L 330 80" 
+          stroke="#dc2626" 
+          stroke-width="2" 
+          fill="none" 
+          opacity="0.5"/>
+    
+    <path d="M 50 220 L 100 200 L 150 180 L 200 160 L 250 140 L 300 120 L 350 100" 
+          stroke="#ef4444" 
+          stroke-width="2" 
+          fill="none" 
+          opacity="0.5"/>
+    
+    <!-- Dollar signs -->
+    <text x="100" y="60" font-family="Arial" font-size="24" fill="#dc2626" opacity="0.4">$</text>
+    <text x="300" y="100" font-family="Arial" font-size="20" fill="#ef4444" opacity="0.4">$</text>
+    <text x="200" y="40" font-family="Arial" font-size="28" fill="#f87171" opacity="0.4">$</text>
+  </g>
+  
+  <!-- Abstract geometric shapes -->
+  <g opacity="0.1">
+    <polygon points="60,30 90,30 75,60" fill="#dc2626"/>
+    <polygon points="310,50 340,50 325,80" fill="#ef4444"/>
+    <polygon points="180,200 210,200 195,230" fill="#f87171"/>
+  </g>
+  
+  <!-- Sparkle effects -->
+  <g opacity="0.4">
+    <circle cx="120" cy="80" r="2" fill="#dc2626"/>
+    <circle cx="280" cy="120" r="1.5" fill="#ef4444"/>
+    <circle cx="200" cy="160" r="2.5" fill="#f87171"/>
+    <circle cx="160" cy="100" r="1" fill="#dc2626"/>
+    <circle cx="240" cy="140" r="1.8" fill="#ef4444"/>
+  </g>
+</svg>

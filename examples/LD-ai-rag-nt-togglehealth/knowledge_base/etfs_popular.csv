@@ -1,0 +1,21 @@
+ticker,name,category,expense_ratio,description
+VTI,Vanguard Total Stock Market ETF,US Stocks,0.03,Total US stock market exposure
+VOO,Vanguard S&P 500 ETF,US Stocks,0.03,Tracks S&P 500 index
+QQQ,Invesco QQQ Trust,Technology,0.20,Nasdaq-100 technology stocks
+SPY,SPDR S&P 500 ETF Trust,US Stocks,0.09,S&P 500 index fund
+VXUS,Vanguard Total International Stock ETF,International,0.08,International developed and emerging markets
+BND,Vanguard Total Bond Market ETF,Bonds,0.03,US investment-grade bonds
+VEA,Vanguard FTSE Developed Markets ETF,International,0.05,Developed markets excluding US
+VWO,Vanguard FTSE Emerging Markets ETF,Emerging Markets,0.10,Emerging market stocks
+VNQ,Vanguard Real Estate ETF,Real Estate,0.12,US real estate investment trusts
+GLD,SPDR Gold Shares,Commodities,0.40,Gold bullion exposure
+TLT,iShares 20+ Year Treasury Bond ETF,Bonds,0.15,Long-term US Treasury bonds
+IWM,iShares Russell 2000 ETF,Small Cap,0.19,Small-cap US stocks
+EFA,iShares MSCI EAFE ETF,International,0.32,Developed markets excluding US and Canada
+EEM,iShares MSCI Emerging Markets ETF,Emerging Markets,0.68,Emerging market equities
+AGG,iShares Core U.S. Aggregate Bond ETF,Bonds,0.03,US investment-grade bonds
+SCHB,Schwab U.S. Broad Market ETF,US Stocks,0.03,Total US stock market
+SCHF,Schwab International Equity ETF,International,0.06,International developed markets
+SCHZ,Schwab U.S. Aggregate Bond ETF,Bonds,0.04,US investment-grade bonds
+VT,Vanguard Total World Stock ETF,Global,0.07,Global stock market exposure
+VGT,Vanguard Information Technology ETF,Technology,0.10,US technology sector

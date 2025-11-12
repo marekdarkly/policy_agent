@@ -92,6 +92,15 @@ def policy_specialist_node(state: AgentState) -> dict[str, Any]:
     langchain_messages = ld_client.build_langchain_messages(ld_config, context_vars)
 
     response = model_invoker.invoke(langchain_messages)
+    
+    # Extract token usage if available
+    tokens = {"input": 0, "output": 0}
+    if hasattr(response, "usage_metadata") and response.usage_metadata:
+        tokens = {
+            "input": response.usage_metadata.get("input_tokens", 0),
+            "output": response.usage_metadata.get("output_tokens", 0)
+        }
+    
     response_text = response.content
 
     # Update state
@@ -108,6 +117,7 @@ def policy_specialist_node(state: AgentState) -> dict[str, Any]:
                 "rag_documents": rag_documents,  # Store actual documents for evaluation
                 "query": query,
                 "policy_id": policy_id,
+                "tokens": tokens,
             },
         },
     }

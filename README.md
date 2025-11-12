@@ -4,6 +4,7 @@ Multi-agent system for medical insurance customer support using LangGraph, Launc
 
 ## Quick Start
 
+### Terminal Interface
 ```bash
 # Setup
 make setup
@@ -11,6 +12,20 @@ make setup
 # Run chatbot
 make run
 ```
+
+### Web Interface
+```bash
+# Start backend + frontend
+cd ui && ./start.sh
+
+# Or manually:
+# Backend:  cd ui/backend && python server.py
+# Frontend: cd ui/frontend && npm install && npm run dev
+```
+
+Open `http://localhost:3000` in your browser.
+
+See [ui/README.md](ui/README.md) for full UI documentation.
 
 ## System Architecture
 

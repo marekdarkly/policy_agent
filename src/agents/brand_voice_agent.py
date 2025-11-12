@@ -60,6 +60,14 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
 
     response = model_invoker.invoke(langchain_messages)
 
+    # Extract token usage if available
+    tokens = {"input": 0, "output": 0}
+    if hasattr(response, "usage_metadata") and response.usage_metadata:
+        tokens = {
+            "input": response.usage_metadata.get("input_tokens", 0),
+            "output": response.usage_metadata.get("output_tokens", 0)
+        }
+
     # Store the brand-voiced response
     final_response = response.content
     
@@ -78,6 +86,10 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                     rag_documents = rag_docs
                     break
         
+        # Get request_id and results_store from state for evaluation tracking
+        request_id = state.get("request_id")
+        results_store = state.get("evaluation_results_store")
+        
         # Handle both sync and async contexts
         try:
             # Try to get the current event loop
@@ -89,7 +101,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                     rag_documents=rag_documents,
                     brand_voice_output=final_response,
                     user_context=user_context,
-                    brand_tracker=model_invoker.tracker
+                    brand_tracker=model_invoker.tracker,
+                    request_id=request_id,
+                    results_store=results_store
                 )
             )
         except RuntimeError:
@@ -104,14 +118,16 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                         rag_documents=rag_documents,
                         brand_voice_output=final_response,
                         user_context=user_context,
-                        brand_tracker=model_invoker.tracker
+                        brand_tracker=model_invoker.tracker,
+                        request_id=request_id,
+                        results_store=results_store
                     )
                 )
             
             thread = threading.Thread(target=run_eval_in_thread, daemon=True)
             thread.start()
         
-        print(f"🔍 Background evaluation started (evaluating against {len(rag_documents)} RAG documents)")
+        print(f"🔍 Background evaluation started (evaluating against {len(rag_documents)} RAG documents) - request_id: {request_id[:8] if request_id else 'N/A'}...")
     except Exception as e:
         # Never let evaluation errors affect the main flow
         print(f"⚠️  Failed to start background evaluation: {e}")
@@ -121,6 +137,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         "original_specialist_response": specialist_response[:500] + "..." if len(specialist_response) > 500 else specialist_response,
         "final_customer_response": final_response[:500] + "..." if len(final_response) > 500 else final_response,
         "brand_voice_applied": True,
+        "tokens": tokens,
         "personalization": {
             "customer_name": customer_name,
             "query_type": str(query_type),

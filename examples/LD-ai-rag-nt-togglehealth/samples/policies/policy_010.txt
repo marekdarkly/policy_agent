@@ -1,0 +1,8 @@
+How can I dispute an unauthorized transaction?
+
+1. You’ll receive status updates via push notification and email.
+2. Navigate to Transactions in the mobile app and select the charge.
+3. Provide any supporting details or receipts; photos can be uploaded.
+4. ToggleBank immediately places a temporary credit on your account while we investigate (may take up to 45 days).
+5. Tap “Report Issue” and choose “Unauthorized”.
+6. If you need further assistance, contact ToggleSupport via chat 24/7.

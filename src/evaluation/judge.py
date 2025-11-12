@@ -91,10 +91,15 @@ class BrandVoiceEvaluator:
             
             print(f"✅ Evaluation completed: Accuracy={accuracy_result['score']:.2f}, Coherence={coherence_result['score']:.2f}")
             
+            # Return flattened structure that matches frontend expectations
             return {
                 "accuracy": accuracy_result,
                 "coherence": coherence_result,
-                "overall_passed": accuracy_result["passed"] and coherence_result["passed"]
+                "overall_passed": accuracy_result["passed"] and coherence_result["passed"],
+                # Add judge model info (TODO: track actual model used)
+                "judge_model_name": "claude-3-5-sonnet-20241022",  
+                "judge_input_tokens": 0,  # TODO: track from judge LLM calls
+                "judge_output_tokens": 0,  # TODO: track from judge LLM calls
             }
             
         except Exception as e:
@@ -291,7 +296,9 @@ async def evaluate_brand_voice_async(
     rag_documents: List[Dict[str, Any]],
     brand_voice_output: str,
     user_context: Dict[str, Any],
-    brand_tracker: Any
+    brand_tracker: Any,
+    request_id: Optional[str] = None,
+    results_store: Optional[Dict[str, Any]] = None
 ) -> None:
     """
     Evaluate system output asynchronously without blocking.
@@ -305,18 +312,41 @@ async def evaluate_brand_voice_async(
         brand_voice_output: Final system output to evaluate
         user_context: User context for LaunchDarkly
         brand_tracker: The tracker from brand_agent for sending metrics
+        request_id: Optional request ID to store results for later retrieval
     """
     evaluator = get_evaluator()
     
     try:
-        # Run evaluation without awaiting (fire-and-forget)
-        await evaluator.evaluate_async(
+        # Run evaluation
+        results = await evaluator.evaluate_async(
             original_query,
             rag_documents,
             brand_voice_output,
             user_context,
             brand_tracker
         )
+        
+        # Store results in global store if request_id provided
+        if request_id and results and results_store is not None:
+            print(f"📊 Evaluation complete! Storing results for request_id={request_id}")
+            print(f"   Accuracy: {results.get('accuracy', {}).get('score', 'N/A')}")
+            print(f"   Coherence: {results.get('coherence', {}).get('score', 'N/A')}")
+            
+            try:
+                results_store[request_id] = results
+                print(f"✅ EVALUATION STORED for request_id={request_id}")
+                print(f"   Keys in results_store: {list(results_store.keys())}")
+            except Exception as e:
+                # Show full error for debugging
+                import traceback
+                print(f"❌ Failed to store evaluation: {e}")
+                print(f"   Traceback: {traceback.format_exc()}")
+        else:
+            print(f"⚠️  Cannot store evaluation:")
+            print(f"   request_id: {request_id}")
+            print(f"   results: {'present' if results else 'None'}")
+            print(f"   results_store: {'present' if results_store is not None else 'None'}")
+        
     except Exception as e:
         # Never let evaluation errors crash the main flow
         print(f"⚠️  Background evaluation failed: {e}")

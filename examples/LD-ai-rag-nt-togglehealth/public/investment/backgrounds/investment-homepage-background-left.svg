@@ -1,0 +1,51 @@
+<svg width="400" height="800" viewBox="0 0 400 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="leftGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e40af;stop-opacity:0.05" />
+      <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:0.08" />
+      <stop offset="100%" style="stop-color:#60a5fa;stop-opacity:0.05" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="400" height="800" fill="url(#leftGradient)"/>
+  
+  <!-- Subtle investment symbols -->
+  <g opacity="0.1">
+    <!-- Dollar signs -->
+    <text x="50" y="100" font-family="Arial" font-size="24" fill="#1e40af">$</text>
+    <text x="80" y="200" font-family="Arial" font-size="20" fill="#3b82f6">$</text>
+    <text x="120" y="300" font-family="Arial" font-size="18" fill="#60a5fa">$</text>
+    <text x="60" y="400" font-family="Arial" font-size="22" fill="#1e40af">$</text>
+    <text x="100" y="500" font-family="Arial" font-size="16" fill="#3b82f6">$</text>
+    <text x="140" y="600" font-family="Arial" font-size="26" fill="#60a5fa">$</text>
+    <text x="70" y="700" font-family="Arial" font-size="19" fill="#1e40af">$</text>
+    
+    <!-- Chart lines -->
+    <path d="M 20 150 L 80 120 L 140 140 L 200 100" stroke="#3b82f6" stroke-width="1" fill="none" opacity="0.3"/>
+    <path d="M 30 350 L 90 320 L 150 340 L 210 300" stroke="#60a5fa" stroke-width="1" fill="none" opacity="0.3"/>
+    <path d="M 40 550 L 100 520 L 160 540 L 220 500" stroke="#1e40af" stroke-width="1" fill="none" opacity="0.3"/>
+    
+    <!-- Small circles representing data points -->
+    <circle cx="80" cy="120" r="2" fill="#3b82f6" opacity="0.4"/>
+    <circle cx="140" cy="140" r="2" fill="#3b82f6" opacity="0.4"/>
+    <circle cx="200" cy="100" r="2" fill="#3b82f6" opacity="0.4"/>
+    <circle cx="90" cy="320" r="2" fill="#60a5fa" opacity="0.4"/>
+    <circle cx="150" cy="340" r="2" fill="#60a5fa" opacity="0.4"/>
+    <circle cx="210" cy="300" r="2" fill="#60a5fa" opacity="0.4"/>
+    <circle cx="100" cy="520" r="2" fill="#1e40af" opacity="0.4"/>
+    <circle cx="160" cy="540" r="2" fill="#1e40af" opacity="0.4"/>
+    <circle cx="220" cy="500" r="2" fill="#1e40af" opacity="0.4"/>
+  </g>
+  
+  <!-- Abstract geometric shapes -->
+  <g opacity="0.05">
+    <polygon points="50,50 100,50 75,100" fill="#1e40af"/>
+    <polygon points="250,150 300,150 275,200" fill="#3b82f6"/>
+    <polygon points="150,250 200,250 175,300" fill="#60a5fa"/>
+    <polygon points="300,350 350,350 325,400" fill="#1e40af"/>
+    <polygon points="100,450 150,450 125,500" fill="#3b82f6"/>
+    <polygon points="200,550 250,550 225,600" fill="#60a5fa"/>
+    <polygon points="50,650 100,650 75,700" fill="#1e40af"/>
+  </g>
+</svg>

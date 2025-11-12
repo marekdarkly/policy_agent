@@ -1,0 +1,19 @@
+model_name,description,stocks,bonds,cash,real_estate,commodities,risk_level,time_horizon
+Conservative,Capital preservation,20,60,15,5,0,Low,Short-term
+Moderate Conservative,Balance safety and growth,40,45,10,5,0,Low-Medium,Medium-term
+Balanced,Equal growth and safety,50,35,10,5,0,Medium,Medium-term
+Moderate Aggressive,Growth with some safety,70,20,5,5,0,Medium-High,Long-term
+Aggressive,Maximum growth potential,80,10,5,5,0,High,Long-term
+Income Focus,Generate steady income,30,60,5,5,0,Low-Medium,Retirement
+Growth Income,Balance growth and income,50,40,5,5,0,Medium,Pre-retirement
+All Weather,Perform in all conditions,30,55,15,0,0,Low,All periods
+Permanent Portfolio,Equal weight allocation,25,25,25,25,0,Low,All periods
+Ray Dalio All Weather,Inflation and growth protection,30,55,15,0,0,Low,All periods
+Warren Buffett,Simple and effective,90,10,0,0,0,High,Long-term
+David Swensen Yale,Endowment style,30,15,5,20,30,Medium-High,Long-term
+Harry Browne Permanent,Equal weight with gold,25,25,25,0,25,Low,All periods
+60/40 Classic,Traditional balanced,60,40,0,0,0,Medium,Medium-term
+Target Date 2025,Retirement in 2025,30,60,10,0,0,Low,Short-term
+Target Date 2035,Retirement in 2035,60,35,5,0,0,Medium,Medium-term
+Target Date 2045,Retirement in 2045,80,15,5,0,0,High,Long-term
+Target Date 2055,Retirement in 2055,90,5,5,0,0,Very High,Very long-term

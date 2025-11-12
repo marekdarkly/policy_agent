@@ -1,0 +1,63 @@
+<svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="chartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e40af;stop-opacity:0.1" />
+      <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:0.2" />
+      <stop offset="100%" style="stop-color:#60a5fa;stop-opacity:0.1" />
+    </linearGradient>
+    <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#1e40af;stop-opacity:0.8" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="800" height="600" fill="url(#chartGradient)"/>
+  
+  <!-- Chart grid lines -->
+  <g stroke="#e5e7eb" stroke-width="1" opacity="0.3">
+    <line x1="50" y1="100" x2="750" y2="100"/>
+    <line x1="50" y1="200" x2="750" y2="200"/>
+    <line x1="50" y1="300" x2="750" y2="300"/>
+    <line x1="50" y1="400" x2="750" y2="400"/>
+    <line x1="50" y1="500" x2="750" y2="500"/>
+    <line x1="150" y1="50" x2="150" y2="550"/>
+    <line x1="250" y1="50" x2="250" y2="550"/>
+    <line x1="350" y1="50" x2="350" y2="550"/>
+    <line x1="450" y1="50" x2="450" y2="550"/>
+    <line x1="550" y1="50" x2="550" y2="550"/>
+    <line x1="650" y1="50" x2="650" y2="550"/>
+  </g>
+  
+  <!-- Investment chart line -->
+  <path d="M 50 450 Q 150 400 250 350 T 450 250 T 650 200 T 750 150" 
+        stroke="url(#lineGradient)" 
+        stroke-width="3" 
+        fill="none" 
+        opacity="0.8"/>
+  
+  <!-- Chart points -->
+  <circle cx="50" cy="450" r="4" fill="#3b82f6"/>
+  <circle cx="150" cy="400" r="4" fill="#3b82f6"/>
+  <circle cx="250" cy="350" r="4" fill="#3b82f6"/>
+  <circle cx="350" cy="300" r="4" fill="#3b82f6"/>
+  <circle cx="450" cy="250" r="4" fill="#3b82f6"/>
+  <circle cx="550" cy="220" r="4" fill="#3b82f6"/>
+  <circle cx="650" cy="200" r="4" fill="#3b82f6"/>
+  <circle cx="750" cy="150" r="4" fill="#3b82f6"/>
+  
+  <!-- Floating investment icons -->
+  <g opacity="0.1">
+    <circle cx="100" cy="150" r="20" fill="#1e40af"/>
+    <circle cx="300" cy="100" r="15" fill="#3b82f6"/>
+    <circle cx="500" cy="80" r="25" fill="#60a5fa"/>
+    <circle cx="700" cy="120" r="18" fill="#1e40af"/>
+  </g>
+  
+  <!-- Abstract geometric shapes -->
+  <g opacity="0.05">
+    <polygon points="50,50 100,50 75,100" fill="#1e40af"/>
+    <polygon points="650,50 700,50 675,100" fill="#3b82f6"/>
+    <polygon points="350,450 400,450 375,500" fill="#60a5fa"/>
+  </g>
+</svg>

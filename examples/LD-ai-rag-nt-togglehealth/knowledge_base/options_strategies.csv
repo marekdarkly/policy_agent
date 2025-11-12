@@ -1,0 +1,16 @@
+strategy,description,risk_level,profit_potential,loss_potential,when_to_use,examples
+Buy Call,Right to buy stock at strike price,High,Unlimited,Premium paid,Bullish on stock,Long AAPL call at 150
+Buy Put,Right to sell stock at strike price,High,Strike - premium,Premium paid,Bearish on stock,Long TSLA put at 200
+Sell Call,Obligation to sell stock at strike price,Very High,Premium received,Unlimited,Bullish or neutral,Short MSFT call at 300
+Sell Put,Obligation to buy stock at strike price,High,Premium received,Strike - premium,Bullish or neutral,Short GOOGL put at 2500
+Covered Call,Buy stock + sell call,Medium,Premium + stock gain,Limited downside,Neutral to slightly bullish,Long AAPL + short call
+Protective Put,Buy stock + buy put,Medium,Unlimited upside,Limited downside,Bullish with protection,Long TSLA + long put
+Bull Spread,Buy call + sell higher call,Medium,Limited profit,Limited loss,Bullish with defined risk,Buy 150 call + sell 160 call
+Bear Spread,Buy put + sell lower put,Medium,Limited profit,Limited loss,Bearish with defined risk,Buy 200 put + sell 190 put
+Iron Condor,Sell call spread + sell put spread,Medium,Limited profit,Limited loss,Neutral, high probability,Sell 150/160 call + sell 140/130 put
+Butterfly Spread,Buy 2 calls + sell 2 calls at middle,Medium,Limited profit,Limited loss,Neutral, high probability,Buy 150 call + sell 2x 155 calls + buy 160 call
+Straddle,Buy call + buy put same strike,High,Unlimited profit,Limited loss,Expecting big move,Buy 100 call + buy 100 put
+Strangle,Buy call + buy put different strikes,High,Unlimited profit,Limited loss,Expecting big move,Buy 95 put + buy 105 call
+Calendar Spread,Sell near-term + buy far-term,Medium,Limited profit,Limited loss,Time decay play,Sell 30-day call + buy 60-day call
+Diagonal Spread,Calendar + vertical spread,Medium,Limited profit,Limited loss,Time + direction,Complex multi-leg strategy
+Iron Butterfly,Sell straddle + buy wings,Medium,Limited profit,Limited loss,Neutral, high probability,Sell 100 straddle + buy 95/105 wings

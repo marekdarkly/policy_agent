@@ -1,0 +1,10 @@
+How do I enable two‑factor authentication (2FA)?
+
+1. Log in and go to Settings ▸ Security.
+2. Toggle “Two‑Factor Authentication”.
+3. 2FA is required for high‑risk actions like adding new payees or changing contact info.
+4. Choose SMS, Email, or Authenticator App.
+5. Enter the verification code to confirm activation.
+6. If you need further assistance, contact ToggleSupport via chat 24/7.
+6. Backup codes are provided in case you lose access to your primary 2FA method.
+7. 2FA significantly improves account security and is strongly recommended.

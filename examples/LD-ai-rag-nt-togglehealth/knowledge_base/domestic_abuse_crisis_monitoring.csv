@@ -1,0 +1,21 @@
+abuse_type,risk_factor,red_flag,intervention_priority,resource_needed
+physical_abuse,visible_injuries,Unexplained bruises or injuries,immediate,safe_housing
+physical_abuse,weapon_threats,Threats with weapons or objects,immediate,police_involvement
+emotional_abuse,control_behavior,Excessive monitoring of activities,high,counseling_support
+emotional_abuse,isolation_tactics,Preventing contact with family/friends,high,social_support_network
+financial_abuse,economic_control,Controlling access to money/resources,medium,financial_independence_support
+financial_abuse,employment_sabotage,Preventing work or career advancement,medium,employment_assistance
+sexual_abuse,coercion,Pressure or force for sexual activities,immediate,sexual_assault_support
+sexual_abuse,reproductive_control,Controlling birth control or pregnancy,high,reproductive_healthcare
+digital_abuse,cyber_stalking,Excessive monitoring of online activity,medium,digital_safety_training
+digital_abuse,revenge_porn,Threatening to share intimate images,high,legal_protection
+stalking,persistent_contact,Unwanted repeated contact attempts,high,restraining_order
+stalking,threats,Direct or indirect threats of harm,immediate,police_protection
+gaslighting,reality_distortion,Denying events or manipulating perception,medium,therapeutic_support
+gaslighting,blame_shifting,Consistently blaming victim for abuse,medium,trauma_counseling
+children_exposure,child_witness,Children witnessing domestic violence,immediate,child_protective_services
+children_exposure,parental_alienation,Using children to control partner,high,family_counseling
+elder_abuse,neglect,Withholding care or medication,immediate,adult_protective_services
+elder_abuse,financial_exploitation,Unauthorized use of finances,high,financial_guardianship
+lgbtq_abuse,outing_threats,Threatening to reveal sexual orientation,high,lgbtq_support_services
+lgbtq_abuse,identity_denial,Denying or invalidating identity,medium,affirmative_counseling
