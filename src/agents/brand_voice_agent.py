@@ -116,10 +116,10 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         # Never let evaluation errors affect the main flow
         print(f"⚠️  Failed to start background evaluation: {e}")
 
-    # Add debug info to agent_data
+    # Add debug info to agent_data (store full responses for hallucination debugging)
     brand_data = {
-        "original_specialist_response": specialist_response[:200] + "..." if len(specialist_response) > 200 else specialist_response,
-        "final_customer_response": final_response[:200] + "..." if len(final_response) > 200 else final_response,
+        "original_specialist_response": specialist_response[:500] + "..." if len(specialist_response) > 500 else specialist_response,
+        "final_customer_response": final_response[:500] + "..." if len(final_response) > 500 else final_response,
         "brand_voice_applied": True,
         "personalization": {
             "customer_name": customer_name,

@@ -241,15 +241,17 @@ def process_query(user_query: str, user_context: dict):
             for agent_name, agent_info in result["agent_data"].items():
                 print_debug(f"  {agent_name}", f"{len(str(agent_info))} bytes", indent=2)
                 
-                # Show brand voice metadata if available
-                if agent_name == "brand_voice_agent":
-                    try:
-                        import json
-                        brand_info = json.loads(agent_info)
-                        if brand_info.get("brand_applied"):
-                            print_success(f"    ✨ Brand Voice Applied: Transformed {brand_info.get('specialist_type', 'unknown')} specialist response", indent=2)
-                    except:
-                        pass
+                # Show brand voice comparison for hallucination debugging
+                if agent_name == "brand_voice":
+                    if isinstance(agent_info, dict):
+                        print("\n" + "="*80)
+                        print("🔍 HALLUCINATION DEBUG: Compare Specialist → Brand Voice")
+                        print("="*80)
+                        print(f"\n📝 SPECIALIST OUTPUT (before brand voice):")
+                        print(f"   {agent_info.get('original_specialist_response', 'N/A')}")
+                        print(f"\n✨ BRAND VOICE OUTPUT (after transformation):")
+                        print(f"   {agent_info.get('final_customer_response', 'N/A')}")
+                        print("="*80 + "\n")
                 
                 # Show RAG information if available
                 if "rag_enabled" in agent_info:
