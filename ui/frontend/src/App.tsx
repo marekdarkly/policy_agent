@@ -71,15 +71,15 @@ function App() {
   }, [messages, currentAgent]);
 
   const pollForEvaluation = async (requestId: string) => {
-    // Poll for evaluation results up to 20 times (max 10 seconds)
-    const maxAttempts = 20;
+    // Poll for evaluation results up to 60 times (max 30 seconds)
+    const maxAttempts = 60;
     let attempts = 0;
 
     console.log(`🔍 Starting evaluation polling for request_id: ${requestId}`);
 
     const poll = async () => {
       if (attempts >= maxAttempts) {
-        console.log('⚠️  Evaluation polling timed out after 10 seconds');
+        console.log('⚠️  Evaluation polling timed out after 30 seconds');
         return;
       }
 
