@@ -1,21 +1,24 @@
 # Prompt Improvements for Robust Evaluations
 
-**⚠️ IMPORTANT**: This document addresses **PROMPT-LEVEL** fixes only.  
-**For RAG DATA issues** (coverage claims, hallucination prevention), see [`RAG_STRUCTURAL_ISSUES.md`](./RAG_STRUCTURAL_ISSUES.md).
+**⚠️ UPDATE**: Initial analysis was based on wrong files. See [`RAG_STRUCTURAL_ISSUES_REVISED.md`](./RAG_STRUCTURAL_ISSUES_REVISED.md) for corrected analysis.
 
 ## Current Performance
-- **Accuracy**: 65% (Target: 80%+)
+- **Accuracy**: 65% (Target: 90%+)
 - **Coherence**: 90% (Good!)
 
-## Root Cause Analysis
+## Root Cause Analysis (CORRECTED)
 
-**Primary Issue**: RAG data mismatch
-- `provider_directory_overview.md` claims coverage in San Francisco, Boston, etc.
-- `providers_detailed.md` has only 1 SF provider, 0 Boston providers
-- LLM hallucinates providers to fulfill queries → 65% accuracy
+**✅ RAG Data**: COMPREHENSIVE (340+ providers, 20 cities, including Boston & SF)
 
-**Secondary Issue**: Prompts don't enforce strict RAG fidelity  
-**Solution**: Fix BOTH RAG data (see RAG_STRUCTURAL_ISSUES.md) AND prompts (below)
+**❌ Primary Issue**: LLM not reproducing RAG data accurately
+- Changes provider names ("James" → "David")
+- Omits first names ("Dr. Jessica E. Singh" → "Dr. Singh")
+- Doesn't filter by user's exact plan (shows EPO/PPO providers to HMO users)
+
+**❌ Secondary Issue**: Judge wants more explicit plan confirmation
+- Even when data is correct, wants "✓ Confirmed for TH-HMO-GOLD-2024" wording
+
+**Solution**: PROMPT engineering + minor retrieval filtering (NO data fixes needed)
 
 ## Issues to Fix
 
@@ -283,35 +286,44 @@ If NO to any: revise before sending.
 
 ## Quick Wins (Do These First)
 
-**Critical 5-Minute Fixes** (Address 65% → 85%+ accuracy):
+**Critical 5-Minute Fixes** (Address 65% → 90%+ accuracy):
 
-1. **Add to `provider_agent`** (Highest Priority):
+1. **Add to `provider_agent`** (HIGHEST PRIORITY - Exact Name Reproduction):
    ```
-   PLAN VERIFICATION: Only return providers explicitly verified for user's exact plan ID ({policy_id}).
-   If provider is in multiple networks, cross-reference with user's plan and state: "✓ Confirmed in-network for your {policy_id} plan"
-   ```
-
-2. **Add to `provider_agent`** (Prevent Hallucination):
-   ```
-   NEVER complete or invent missing data. If RAG has "Dr. Singh" (no first name), output "Dr. Singh" exactly.
-   If data is missing, direct to: "Call 1-800-TOGGLE-1 for details"
+   COPY PROVIDER NAMES EXACTLY FROM RAG:
+   - If RAG says "Dr. James D. Cohen" → Output "Dr. James D. Cohen" (NOT "Dr. David Cohen")
+   - If RAG says "Dr. Jessica E. Singh" → Output "Dr. Jessica E. Singh" (NOT "Dr. Singh")  
+   - DO NOT change first names, omit names, or abbreviate
+   - Copy character-for-character from RAG documents
    ```
 
-3. **Add to `provider_agent`** (Exact Titles):
+2. **Add to `provider_agent`** (Plan Filtering):
    ```
-   Copy all professional titles EXACTLY from RAG documents. "Licensed Psychologist" ≠ "Clinical Psychology"
+   FILTER BY USER'S EXACT PLAN:
+   - User's plan: {policy_id}
+   - ONLY return providers where "Accepted Plans" field explicitly includes {policy_id}
+   - If provider's "Accepted Plans" doesn't list {policy_id}, DO NOT include them
+   ```
+
+3. **Add to `provider_agent`** (Explicit Plan Confirmation):
+   ```
+   For each provider, add explicit confirmation:
+   "✓ Confirmed in-network for your {policy_id} plan"
    ```
 
 4. **Add to `provider_agent`** (HMO Requirements):
    ```
-   If HMO plan: State PCP selection and referral requirements FIRST with visual emphasis (⚠️)
+   If user has HMO plan: State PCP selection and referral requirements FIRST with visual emphasis (⚠️)
    ```
 
-5. **Add to `brand_agent`** (Preserve Facts):
+5. **Add to `brand_agent`** (Preserve Names & Facts):
    ```
-   Preserve ALL facts from specialist response. Transform tone, not content.
-   Every provider ID, title, plan verification must be preserved exactly.
+   Preserve ALL provider names EXACTLY as given by specialist.
+   Do NOT change, abbreviate, or omit any part of provider names.
+   Transform tone, not content.
    ```
 
-**Expected Result**: These 5 changes should get you to **85-95% accuracy** consistently!
+**Expected Result**: These 5 changes should get you to **90-95% accuracy** consistently!
+
+**Key Fix**: #1 (exact name copying) will eliminate most errors immediately.
 
