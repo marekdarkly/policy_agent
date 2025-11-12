@@ -39,8 +39,9 @@ class LaunchDarklyClient:
                 "LAUNCHDARKLY_SDK_KEY is required. Set it in your environment variables."
             )
 
-        # Initialize LaunchDarkly SDK (following LaunchDarkly Python SDK pattern)
-        ldclient.set_config(Config(self.sdk_key))
+        # DON'T call ldclient.set_config() here - observability.py already initialized it!
+        # Calling set_config() again would overwrite the ObservabilityPlugin.
+        # Just get the existing client that was initialized with the plugin.
         
         # Wait briefly for async initialization (LaunchDarkly SDK initializes asynchronously)
         import time
@@ -54,9 +55,10 @@ class LaunchDarklyClient:
                 )
             time.sleep(0.1)
         
+        # Use the already-initialized client (with ObservabilityPlugin from observability.py)
         self.client = ldclient.get()
         self.ai_client = LDAIClient(self.client)
-        print("✅ LaunchDarkly AI Config initialized")
+        print("✅ LaunchDarkly AI Config client ready (using observability-enabled SDK)")
 
     def get_ai_config(
         self,
