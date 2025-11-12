@@ -488,7 +488,11 @@ class ModelInvoker:
                 
                 if current_span and current_span.is_recording() and self.config_key:
                     # Set the AI Config key for this specific agent
-                    current_span.set_attribute("ld.ai_config.key", self.config_key)
+                    # Wrap each operation separately to handle race conditions
+                    try:
+                        current_span.set_attribute("ld.ai_config.key", self.config_key)
+                    except Exception:
+                        pass  # Span may have ended between is_recording() check and this operation
                     
                     # Add feature_flag event
                     if self.user_context:
@@ -496,19 +500,21 @@ class ModelInvoker:
                             ctx_dict = self.user_context.to_dict() if hasattr(self.user_context, 'to_dict') else {}
                             ctx_id = ctx_dict.get('key') or ctx_dict.get('userKey') or 'anonymous'
                             
-                            current_span.add_event(
-                                "feature_flag",
-                                attributes={
-                                    "feature_flag.key": self.config_key,
-                                    "feature_flag.provider.name": "LaunchDarkly",
-                                    "feature_flag.context.id": ctx_id,
-                                    "feature_flag.result.value": True,
-                                },
-                            )
+                            # Check is_recording() again right before add_event
+                            if current_span.is_recording():
+                                current_span.add_event(
+                                    "feature_flag",
+                                    attributes={
+                                        "feature_flag.key": self.config_key,
+                                        "feature_flag.provider.name": "LaunchDarkly",
+                                        "feature_flag.context.id": ctx_id,
+                                        "feature_flag.result.value": True,
+                                    },
+                                )
                         except Exception:
-                            pass
+                            pass  # Silently ignore if span ended
                     
-                    # Trigger LD variation for correlation
+                    # Trigger LD variation for correlation (independent of span state)
                     if self.user_context:
                         try:
                             _ = ldclient.get().variation(self.config_key, self.user_context, True)
