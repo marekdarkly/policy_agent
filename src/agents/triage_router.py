@@ -53,13 +53,19 @@ def triage_node(state: AgentState) -> dict[str, Any]:
 
     response = model_invoker.invoke(langchain_messages)
 
-    # Extract token usage if available
+    # Extract token usage and TTFT if available
     tokens = {"input": 0, "output": 0}
+    ttft_ms = None
+    
     if hasattr(response, "usage_metadata") and response.usage_metadata:
         tokens = {
             "input": response.usage_metadata.get("input_tokens", 0),
             "output": response.usage_metadata.get("output_tokens", 0)
         }
+    
+    # Extract Time to First Token (TTFT) from response metadata
+    if hasattr(response, "response_metadata") and isinstance(response.response_metadata, dict):
+        ttft_ms = response.response_metadata.get("ttft_ms")
 
     # Parse the JSON response
     try:
@@ -116,6 +122,7 @@ def triage_node(state: AgentState) -> dict[str, Any]:
             **state.get("agent_data", {}),
             "triage_router": {
                 "tokens": tokens,
+                "ttft_ms": ttft_ms,  # Time to first token from Bedrock streaming
                 "confidence": confidence_score,
                 "query_type": str(query_type)
             }
