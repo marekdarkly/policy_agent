@@ -474,49 +474,51 @@ class ModelInvoker:
             Model response
         """
         try:
-            # Create a parent span with AI Config context that child LLM spans will inherit
+            # Set AI Config attributes on the current parent span (like ToggleBank RAG does)
+            # Don't create a new span - just annotate the existing parent (FastAPI/LangGraph span)
             try:
                 from opentelemetry import trace
-                from opentelemetry.trace import Status, StatusCode
                 
-                tracer = trace.get_tracer(__name__)
+                parent_span = trace.get_current_span()
+                if parent_span and parent_span.is_recording():
+                    # Set the ld.ai_config.key attribute on the parent span
+                    parent_span.set_attribute("ld.ai_config.key", self.config_key)
+                    parent_span.set_attribute("ai.config.type", "agent" if self._is_agent_config else "completion")
+                    
+                    # Add a feature_flag event (like ToggleBank RAG does)
+                    parent_span.add_event(
+                        "feature_flag",
+                        attributes={
+                            "feature_flag.key": self.config_key,
+                            "feature_flag.provider.name": "LaunchDarkly",
+                        },
+                    )
                 
-                # Create a parent span with AI Config attributes
-                # The auto-instrumented LLM span will be a child and inherit context
-                with tracer.start_as_current_span(
-                    f"ai_config.{self.config_key}",
-                    attributes={
-                        "ld.ai_config.key": self.config_key,  # LaunchDarkly expects ld. prefix!
-                        "ai.config.key": self.config_key,
-                        "ai.config.type": "agent" if self._is_agent_config else "completion",
-                        "service.name": "togglehealth-policy-agent",
-                    }
-                ) as span:
-                    # Use track_duration_of to wrap the model call (LaunchDarkly API)
-                    result = self.tracker.track_duration_of(lambda: self.model.invoke(messages))
+                # Use track_duration_of to wrap the model call (LaunchDarkly API)
+                result = self.tracker.track_duration_of(lambda: self.model.invoke(messages))
+                
+                # Track success (no arguments)
+                self.tracker.track_success()
+                
+                # Extract and track token usage if available
+                if hasattr(result, "usage_metadata") and result.usage_metadata:
+                    from ldai.tracker import TokenUsage
                     
-                    # Track success (no arguments)
-                    self.tracker.track_success()
+                    usage_data = result.usage_metadata
+                    token_usage = TokenUsage(
+                        input=usage_data.get("input_tokens", 0),
+                        output=usage_data.get("output_tokens", 0),
+                        total=usage_data.get("total_tokens", 0)
+                    )
+                    self.tracker.track_tokens(token_usage)
                     
-                    # Extract and track token usage if available
-                    if hasattr(result, "usage_metadata") and result.usage_metadata:
-                        from ldai.tracker import TokenUsage
-                        
-                        usage_data = result.usage_metadata
-                        token_usage = TokenUsage(
-                            input=usage_data.get("input_tokens", 0),
-                            output=usage_data.get("output_tokens", 0),
-                            total=usage_data.get("total_tokens", 0)
-                        )
-                        self.tracker.track_tokens(token_usage)
-                        
-                        # Add token info to parent span
-                        span.set_attribute("ai.tokens.input", token_usage.input)
-                        span.set_attribute("ai.tokens.output", token_usage.output)
-                        span.set_attribute("ai.tokens.total", token_usage.total)
-                    
-                    span.set_status(Status(StatusCode.OK))
-                    return result
+                    # Add token info to parent span
+                    if parent_span and parent_span.is_recording():
+                        parent_span.set_attribute("ai.tokens.input", token_usage.input)
+                        parent_span.set_attribute("ai.tokens.output", token_usage.output)
+                        parent_span.set_attribute("ai.tokens.total", token_usage.total)
+                
+                return result
                     
             except ImportError:
                 # OpenTelemetry not available, fall back to basic tracking
