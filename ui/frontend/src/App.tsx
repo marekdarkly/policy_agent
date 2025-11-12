@@ -18,6 +18,7 @@ interface AgentStep {
   rag_docs?: number;
   icon: string;
   duration?: number;
+  ttft_ms?: number;  // Time to first token from streaming
   tokens?: {
     input: number;
     output: number;
@@ -547,6 +548,12 @@ function App() {
                           <div className="agent-metric-item">
                             <span>Duration:</span>
                             <span>{agent.duration}ms</span>
+                          </div>
+                        )}
+                        {agent.ttft_ms && (
+                          <div className="agent-metric-item">
+                            <span>Time to First Token:</span>
+                            <span>{agent.ttft_ms}ms</span>
                           </div>
                         )}
                         {agent.tokens && (
