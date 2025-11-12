@@ -327,20 +327,31 @@ async def evaluate_brand_voice_async(
         
         # Store results in global store if request_id provided
         if request_id and results:
+            print(f"📊 Evaluation complete! Attempting to store results for request_id={request_id}")
+            print(f"   Accuracy: {results.get('accuracy', {}).get('score', 'N/A')}")
+            print(f"   Coherence: {results.get('coherence', {}).get('score', 'N/A')}")
+            
             # Import at runtime to avoid circular dependency
             try:
-                from ui.backend.server import EVALUATION_RESULTS
-                EVALUATION_RESULTS[request_id] = results
-                print(f"✅ EVALUATION STORED for request_id={request_id}")
-                print(f"   Accuracy: {results.get('accuracy', {}).get('score', 'N/A')}")
-                print(f"   Coherence: {results.get('coherence', {}).get('score', 'N/A')}")
-                print(f"   Keys in EVALUATION_RESULTS: {list(EVALUATION_RESULTS.keys())}")
-            except ImportError as e:
-                # Server not running or not available - that's okay
-                print(f"⚠️  Could not import EVALUATION_RESULTS: {e}")
-                print(f"✅ Evaluation complete for request {request_id[:8]}... - no server to store in")
+                import sys
+                # Get the server module if it's already imported
+                if 'ui.backend.server' in sys.modules:
+                    server_module = sys.modules['ui.backend.server']
+                    EVALUATION_RESULTS = server_module.EVALUATION_RESULTS
+                    EVALUATION_RESULTS[request_id] = results
+                    print(f"✅ EVALUATION STORED for request_id={request_id}")
+                    print(f"   Keys in EVALUATION_RESULTS: {list(EVALUATION_RESULTS.keys())}")
+                else:
+                    print(f"⚠️  Server module not loaded - cannot store evaluation")
+            except Exception as e:
+                # Show full error for debugging
+                import traceback
+                print(f"❌ Failed to store evaluation: {e}")
+                print(f"   Traceback: {traceback.format_exc()}")
         else:
             print(f"⚠️  No request_id provided or no results - cannot store evaluation")
+            print(f"   request_id: {request_id}")
+            print(f"   results: {results}")
         
     except Exception as e:
         # Never let evaluation errors crash the main flow
