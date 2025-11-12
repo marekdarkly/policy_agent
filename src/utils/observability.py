@@ -191,10 +191,3 @@ def initialize_observability(
 def is_observability_enabled() -> bool:
     """Check if observability has been successfully initialized."""
     return _observability_initialized
-
-
-# Auto-initialize if this module is imported and SDK key is available
-# This ensures observability is set up before any LLM imports
-if not _observability_initialized and os.getenv("LAUNCHDARKLY_SDK_KEY"):
-    logger.info("🚀 Auto-initializing observability on module import...")
-    initialize_observability()
