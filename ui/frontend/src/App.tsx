@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { PulseLoader } from 'react-spinners';
 import './App.css';
 
 interface Message {
@@ -304,23 +303,43 @@ function App() {
 
       {/* Chat Content */}
       <div className="chat-content" ref={chatContentRef}>
+        {/* Initial greeting */}
+        <div className="initial-message">
+          <img src="/assets/ToggleAvatar.png" alt="" className="message-avatar" />
+          <div className="message message-assistant">
+            Hello! I'm your ToggleHealth assistant. How can I help you today?
+          </div>
+        </div>
+
         {messages.map((message) => {
           if (message.role === 'user') {
             return (
-              <div key={message.id} className="message message-user">
-                {message.content}
+              <div key={message.id} className="message-row message-row-user">
+                <div className="message message-user">
+                  {message.content}
+                </div>
               </div>
             );
           } else if (message.role === 'assistant') {
             return (
-              <div key={message.id} className="message message-assistant">
-                {message.content}
+              <div key={message.id} className="message-row">
+                <img src="/assets/ToggleAvatar.png" alt="" className="message-avatar" />
+                <div className="message message-assistant">
+                  {message.content}
+                </div>
               </div>
             );
           } else if (message.role === 'system' && message.content === 'loading') {
             return (
-              <div key={message.id} className="message message-assistant">
-                <PulseLoader size={8} color="#4A90E2" />
+              <div key={message.id} className="message-row">
+                <img src="/assets/ToggleAvatar.png" alt="" className="message-avatar" />
+                <div className="message message-assistant">
+                  <div className="loading-dots">
+                    <div className="dot"></div>
+                    <div className="dot"></div>
+                    <div className="dot"></div>
+                  </div>
+                </div>
               </div>
             );
           }
