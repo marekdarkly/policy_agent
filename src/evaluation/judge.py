@@ -55,25 +55,20 @@ class BrandVoiceEvaluator:
             Dict with evaluation results
         """
         try:
-            # Get evaluation config from LaunchDarkly
-            eval_config, eval_tracker = self.ld_client.get_ai_config(
-                "brand_eval_judge",
-                user_context
-            )
+            # Note: We don't need to pre-fetch config here since each metric
+            # will get its own config (brand_eval_judge_accuracy, brand_eval_judge_coherence)
             
             # Run accuracy and coherence evaluations in parallel
             accuracy_task = self._evaluate_accuracy(
                 original_query,
                 specialist_response,
                 brand_voice_output,
-                user_context,
-                eval_config
+                user_context
             )
             
             coherence_task = self._evaluate_coherence(
                 brand_voice_output,
-                user_context,
-                eval_config
+                user_context
             )
             
             accuracy_result, coherence_result = await asyncio.gather(
@@ -115,8 +110,7 @@ class BrandVoiceEvaluator:
         original_query: str,
         specialist_response: str,
         brand_voice_output: str,
-        user_context: Dict[str, Any],
-        eval_config: Dict[str, Any]
+        user_context: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Evaluate accuracy: Did brand voice preserve factual accuracy?
@@ -125,7 +119,7 @@ class BrandVoiceEvaluator:
         """
         # Get the judge LLM and config (with prompts from LaunchDarkly)
         model_invoker, judge_config = get_model_invoker(
-            config_key="brand_eval_judge",
+            config_key="brand_eval_judge_accuracy",
             context=user_context,
             default_temperature=0.0  # Deterministic for evaluation
         )
@@ -150,8 +144,7 @@ class BrandVoiceEvaluator:
     async def _evaluate_coherence(
         self,
         brand_voice_output: str,
-        user_context: Dict[str, Any],
-        eval_config: Dict[str, Any]
+        user_context: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Evaluate coherence: Is the output clear, well-structured, professional?
@@ -160,7 +153,7 @@ class BrandVoiceEvaluator:
         """
         # Get the judge LLM and config (with prompts from LaunchDarkly)
         model_invoker, judge_config = get_model_invoker(
-            config_key="brand_eval_judge",
+            config_key="brand_eval_judge_coherence",
             context=user_context,
             default_temperature=0.0
         )
