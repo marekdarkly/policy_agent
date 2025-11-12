@@ -200,105 +200,70 @@ function App() {
 
     setMessages((prev) => [...prev, userMessage, loadingMessage]);
 
-    // Use streaming endpoint with SSE
+    // Start progressive agent status updates
+    setCurrentAgent('🔍 Analyzing your question...');
+    
+    // Set up estimated timing for status updates (will update with actual timing when response arrives)
+    const triageTimer = setTimeout(() => setCurrentAgent('📋 Looking up your policy...'), 2000);
+    const brandTimer = setTimeout(() => setCurrentAgent('✨ Writing up my thoughts...'), 10000);
+
     try {
-      // Create POST request body
-      const requestBody = JSON.stringify({ userInput: currentInput });
-      
-      // Use fetch for streaming (EventSource doesn't support POST)
-      const response = await fetch('http://localhost:8000/api/chat/stream', {
+      const response = await fetch('http://localhost:8000/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'text/event-stream',
         },
-        body: requestBody,
+        body: JSON.stringify({
+          userInput: currentInput,
+        }),
       });
+
+      // Clear the estimated timers
+      clearTimeout(triageTimer);
+      clearTimeout(brandTimer);
 
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
       }
 
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('No response body');
+      const data: ChatResponse = await response.json();
+
+      // Now use actual agent flow to show final status updates
+      if (data.agentFlow.length > 1) {
+        const specialist = data.agentFlow.find(a => a.agent.includes('specialist'));
+        if (specialist) {
+          setCurrentAgent(`${specialist.icon} Finalizing with ${specialist.name}...`);
+          await new Promise((resolve) => setTimeout(resolve, 400));
+        }
       }
 
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let streamedContent = '';
-      let responseRequestId = '';
-      let agentFlow: AgentStep[] = [];
-      let metrics: any = null;
-
-      // Read stream
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        // Decode chunk
-        buffer += decoder.decode(value, { stream: true });
-
-        // Process complete SSE messages
-        const lines = buffer.split('\n\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const jsonStr = line.substring(6);
-            try {
-              const event = JSON.parse(jsonStr);
-
-              if (event.type === 'status') {
-                // Update agent status
-                setCurrentAgent(event.message);
-              } else if (event.type === 'chunk') {
-                // Append chunk to streamed content
-                streamedContent += event.content;
-                
-                // Update message in real-time
-                const streamingMessage: Message = {
-                  id: 'streaming',
-                  role: 'assistant',
-                  content: streamedContent,
-                };
-                setMessages((prev) => prev.filter((m) => m.content !== 'loading' && m.id !== 'streaming').concat(streamingMessage));
-              } else if (event.type === 'complete') {
-                // Final event with metrics
-                responseRequestId = event.requestId;
-                agentFlow = event.agentFlow;
-                metrics = event.metrics;
-              } else if (event.type === 'error') {
-                throw new Error(event.message);
-              }
-            } catch (e) {
-              console.error('Failed to parse SSE event:', e);
-            }
-          }
-        }
+      // Show brand voice status if present
+      const brandVoice = data.agentFlow.find((a) => a.agent === 'brand_voice');
+      if (brandVoice) {
+        setCurrentAgent('✨ Polishing the response...');
+        await new Promise((resolve) => setTimeout(resolve, 300));
       }
 
       // Clear agent status
       setCurrentAgent(null);
 
-      // Replace streaming message with final message (with request ID for feedback)
-      const finalMessage: Message = {
-        id: responseRequestId || Date.now().toString(),
+      // Add assistant message
+      const assistantMessage: Message = {
+        id: data.requestId,
         role: 'assistant',
-        content: streamedContent,
-        requestId: responseRequestId,
+        content: data.response,
+        requestId: data.requestId,  // Store requestId for feedback tracking
       };
-      setMessages((prev) => prev.filter((m) => m.content !== 'loading' && m.id !== 'streaming').concat(finalMessage));
 
-      // Store metrics, agent flow, and request ID
-      setLastMetrics(metrics);
-      setLastAgentFlow(agentFlow);
-      setLastRequestId(responseRequestId);
+      setMessages((prev) => prev.filter((m) => m.content !== 'loading').concat(assistantMessage));
+      
+      // Store metrics, agent flow, and request ID for feedback
+      setLastMetrics(data.metrics || null);
+      setLastAgentFlow(data.agentFlow);
+      setLastRequestId(data.requestId);
 
-      // Start polling for evaluation results
-      if (responseRequestId) {
-        pollForEvaluation(responseRequestId);
-      }
+      // Start polling for evaluation results (async, non-blocking)
+      pollForEvaluation(data.requestId);
 
     } catch (error) {
       console.error('Chat error:', error);
@@ -307,7 +272,7 @@ function App() {
         role: 'assistant',
         content: 'I\'m sorry, an error occurred. Please try again.',
       };
-      setMessages((prev) => prev.filter((m) => m.content !== 'loading' && m.id !== 'streaming').concat(errorMessage));
+      setMessages((prev) => prev.filter((m) => m.content !== 'loading').concat(errorMessage));
     } finally {
       setIsLoading(false);
       setCurrentAgent(null);
