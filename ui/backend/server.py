@@ -37,6 +37,7 @@ from datetime import datetime
 # Import LLM-related modules AFTER observability setup
 from src.graph.workflow import run_workflow
 from src.utils.user_profile import create_user_profile
+from ldai import FeedbackKind
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -47,6 +48,10 @@ EVALUATION_RESULTS: Dict[str, Dict[str, Any]] = {}
 
 # Track which evaluations we've logged polling for (to reduce noise)
 POLLING_LOGGED: set = set()
+
+# Store brand voice trackers for feedback (keyed by request_id)
+# Trackers are needed to send feedback to LaunchDarkly
+BRAND_TRACKERS: Dict[str, Any] = {}
 
 # Global log broadcaster for SSE
 LOG_QUEUES: list[queue.Queue] = []
@@ -221,6 +226,11 @@ class ChatResponse(BaseModel):
     error: Optional[str] = None
 
 
+class FeedbackRequest(BaseModel):
+    requestId: str
+    feedback: str  # 'positive' or 'negative'
+
+
 @app.post("/api/chat")
 async def chat_endpoint(request: ChatRequest) -> ChatResponse:
     """
@@ -249,13 +259,14 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
         current_agent_start = time.time()
         request_id = str(uuid4())
         
-        # Run workflow with request_id and evaluation store for evaluation tracking
+        # Run workflow with request_id, evaluation store, and tracker store
         result = await asyncio.to_thread(
             run_workflow,
             user_message=request.userInput,
             user_context=user_context,
             request_id=request_id,
-            evaluation_results_store=EVALUATION_RESULTS
+            evaluation_results_store=EVALUATION_RESULTS,
+            brand_trackers_store=BRAND_TRACKERS
         )
         
         total_duration = int((time.time() - start_time) * 1000)  # ms
@@ -413,6 +424,46 @@ async def get_evaluation(request_id: str):
             "ready": False,
             "message": "Evaluation still processing or not found"
         }
+
+
+@app.post("/api/feedback")
+async def submit_feedback(request: FeedbackRequest):
+    """
+    Submit user feedback (positive/negative) for a brand voice response.
+    Sends the feedback to LaunchDarkly for tracking in the AI Config Monitoring tab.
+    """
+    request_id = request.requestId
+    feedback_type = request.feedback
+    
+    logger.info(f"[{request_id}] 📝 Received feedback: {feedback_type}")
+    
+    # Retrieve the brand voice tracker for this request
+    if request_id not in BRAND_TRACKERS:
+        logger.warning(f"[{request_id}] ⚠️  No tracker found for request (may have expired)")
+        raise HTTPException(status_code=404, detail="Request not found or expired")
+    
+    tracker = BRAND_TRACKERS[request_id]
+    
+    # Track feedback in LaunchDarkly
+    try:
+        feedback_kind = FeedbackKind.Positive if feedback_type == 'positive' else FeedbackKind.Negative
+        tracker.track_feedback({'kind': feedback_kind})
+        logger.info(f"[{request_id}] ✅ Feedback tracked in LaunchDarkly: {feedback_type}")
+        
+        # Flush to ensure immediate delivery
+        from ldclient import get as get_ld_client
+        get_ld_client().flush()
+        
+        # Clean up tracker after feedback is sent (optional)
+        del BRAND_TRACKERS[request_id]
+        
+        return {
+            "success": True,
+            "message": f"Feedback ({feedback_type}) recorded successfully"
+        }
+    except Exception as e:
+        logger.error(f"[{request_id}] ❌ Failed to track feedback: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to track feedback: {str(e)}")
 
 
 @app.get("/api/logs/stream")

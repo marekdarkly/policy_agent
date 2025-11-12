@@ -90,6 +90,12 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         request_id = state.get("request_id")
         results_store = state.get("evaluation_results_store")
         
+        # Store the brand voice tracker for feedback tracking (if request_id available)
+        trackers_store = state.get("brand_trackers_store")
+        if request_id and trackers_store is not None:
+            trackers_store[request_id] = model_invoker.tracker
+            print(f"✅ Stored brand voice tracker for request {request_id[:8]}...")
+        
         # Handle both sync and async contexts
         try:
             # Try to get the current event loop

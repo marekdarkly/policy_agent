@@ -7,6 +7,7 @@ interface Message {
   id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
+  requestId?: string;  // For tracking feedback on assistant responses
 }
 
 interface AgentStep {
@@ -58,6 +59,8 @@ function App() {
   const [currentAgent, setCurrentAgent] = useState<string | null>(null);
   const [lastMetrics, setLastMetrics] = useState<ChatResponse['metrics'] | null>(null);
   const [lastAgentFlow, setLastAgentFlow] = useState<AgentStep[]>([]);
+  const [lastRequestId, setLastRequestId] = useState<string | null>(null);
+  const [feedbackGiven, setFeedbackGiven] = useState<'positive' | 'negative' | null>(null);
   const [showMetrics, setShowMetrics] = useState(false);
   const [showEvalReasoning, setShowEvalReasoning] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -138,6 +141,37 @@ function App() {
     setTimeout(poll, 1000);
   };
 
+  const sendFeedback = async (isPositive: boolean) => {
+    if (!lastRequestId) {
+      console.warn('No request ID available for feedback');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:8000/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          requestId: lastRequestId,
+          feedback: isPositive ? 'positive' : 'negative',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Feedback request failed with status ${response.status}`);
+      }
+
+      // Update UI to show feedback was given
+      setFeedbackGiven(isPositive ? 'positive' : 'negative');
+      console.log(`✅ Feedback sent: ${isPositive ? 'positive' : 'negative'}`);
+
+    } catch (error) {
+      console.error('Error sending feedback:', error);
+    }
+  };
+
   const sendMessage = async () => {
     if (!userInput.trim()) return;
 
@@ -146,6 +180,7 @@ function App() {
     setIsLoading(true);
     setCurrentAgent(null);
     setShowMetrics(false);
+    setFeedbackGiven(null);  // Reset feedback for new conversation
 
     // Add user message
     const userMessage: Message = {
@@ -214,13 +249,15 @@ function App() {
         id: data.requestId,
         role: 'assistant',
         content: data.response,
+        requestId: data.requestId,  // Store requestId for feedback tracking
       };
 
       setMessages((prev) => prev.filter((m) => m.content !== 'loading').concat(assistantMessage));
       
-      // Store metrics and agent flow
+      // Store metrics, agent flow, and request ID for feedback
       setLastMetrics(data.metrics || null);
       setLastAgentFlow(data.agentFlow);
+      setLastRequestId(data.requestId);
 
       // Start polling for evaluation results (async, non-blocking)
       pollForEvaluation(data.requestId);
@@ -393,10 +430,20 @@ function App() {
           </div>
         </div>
         <div className="header-actions">
-          <button className="feedback-btn feedback-good" title="Good service">
+          <button 
+            className={`feedback-btn feedback-good ${feedbackGiven === 'positive' ? 'active' : ''}`}
+            title="Good service"
+            onClick={() => sendFeedback(true)}
+            disabled={!lastRequestId || isLoading}
+          >
             😊
           </button>
-          <button className="feedback-btn feedback-bad" title="Bad service">
+          <button 
+            className={`feedback-btn feedback-bad ${feedbackGiven === 'negative' ? 'active' : ''}`}
+            title="Bad service"
+            onClick={() => sendFeedback(false)}
+            disabled={!lastRequestId || isLoading}
+          >
             ☹️
           </button>
         </div>
