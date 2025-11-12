@@ -4,19 +4,19 @@ This document provides example prompts for evaluating the brand voice agent usin
 
 ## LaunchDarkly AI Config Setup
 
-Create an AI Config in LaunchDarkly with key: `brand_eval_judge`
+You need to create **TWO** separate AI Configs in LaunchDarkly:
+
+### 1. Accuracy Evaluation Config
+
+**Config Key**: `brand_eval_judge_accuracy`
 
 **Config Type**: Agent-based (Goal or task)
 
-**Model**: Use a strong reasoning model like Claude Sonnet 4 or GPT-4
+**Model**: Claude Sonnet 4 or GPT-4 (strong reasoning model)
 
-**Custom Parameters**:
-- `awskbid`: (not needed for evaluation)
+**Temperature**: 0.0 (deterministic)
 
----
-
-## Accuracy Evaluation Prompt (Goal or Task)
-
+**Goal or Task**:
 ```
 You are an expert evaluator assessing whether a customer-facing response preserves factual accuracy from the original specialist response.
 
@@ -59,12 +59,10 @@ Follow these evaluation steps systematically:
    - 0.1 = Major errors or hallucinations
    - 0.0 = Completely inaccurate or fabricated
 
-RESPONSE FORMAT:
-
-You will receive:
-- Original User Query: The customer's question
-- Specialist Response: The factual source of truth
-- Brand Voice Output: The response to evaluate
+INPUTS YOU'LL RECEIVE:
+- original_query: {{original_query}}
+- specialist_response: {{specialist_response}}
+- brand_voice_output: {{brand_voice_output}}
 
 Return ONLY valid JSON:
 {
@@ -78,8 +76,17 @@ Be strict but fair. The threshold for passing is 0.8 - reserve scores above 0.8 
 
 ---
 
-## Coherence Evaluation Prompt (Goal or Task)
+### 2. Coherence Evaluation Config
 
+**Config Key**: `brand_eval_judge_coherence`
+
+**Config Type**: Agent-based (Goal or task)
+
+**Model**: Claude Sonnet 4 or GPT-4 (strong reasoning model)
+
+**Temperature**: 0.0 (deterministic)
+
+**Goal or Task**:
 ```
 You are an expert evaluator assessing the coherence, clarity, and professionalism of customer-facing healthcare communications.
 
@@ -129,10 +136,8 @@ Follow these evaluation steps systematically:
    - 0.1 = Difficult to follow or unprofessional
    - 0.0 = Incoherent or inappropriate
 
-RESPONSE FORMAT:
-
-You will receive:
-- Brand Voice Output: The response to evaluate
+INPUTS YOU'LL RECEIVE:
+- brand_voice_output: {{brand_voice_output}}
 
 Return ONLY valid JSON:
 {
@@ -146,27 +151,28 @@ Be constructive. The threshold for passing is 0.7 - customer-facing healthcare c
 
 ---
 
-## Usage in LaunchDarkly
+## Implementation Details
 
-1. **Create AI Config**: Navigate to LaunchDarkly → AI Configs → Create
-2. **Config Key**: `brand_eval_judge`
-3. **Type**: Agent-based
-4. **Goal or Task**: Copy one of the prompts above (you'll use the same config for both, the code will provide different inputs)
-5. **Model**: Select a strong reasoning model
-   - Recommended: `us.anthropic.claude-sonnet-4-20250514-v1:0`
-   - Alternative: GPT-4 Turbo or Nova Pro
-6. **Temperature**: 0.0 (for deterministic evaluation)
-
-## How It Works
-
-The evaluation system:
-1. Runs **asynchronously** after the brand voice agent responds
-2. Uses the **same LaunchDarkly tracker** as brand_agent
-3. Sends judgment metrics with special keys:
+The evaluation system will:
+1. Call **both** configs separately for each evaluation
+2. Use `brand_eval_judge_accuracy` for accuracy judgment
+3. Use `brand_eval_judge_coherence` for coherence judgment
+4. Pass relevant context variables to each config
+5. Send results to LaunchDarkly with metric keys:
    - `$ld:ai:judge:accuracy` 
    - `$ld:ai:judge:coherence`
-4. These metrics appear in the LaunchDarkly AI Config dashboard alongside the brand_agent metrics
-5. Evaluation **never blocks** the user response
+
+## Why Two Separate Configs?
+
+Each metric needs different inputs:
+- **Accuracy**: Needs original_query, specialist_response, AND brand_voice_output
+- **Coherence**: Only needs brand_voice_output
+
+Having separate configs allows:
+- Different prompts optimized for each metric
+- Independent tuning of evaluation criteria
+- Potential to use different models per metric
+- Clearer separation of concerns
 
 ## Monitoring
 
@@ -174,8 +180,8 @@ In LaunchDarkly, you'll be able to:
 - See accuracy and coherence scores in real-time
 - Track trends over time
 - Alert when scores drop below threshold
-- Correlate evaluation scores with user context (location, plan type, etc.)
-- A/B test different brand voice prompts and see impact on evaluation scores
+- Correlate evaluation scores with user context
+- A/B test different brand voice prompts
 
 ## Adjusting Thresholds
 
@@ -184,4 +190,3 @@ Current thresholds (defined in code):
 - **Coherence**: 0.7 (reasonable - allows some style variation)
 
 These can be adjusted in `src/evaluation/judge.py` based on your tolerance for errors.
-

@@ -123,26 +123,26 @@ class BrandVoiceEvaluator:
         
         Uses G-Eval methodology with evaluation steps from LaunchDarkly.
         """
-        # Get the judge LLM
-        model_invoker, _ = get_model_invoker(
+        # Get the judge LLM and config (with prompts from LaunchDarkly)
+        model_invoker, judge_config = get_model_invoker(
             config_key="brand_eval_judge",
             context=user_context,
             default_temperature=0.0  # Deterministic for evaluation
         )
         
-        # Build evaluation prompt using G-Eval methodology
-        prompt = self._build_accuracy_prompt(
-            original_query,
-            specialist_response,
-            brand_voice_output,
-            eval_config
-        )
+        # Build messages from LaunchDarkly config with accuracy evaluation context
+        context_vars = {
+            **user_context,
+            "original_query": original_query,
+            "specialist_response": specialist_response,
+            "brand_voice_output": brand_voice_output,
+            "evaluation_type": "accuracy"
+        }
+        
+        langchain_messages = self.ld_client.build_langchain_messages(judge_config, context_vars)
         
         # Run evaluation
-        response = model_invoker.invoke([
-            SystemMessage(content="You are an expert evaluator assessing the accuracy of AI-generated responses."),
-            HumanMessage(content=prompt)
-        ])
+        response = model_invoker.invoke(langchain_messages)
         
         # Parse result
         return self._parse_eval_response(response.content, threshold=0.8)
@@ -158,114 +158,28 @@ class BrandVoiceEvaluator:
         
         Uses G-Eval methodology with evaluation steps from LaunchDarkly.
         """
-        # Get the judge LLM
-        model_invoker, _ = get_model_invoker(
+        # Get the judge LLM and config (with prompts from LaunchDarkly)
+        model_invoker, judge_config = get_model_invoker(
             config_key="brand_eval_judge",
             context=user_context,
             default_temperature=0.0
         )
         
-        # Build evaluation prompt
-        prompt = self._build_coherence_prompt(brand_voice_output, eval_config)
+        # Build messages from LaunchDarkly config with coherence evaluation context
+        context_vars = {
+            **user_context,
+            "brand_voice_output": brand_voice_output,
+            "evaluation_type": "coherence"
+        }
+        
+        langchain_messages = self.ld_client.build_langchain_messages(judge_config, context_vars)
         
         # Run evaluation
-        response = model_invoker.invoke([
-            SystemMessage(content="You are an expert evaluator assessing the coherence and clarity of AI-generated responses."),
-            HumanMessage(content=prompt)
-        ])
+        response = model_invoker.invoke(langchain_messages)
         
         # Parse result
         return self._parse_eval_response(response.content, threshold=0.7)
     
-    def _build_accuracy_prompt(
-        self,
-        original_query: str,
-        specialist_response: str,
-        brand_voice_output: str,
-        eval_config: Dict[str, Any]
-    ) -> str:
-        """Build G-Eval prompt for accuracy evaluation."""
-        
-        # Extract evaluation steps from config or use defaults
-        instructions = eval_config.get("_instructions", "")
-        
-        # Default evaluation steps if not in config
-        default_steps = [
-            "Compare the facts in the brand voice output against the specialist response",
-            "Check if any medical/policy/provider facts were changed, omitted, or added",
-            "Verify that numbers, dates, names, and specific details remain accurate",
-            "Heavily penalize any hallucinations or factual errors",
-            "Minor rephrasing for clarity is acceptable as long as facts are preserved"
-        ]
-        
-        return f"""Evaluate the ACCURACY of the brand voice output by comparing it to the specialist response.
-
-Original User Query:
-{original_query}
-
-Specialist Response (Source of Truth):
-{specialist_response}
-
-Brand Voice Output (To Evaluate):
-{brand_voice_output}
-
-Evaluation Steps:
-{chr(10).join(f"{i+1}. {step}" for i, step in enumerate(default_steps))}
-
-Rate the accuracy on a scale of 0.0 to 1.0, where:
-- 1.0 = Perfect accuracy, all facts preserved
-- 0.8-0.9 = Minor rephrasing but facts intact
-- 0.6-0.7 = Some details lost but core facts correct
-- 0.4-0.5 = Significant factual changes
-- 0.0-0.3 = Major errors or hallucinations
-
-Return your evaluation as JSON:
-{{
-    "score": <float between 0.0 and 1.0>,
-    "reasoning": "<brief explanation of score>",
-    "issues": ["<list any factual discrepancies found>"]
-}}
-
-JSON:"""
-    
-    def _build_coherence_prompt(
-        self,
-        brand_voice_output: str,
-        eval_config: Dict[str, Any]
-    ) -> str:
-        """Build G-Eval prompt for coherence evaluation."""
-        
-        default_steps = [
-            "Evaluate whether the response uses clear and direct language",
-            "Check if medical/insurance terminology is explained when used",
-            "Assess whether the message is well-structured with logical flow",
-            "Verify the tone is professional yet friendly and empathetic",
-            "Identify any confusing, vague, or overly complex parts"
-        ]
-        
-        return f"""Evaluate the COHERENCE of this customer-facing response.
-
-Brand Voice Output:
-{brand_voice_output}
-
-Evaluation Steps:
-{chr(10).join(f"{i+1}. {step}" for i, step in enumerate(default_steps))}
-
-Rate the coherence on a scale of 0.0 to 1.0, where:
-- 1.0 = Exceptionally clear, professional, and easy to understand
-- 0.8-0.9 = Clear and well-structured with minor room for improvement
-- 0.6-0.7 = Understandable but has some confusing parts
-- 0.4-0.5 = Somewhat unclear or poorly structured
-- 0.0-0.3 = Confusing, unprofessional, or difficult to follow
-
-Return your evaluation as JSON:
-{{
-    "score": <float between 0.0 and 1.0>,
-    "reasoning": "<brief explanation of score>",
-    "issues": ["<list any coherence issues found>"]
-}}
-
-JSON:"""
     
     def _parse_eval_response(self, response: str, threshold: float) -> Dict[str, Any]:
         """Parse evaluation response from judge LLM."""
