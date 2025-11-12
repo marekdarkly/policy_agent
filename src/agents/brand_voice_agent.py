@@ -86,8 +86,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                     rag_documents = rag_docs
                     break
         
-        # Get request_id from state for evaluation tracking
+        # Get request_id and results_store from state for evaluation tracking
         request_id = state.get("request_id")
+        results_store = state.get("evaluation_results_store")
         
         # Handle both sync and async contexts
         try:
@@ -101,7 +102,8 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                     brand_voice_output=final_response,
                     user_context=user_context,
                     brand_tracker=model_invoker.tracker,
-                    request_id=request_id
+                    request_id=request_id,
+                    results_store=results_store
                 )
             )
         except RuntimeError:
@@ -117,7 +119,8 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                         brand_voice_output=final_response,
                         user_context=user_context,
                         brand_tracker=model_invoker.tracker,
-                        request_id=request_id
+                        request_id=request_id,
+                        results_store=results_store
                     )
                 )
             

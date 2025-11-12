@@ -82,12 +82,13 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
         current_agent_start = time.time()
         request_id = str(uuid4())
         
-        # Run workflow with request_id for evaluation tracking
+        # Run workflow with request_id and evaluation store for evaluation tracking
         result = await asyncio.to_thread(
             run_workflow,
             user_message=request.userInput,
             user_context=user_context,
-            request_id=request_id
+            request_id=request_id,
+            evaluation_results_store=EVALUATION_RESULTS
         )
         
         total_duration = int((time.time() - start_time) * 1000)  # ms

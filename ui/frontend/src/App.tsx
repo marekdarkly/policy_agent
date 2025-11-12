@@ -149,8 +149,8 @@ function App() {
     setCurrentAgent('🔍 Analyzing your question...');
     
     // Set up estimated timing for status updates (will update with actual timing when response arrives)
-    const triageTimer = setTimeout(() => setCurrentAgent('📋 Checking policy details...'), 800);
-    const specialistTimer = setTimeout(() => setCurrentAgent('✨ Writing up my thoughts...'), 2500);
+    const triageTimer = setTimeout(() => setCurrentAgent('📋 Looking up your policy...'), 2000);
+    const brandTimer = setTimeout(() => setCurrentAgent('✨ Writing up my thoughts...'), 10000);
 
     try {
       const response = await fetch('http://localhost:8000/api/chat', {
@@ -165,7 +165,7 @@ function App() {
 
       // Clear the estimated timers
       clearTimeout(triageTimer);
-      clearTimeout(specialistTimer);
+      clearTimeout(brandTimer);
 
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
