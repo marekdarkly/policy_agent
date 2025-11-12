@@ -51,7 +51,14 @@ def triage_node(state: AgentState) -> dict[str, Any]:
     if isinstance(model_invoker.model, ChatOpenAI):
         model_invoker.model.model_kwargs = {"response_format": {"type": "json_object"}}
 
+    # Track start time for duration measurement
+    import time
+    start_time = time.time()
+    
     response = model_invoker.invoke(langchain_messages)
+    
+    # Calculate duration
+    duration_ms = int((time.time() - start_time) * 1000)
 
     # Extract token usage and TTFT if available
     tokens = {"input": 0, "output": 0}
@@ -123,6 +130,7 @@ def triage_node(state: AgentState) -> dict[str, Any]:
             "triage_router": {
                 "tokens": tokens,
                 "ttft_ms": ttft_ms,  # Time to first token from Bedrock streaming
+                "duration_ms": duration_ms,  # Total time to generate response
                 "confidence": confidence_score,
                 "query_type": str(query_type)
             }

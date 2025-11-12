@@ -280,37 +280,37 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
         agent_data = result.get("agent_data", {})
         confidence = result.get("confidence_score", 0)
         
-        # Triage - estimate duration and get tokens + TTFT
-        triage_duration = int(total_duration * 0.1)  # ~10% of time
+        # Triage - get real duration, TTFT, and tokens
         triage_data = agent_data.get("triage_router", {})
         triage_tokens = triage_data.get("tokens", {"input": 0, "output": 0})
         triage_ttft = triage_data.get("ttft_ms")
+        triage_duration = triage_data.get("duration_ms")  # Real duration from agent
         agent_flow.append({
             "agent": "triage_router",
             "name": "Triage Router",
             "status": "complete",
             "confidence": float(confidence) if confidence else 0.0,
             "icon": "🔍",
-            "duration": triage_duration,
-            "ttft_ms": triage_ttft,  # Time to first token from streaming
+            "duration": triage_duration,  # Total time to generate
+            "ttft_ms": triage_ttft,  # Time to first token
             "tokens": triage_tokens
         })
         
-        # Specialist
-        specialist_duration = int(total_duration * 0.6)  # ~60% of time
+        # Specialist - get real duration, TTFT, and tokens
         if "policy_specialist" in agent_data:
             policy_data = agent_data["policy_specialist"]
             rag_docs = policy_data.get("rag_documents_retrieved", 0)
             tokens = policy_data.get("tokens", {"input": 0, "output": 0})
             ttft_ms = policy_data.get("ttft_ms")
+            duration_ms = policy_data.get("duration_ms")
             agent_flow.append({
                 "agent": "policy_specialist",
                 "name": "Policy Specialist",
                 "status": "complete",
                 "rag_docs": rag_docs,
                 "icon": "📋",
-                "duration": specialist_duration,
-                "ttft_ms": ttft_ms,  # Time to first token from streaming
+                "duration": duration_ms,  # Total time to generate
+                "ttft_ms": ttft_ms,  # Time to first token
                 "tokens": tokens
             })
         elif "provider_specialist" in agent_data:
@@ -318,42 +318,44 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
             rag_docs = provider_data.get("rag_documents_retrieved", 0)
             tokens = provider_data.get("tokens", {"input": 0, "output": 0})
             ttft_ms = provider_data.get("ttft_ms")
+            duration_ms = provider_data.get("duration_ms")
             agent_flow.append({
                 "agent": "provider_specialist",
                 "name": "Provider Specialist",
                 "status": "complete",
                 "rag_docs": rag_docs,
                 "icon": "🏥",
-                "duration": specialist_duration,
-                "ttft_ms": ttft_ms,  # Time to first token from streaming
+                "duration": duration_ms,  # Total time to generate
+                "ttft_ms": ttft_ms,  # Time to first token
                 "tokens": tokens
             })
         elif "scheduler_specialist" in agent_data:
             scheduler_data = agent_data.get("scheduler_specialist", {})
             ttft_ms = scheduler_data.get("ttft_ms")
+            duration_ms = scheduler_data.get("duration_ms")
             agent_flow.append({
                 "agent": "scheduler_specialist",
                 "name": "Scheduler Specialist",
                 "status": "complete",
                 "icon": "📅",
-                "duration": specialist_duration,
-                "ttft_ms": ttft_ms,  # Time to first token from streaming
+                "duration": duration_ms,  # Total time to generate
+                "ttft_ms": ttft_ms,  # Time to first token
                 "tokens": {"input": 0, "output": 0}
             })
         
-        # Brand voice - estimate duration and get tokens + TTFT
-        brand_duration = int(total_duration * 0.3)  # ~30% of time
+        # Brand voice - get real duration, TTFT, and tokens
         if "brand_voice" in agent_data:
             brand_data_info = agent_data["brand_voice"]
             brand_tokens = brand_data_info.get("tokens", {"input": 0, "output": 0})
             brand_ttft = brand_data_info.get("ttft_ms")
+            brand_duration = brand_data_info.get("duration_ms")
             agent_flow.append({
                 "agent": "brand_voice",
                 "name": "Brand Voice",
                 "status": "complete",
                 "icon": "✨",
-                "duration": brand_duration,
-                "ttft_ms": brand_ttft,  # Time to first token from streaming
+                "duration": brand_duration,  # Total time to generate
+                "ttft_ms": brand_ttft,  # Time to first token
                 "tokens": brand_tokens
             })
         

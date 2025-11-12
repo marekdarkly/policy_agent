@@ -91,7 +91,14 @@ def policy_specialist_node(state: AgentState) -> dict[str, Any]:
     }
     langchain_messages = ld_client.build_langchain_messages(ld_config, context_vars)
 
+    # Track start time for duration measurement
+    import time
+    start_time = time.time()
+    
     response = model_invoker.invoke(langchain_messages)
+    
+    # Calculate duration
+    duration_ms = int((time.time() - start_time) * 1000)
     
     # Extract token usage and TTFT if available
     tokens = {"input": 0, "output": 0}
@@ -125,6 +132,7 @@ def policy_specialist_node(state: AgentState) -> dict[str, Any]:
                 "policy_id": policy_id,
                 "tokens": tokens,
                 "ttft_ms": ttft_ms,  # Time to first token from Bedrock streaming
+                "duration_ms": duration_ms,  # Total time to generate response
             },
         },
     }
