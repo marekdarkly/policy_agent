@@ -11,7 +11,7 @@ interface LogEntry {
 export default function Terminal() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(true);  // Default to collapsed
+  const [isCollapsed, setIsCollapsed] = useState(false);  // Default to expanded so logs are visible
   const logsEndRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
 

@@ -408,15 +408,18 @@ async def chat_stream(request: ChatRequest):
     """
     async def event_generator():
         try:
+            # Track start time for total duration
+            start_time = time.time()
+            
             # Generate unique request ID
             request_id = str(uuid4())
             
             # Send initial status
             yield f"data: {json.dumps({'type': 'status', 'agent': 'system', 'message': 'Starting analysis...'})}\n\n"
             
-            # Create user context
+            # Create user context with actual user profile from .env
             user_context = create_user_profile(
-                name=os.getenv("USER_NAME", "John Doe"),
+                name=os.getenv("USER_NAME", "Marek Urbanowicz"),
                 location=os.getenv("USER_LOCATION", "San Francisco, CA"),
                 policy_id=os.getenv("USER_POLICY_ID", "TH-HMO-GOLD-2024"),
                 coverage_type=os.getenv("USER_COVERAGE_TYPE", "Gold HMO")
@@ -528,7 +531,13 @@ async def chat_stream(request: ChatRequest):
                     "tokens": brand_data_info.get("tokens", {"input": 0, "output": 0})
                 })
             
-            # Send final event with metrics
+            # Calculate total duration
+            total_duration = int((time.time() - start_time) * 1000)  # ms
+            
+            # Log completion with full metrics
+            logger.info(f"[{request_id}] Response generated: {len(final_response)} chars, {len(agent_flow)} agents, {total_duration}ms")
+            
+            # Send final event with metrics (including total_duration_ms)
             yield f"data: {json.dumps({
                 'type': 'complete',
                 'requestId': request_id,
@@ -537,7 +546,8 @@ async def chat_stream(request: ChatRequest):
                     'query_type': str(query_type),
                     'confidence': float(confidence) if confidence else 0.0,
                     'agent_count': len(agent_flow),
-                    'rag_enabled': any(a.get('rag_docs', 0) > 0 for a in agent_flow)
+                    'rag_enabled': any(a.get('rag_docs', 0) > 0 for a in agent_flow),
+                    'total_duration_ms': total_duration
                 }
             })}\n\n"
             
