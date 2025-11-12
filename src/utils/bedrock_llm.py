@@ -289,11 +289,154 @@ class BedrockConverseLLM(BaseChatModel):
         run_manager: Optional[CallbackManagerForLLMRun] = None,
         **kwargs: Any,
     ) -> Iterator[ChatGeneration]:
-        """Stream responses from Bedrock (not implemented yet).
-
-        Note: Streaming support can be added using converseStream API.
+        """Stream responses from Bedrock using converseStream API.
+        
+        Yields chunks as they arrive from Bedrock.
         """
-        raise NotImplementedError("Streaming is not yet implemented for BedrockConverseLLM")
+        bedrock_client = self._bedrock_client
+        converse_messages, system_messages = self._convert_messages_to_converse_format(
+            messages
+        )
+        inference_config = {
+            "temperature": kwargs.get("temperature", self.temperature),
+            "maxTokens": kwargs.get("max_tokens", self.max_tokens),
+        }
+        if stop:
+            inference_config["stopSequences"] = stop
+        api_params = {
+            "modelId": self.model_id,
+            "messages": converse_messages,
+            "inferenceConfig": inference_config,
+        }
+        if system_messages:
+            api_params["system"] = system_messages
+
+        try:
+            start_time = time.time()
+            ttft_ms = None
+            
+            response_stream = bedrock_client.converse_stream(**api_params)
+            
+            accumulated_text = ""
+            token_usage = {}
+            stop_reason = None
+            
+            for event in response_stream["stream"]:
+                # Capture TTFT on first content delta
+                if ttft_ms is None and "contentBlockDelta" in event:
+                    ttft_ms = int((time.time() - start_time) * 1000)
+                
+                # Yield each chunk as it arrives
+                if "contentBlockDelta" in event:
+                    delta = event["contentBlockDelta"].get("delta", {})
+                    if "text" in delta:
+                        chunk_text = delta["text"]
+                        accumulated_text += chunk_text
+                        
+                        # Create a chunk with the incremental text
+                        message = AIMessage(
+                            content=chunk_text,
+                            response_metadata={
+                                "model_id": self.model_id,
+                                "ttft_ms": ttft_ms,
+                                "is_chunk": True,
+                            },
+                        )
+                        yield ChatGeneration(message=message)
+                
+                # Capture final metadata
+                if "metadata" in event:
+                    metadata = event["metadata"]
+                    usage = metadata.get("usage", {})
+                    token_usage = {
+                        "input_tokens": usage.get("inputTokens", 0),
+                        "output_tokens": usage.get("outputTokens", 0),
+                        "total_tokens": usage.get("totalTokens", 0),
+                    }
+                    stop_reason = metadata.get("stopReason")
+            
+            # Yield final metadata chunk
+            if ttft_ms is None:
+                ttft_ms = int((time.time() - start_time) * 1000)
+            
+            final_message = AIMessage(
+                content="",  # Empty content for metadata-only message
+                response_metadata={
+                    "model_id": self.model_id,
+                    "stop_reason": stop_reason,
+                    "token_usage": token_usage,
+                    "ttft_ms": ttft_ms,
+                    "is_final": True,
+                },
+            )
+            final_message.usage_metadata = token_usage
+            yield ChatGeneration(message=final_message)
+
+        except Exception as e:
+            if "credentials" in str(e).lower() or "expired" in str(e).lower():
+                print("🔄 Credentials may be expired, attempting refresh...")
+                if self.aws_sso_manager.force_refresh():
+                    self._bedrock_client = self.aws_sso_manager.get_bedrock_client(
+                        "bedrock-runtime"
+                    )
+                    
+                    # Retry streaming after refresh
+                    start_time = time.time()
+                    ttft_ms = None
+                    
+                    response_stream = self._bedrock_client.converse_stream(**api_params)
+                    
+                    accumulated_text = ""
+                    token_usage = {}
+                    stop_reason = None
+                    
+                    for event in response_stream["stream"]:
+                        if ttft_ms is None and "contentBlockDelta" in event:
+                            ttft_ms = int((time.time() - start_time) * 1000)
+                        
+                        if "contentBlockDelta" in event:
+                            delta = event["contentBlockDelta"].get("delta", {})
+                            if "text" in delta:
+                                chunk_text = delta["text"]
+                                accumulated_text += chunk_text
+                                
+                                message = AIMessage(
+                                    content=chunk_text,
+                                    response_metadata={
+                                        "model_id": self.model_id,
+                                        "ttft_ms": ttft_ms,
+                                        "is_chunk": True,
+                                    },
+                                )
+                                yield ChatGeneration(message=message)
+                        
+                        if "metadata" in event:
+                            metadata = event["metadata"]
+                            usage = metadata.get("usage", {})
+                            token_usage = {
+                                "input_tokens": usage.get("inputTokens", 0),
+                                "output_tokens": usage.get("outputTokens", 0),
+                                "total_tokens": usage.get("totalTokens", 0),
+                            }
+                            stop_reason = metadata.get("stopReason")
+                    
+                    if ttft_ms is None:
+                        ttft_ms = int((time.time() - start_time) * 1000)
+                    
+                    final_message = AIMessage(
+                        content="",
+                        response_metadata={
+                            "model_id": self.model_id,
+                            "stop_reason": stop_reason,
+                            "token_usage": token_usage,
+                            "ttft_ms": ttft_ms,
+                            "is_final": True,
+                        },
+                    )
+                    final_message.usage_metadata = token_usage
+                    yield ChatGeneration(message=final_message)
+
+            raise
 
 
 # Common Bedrock model IDs
