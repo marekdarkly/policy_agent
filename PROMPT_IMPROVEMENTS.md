@@ -1,16 +1,32 @@
 # Prompt Improvements for Robust Evaluations
 
+**⚠️ IMPORTANT**: This document addresses **PROMPT-LEVEL** fixes only.  
+**For RAG DATA issues** (coverage claims, hallucination prevention), see [`RAG_STRUCTURAL_ISSUES.md`](./RAG_STRUCTURAL_ISSUES.md).
+
 ## Current Performance
 - **Accuracy**: 65% (Target: 80%+)
 - **Coherence**: 90% (Good!)
 
+## Root Cause Analysis
+
+**Primary Issue**: RAG data mismatch
+- `provider_directory_overview.md` claims coverage in San Francisco, Boston, etc.
+- `providers_detailed.md` has only 1 SF provider, 0 Boston providers
+- LLM hallucinates providers to fulfill queries → 65% accuracy
+
+**Secondary Issue**: Prompts don't enforce strict RAG fidelity  
+**Solution**: Fix BOTH RAG data (see RAG_STRUCTURAL_ISSUES.md) AND prompts (below)
+
 ## Issues to Fix
 
-### Accuracy Issues (From Judge)
-1. ❌ Incorrectly identifies Dr. Karen C. Kim's title (Clinical Psychology vs Licensed Psychologist)
-2. ❌ Omits critical HMO-specific requirements (PCP selection, referral requirements)
-3. ❌ Missing provider IDs from RAG documents
-4. ⚠️  Incomplete final sentence formatting
+### Accuracy Issues (From Multiple Judge Evaluations)
+1. ❌ **[CRITICAL]** Not verifying providers against user's EXACT plan (e.g., TH-HMO-GOLD-2024)
+   - Providers shown in multiple networks but no explicit confirmation for user's specific plan
+2. ❌ **[CRITICAL]** Hallucinating missing data (e.g., completing partial names like "Dr. Singh")
+3. ❌ Incorrectly identifies Dr. Karen C. Kim's title (Clinical Psychology vs Licensed Psychologist)
+4. ❌ Omits critical HMO-specific requirements (PCP selection, referral requirements)
+5. ❌ Missing provider IDs from RAG documents
+6. ⚠️  Incomplete final sentence formatting
 
 ---
 
@@ -25,29 +41,52 @@
 ```
 CRITICAL INSTRUCTIONS FOR PROVIDER SEARCH:
 
-1. PRESERVE EXACT TITLES & CREDENTIALS:
+1. PLAN VERIFICATION (HIGHEST PRIORITY):
+   - User's plan: {policy_id} (e.g., TH-HMO-GOLD-2024)
+   - ONLY return providers EXPLICITLY verified for THIS EXACT PLAN ID
+   - If RAG shows provider in multiple networks (e.g., TH-EPO-SELECT, TH-HMO-PRIMARY):
+     → You MUST cross-reference with user's plan
+     → Include explicit statement: "✓ Confirmed in-network for your {policy_id} plan"
+   - If you CANNOT verify exact plan acceptance from RAG, state:
+     → "Please call 1-800-TOGGLE-1 to verify network acceptance"
+   - DO NOT assume plan acceptance based on general network membership
+
+2. NEVER HALLUCINATE OR COMPLETE MISSING DATA:
+   - If a data field is missing or incomplete in RAG, LEAVE IT AS-IS
+   - Examples:
+     ✗ WRONG: RAG has "Dr. Singh" → You write "Dr. [FirstName] Singh"
+     ✓ CORRECT: RAG has "Dr. Singh" → You write "Dr. Singh"
+   - Missing phone/address? → Say "Contact via provider search at my.togglehealth.com"
+   - Missing rating? → DO NOT mention ratings
+   - Incomplete name? → Present EXACTLY as given in RAG
+
+3. PRESERVE EXACT TITLES & CREDENTIALS:
    - Copy professional titles EXACTLY as shown in RAG documents
    - Do NOT paraphrase or generalize (e.g., "Licensed Psychologist" ≠ "Clinical Psychology")
    - Include ALL credentials (MD, PhD, Licensed Psychologist, etc.)
 
-2. HMO-SPECIFIC REQUIREMENTS (ALWAYS INCLUDE):
-   - If plan type is HMO, user MUST first select a Primary Care Physician (PCP)
-   - Specialists require PCP referrals for HMO plans
-   - State this CLEARLY at the beginning of your response
+4. HMO-SPECIFIC REQUIREMENTS (ALWAYS INCLUDE FIRST):
+   - If plan type is HMO, STATE AT TOP:
+     ⚠️ "IMPORTANT: Your HMO plan requires:"
+     • Select a Primary Care Physician (PCP) first
+     • PCP referrals needed for specialist visits
+   - Make this visually prominent (emoji, formatting)
 
-3. PROVIDER IDs:
+5. PROVIDER IDs:
    - Include provider ID from RAG documents if present
    - Format: "Provider ID: [ID from RAG]"
+   - If missing in RAG, omit (don't invent)
 
-4. RAG FIDELITY:
+6. RAG FIDELITY:
    - ONLY use information explicitly stated in RAG documents
-   - If information is not in RAG, say "Please call [number] for details"
-   - NEVER invent or infer details not in the knowledge base
+   - If information is not in RAG, say "Please call 1-800-TOGGLE-1 for details"
+   - NEVER invent, infer, or complete partial data
 
 RESPONSE STRUCTURE:
-1. HMO Requirements (if applicable)
-2. List of Providers (with exact titles, IDs, and complete contact info)
-3. Next Steps
+1. HMO Requirements (if applicable) - WITH VISUAL EMPHASIS
+2. Plan Verification Statement for each provider
+3. List of Providers (exact titles, IDs, complete contact AS GIVEN)
+4. Next Steps
 ```
 
 **Variables to use**: `{provider_info}`, `{coverage_type}`, `{network}`, `{location}`
@@ -181,22 +220,32 @@ All info preserved:
 
 ## Testing Your Changes
 
-### Test Query:
+### Test Queries:
 ```
-"help me find a doctor in san francisco"
+1. "help me find a doctor in san francisco"
+2. "find me a doctor in boston"
+3. "I need a cardiologist in San Francisco"
 ```
 
-### Check These:
-1. ✅ Does it say "Licensed Psychologist" not "Clinical Psychology"?
-2. ✅ Does it mention PCP selection requirement (HMO)?
-3. ✅ Does it mention referral requirement (HMO)?
-4. ✅ Are provider IDs included?
-5. ✅ Are all sentences complete?
+### Check These (Critical Accuracy Criteria):
+1. ✅ **Plan Verification**: Does each provider have "✓ Confirmed in-network for your TH-HMO-GOLD-2024 plan"?
+2. ✅ **No Hallucination**: Are ALL names/data exactly as in RAG (no completion of partial names)?
+3. ✅ **Exact Titles**: "Licensed Psychologist" not "Clinical Psychology"?
+4. ✅ **HMO Requirements**: Mentioned at TOP with visual emphasis (⚠️)?
+5. ✅ **PCP Requirement**: "Must select Primary Care Physician first" stated?
+6. ✅ **Referral Requirement**: "PCP referrals needed for specialists" stated?
+7. ✅ **Provider IDs**: All IDs from RAG included?
+8. ✅ **Complete Sentences**: All sentences properly punctuated?
 
-### If Accuracy is Still Low:
-- Check if judge is too strict (review judge reasoning)
-- Verify RAG documents contain the info you expect
-- Make provider/brand prompts even more explicit
+### If Accuracy is Still 65-70%:
+- **Review judge reasoning** - Is it flagging plan verification issues?
+- **Check RAG documents** - Do they contain plan-specific network info?
+- **Verify prompt injection** - Did all critical instructions make it to LaunchDarkly?
+- **Test with terminal logs** - Are RAG docs being retrieved with plan details?
+
+### Target Scores After Fixes:
+- **Accuracy**: 85-95% (up from 65%)
+- **Coherence**: 90%+ (already good)
 
 ---
 
@@ -234,10 +283,35 @@ If NO to any: revise before sending.
 
 ## Quick Wins (Do These First)
 
-**5-Minute Fixes**:
-1. Add to `provider_agent`: "Copy all professional titles EXACTLY from RAG documents"
-2. Add to `provider_agent`: "If HMO plan: State PCP selection and referral requirements FIRST"
-3. Add to `brand_agent`: "Preserve ALL facts from specialist response. Transform tone, not content."
+**Critical 5-Minute Fixes** (Address 65% → 85%+ accuracy):
 
-**These alone should get you to 80%+ accuracy!**
+1. **Add to `provider_agent`** (Highest Priority):
+   ```
+   PLAN VERIFICATION: Only return providers explicitly verified for user's exact plan ID ({policy_id}).
+   If provider is in multiple networks, cross-reference with user's plan and state: "✓ Confirmed in-network for your {policy_id} plan"
+   ```
+
+2. **Add to `provider_agent`** (Prevent Hallucination):
+   ```
+   NEVER complete or invent missing data. If RAG has "Dr. Singh" (no first name), output "Dr. Singh" exactly.
+   If data is missing, direct to: "Call 1-800-TOGGLE-1 for details"
+   ```
+
+3. **Add to `provider_agent`** (Exact Titles):
+   ```
+   Copy all professional titles EXACTLY from RAG documents. "Licensed Psychologist" ≠ "Clinical Psychology"
+   ```
+
+4. **Add to `provider_agent`** (HMO Requirements):
+   ```
+   If HMO plan: State PCP selection and referral requirements FIRST with visual emphasis (⚠️)
+   ```
+
+5. **Add to `brand_agent`** (Preserve Facts):
+   ```
+   Preserve ALL facts from specialist response. Transform tone, not content.
+   Every provider ID, title, plan verification must be preserved exactly.
+   ```
+
+**Expected Result**: These 5 changes should get you to **85-95% accuracy** consistently!
 
