@@ -244,6 +244,31 @@ class BrandVoiceEvaluator:
             else:
                 # Fallback: log as metadata if direct metric tracking not available
                 print(f"📊 Judgment Metrics: accuracy={accuracy_result['score']:.2f}, coherence={coherence_result['score']:.2f}")
+            
+            # Display evaluation results with reasoning
+            print("\n" + "="*80)
+            print("🔍 G-EVAL JUDGMENT RESULTS")
+            print("="*80)
+            
+            # Accuracy
+            acc_pass = "✅ PASS" if accuracy_result.get("passed") else "❌ FAIL"
+            print(f"\n📊 Accuracy: {accuracy_result.get('score', 0.0):.2f} {acc_pass}")
+            print(f"   Reasoning: {accuracy_result.get('reason', 'No reasoning provided')}")
+            if accuracy_result.get("issues"):
+                print(f"   Issues:")
+                for issue in accuracy_result.get("issues", []):
+                    print(f"     - {issue}")
+            
+            # Coherence
+            coh_pass = "✅ PASS" if coherence_result.get("passed") else "❌ FAIL"
+            print(f"\n📊 Coherence: {coherence_result.get('score', 0.0):.2f} {coh_pass}")
+            print(f"   Reasoning: {coherence_result.get('reason', 'No reasoning provided')}")
+            if coherence_result.get("issues"):
+                print(f"   Issues:")
+                for issue in coherence_result.get("issues", []):
+                    print(f"     - {issue}")
+            
+            print("="*80 + "\n")
                 
         except Exception as e:
             print(f"⚠️  Failed to send judgment to LaunchDarkly: {e}")
