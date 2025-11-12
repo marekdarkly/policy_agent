@@ -450,15 +450,19 @@ class ModelInvoker:
     https://github.com/launchdarkly/hello-python-ai/blob/main/examples/langchain_example.py
     """
 
-    def __init__(self, model: BaseChatModel, tracker: Any):
+    def __init__(self, model: BaseChatModel, tracker: Any, config_key: str = "", is_agent_config: bool = False):
         """Initialize model invoker.
 
         Args:
             model: The LangChain model to invoke
             tracker: LaunchDarkly tracker for metrics
+            config_key: The AI Config key (for observability linking)
+            is_agent_config: Whether this is an agent-based config
         """
         self.model = model
         self.tracker = tracker
+        self.config_key = config_key
+        self._is_agent_config = is_agent_config
 
     def invoke(self, messages: list[BaseMessage]) -> Any:
         """Invoke the model with tracking.
@@ -470,25 +474,55 @@ class ModelInvoker:
             Model response
         """
         try:
-            # Use track_duration_of to wrap the model call (LaunchDarkly API)
-            result = self.tracker.track_duration_of(lambda: self.model.invoke(messages))
-            
-            # Track success (no arguments)
-            self.tracker.track_success()
-            
-            # Extract and track token usage if available
-            if hasattr(result, "usage_metadata") and result.usage_metadata:
-                from ldai.tracker import TokenUsage
+            # Link OpenTelemetry span to AI Config using ldobserve
+            try:
+                from ldobserve import observe
                 
-                usage_data = result.usage_metadata
-                token_usage = TokenUsage(
-                    input=usage_data.get("input_tokens", 0),
-                    output=usage_data.get("output_tokens", 0),
-                    total=usage_data.get("total_tokens", 0)
-                )
-                self.tracker.track_tokens(token_usage)
-            
-            return result
+                # Create a span associated with this AI Config
+                with observe.start_span(
+                    f"ai.config.{self.config_key}",
+                    attributes={
+                        "ai.config.key": self.config_key,
+                        "ai.config.type": "agent" if self._is_agent_config else "completion",
+                    }
+                ):
+                    # Use track_duration_of to wrap the model call (LaunchDarkly API)
+                    result = self.tracker.track_duration_of(lambda: self.model.invoke(messages))
+                    
+                    # Track success (no arguments)
+                    self.tracker.track_success()
+                    
+                    # Extract and track token usage if available
+                    if hasattr(result, "usage_metadata") and result.usage_metadata:
+                        from ldai.tracker import TokenUsage
+                        
+                        usage_data = result.usage_metadata
+                        token_usage = TokenUsage(
+                            input=usage_data.get("input_tokens", 0),
+                            output=usage_data.get("output_tokens", 0),
+                            total=usage_data.get("total_tokens", 0)
+                        )
+                        self.tracker.track_tokens(token_usage)
+                    
+                    return result
+                    
+            except ImportError:
+                # ldobserve not available, fall back to basic tracking
+                result = self.tracker.track_duration_of(lambda: self.model.invoke(messages))
+                self.tracker.track_success()
+                
+                if hasattr(result, "usage_metadata") and result.usage_metadata:
+                    from ldai.tracker import TokenUsage
+                    
+                    usage_data = result.usage_metadata
+                    token_usage = TokenUsage(
+                        input=usage_data.get("input_tokens", 0),
+                        output=usage_data.get("output_tokens", 0),
+                        total=usage_data.get("total_tokens", 0)
+                    )
+                    self.tracker.track_tokens(token_usage)
+                
+                return result
 
         except Exception:
             # Track error (no arguments)

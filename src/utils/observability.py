@@ -76,15 +76,15 @@ def initialize_observability(
         
         # Configure LaunchDarkly with observability plugin
         try:
+            obs_config = ObservabilityConfig(
+                service_name=service_name,
+                service_version=service_version,
+            )
+            
             config = Config(
                 sdk_key,
                 plugins=[
-                    ObservabilityPlugin(
-                        ObservabilityConfig(
-                            service_name=service_name,
-                            service_version=service_version,
-                        )
-                    )
+                    ObservabilityPlugin(obs_config)
                 ]
             )
             

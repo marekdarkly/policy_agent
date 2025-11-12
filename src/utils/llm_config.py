@@ -173,7 +173,10 @@ def get_model_invoker(
     
     llm = _create_llm_for_provider(provider, model_name, temperature, max_tokens)
     
-    return ModelInvoker(llm, tracker), config
+    # Determine if this is an agent-based config (has _instructions vs messages)
+    is_agent_config = "_instructions" in config or config.get("_enabled", False)
+    
+    return ModelInvoker(llm, tracker, config_key=config_key, is_agent_config=is_agent_config), config
 
 
 def _create_llm_for_provider(
