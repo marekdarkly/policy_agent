@@ -1,156 +1,131 @@
-# Medical Insurance Support Multi-Agent System
+# Medical Insurance Multi-Agent System
 
-A production-ready LangGraph-based multi-agent system for intelligent medical insurance customer support. Features LaunchDarkly AI Config management and AWS Bedrock Knowledge Base RAG integration.
+Multi-agent system for medical insurance customer support using LangGraph, LaunchDarkly AI Configs, AWS Bedrock, and RAG.
 
-## 🌟 Features
-
-- 🤖 **Multi-Agent Orchestration** with LangGraph
-- 🎯 **LaunchDarkly AI Configs** - Dynamic model AND prompt management per agent
-- 📚 **RAG with Bedrock Knowledge Base** - Semantic search over policy & provider docs
-- ✨ **Brand Voice Synthesis** - Consistent, personalized customer responses
-- 💬 **Interactive Terminal Chatbot** - Beautiful UI with extensive debug logging
-- 📊 **Observability** - Full metrics tracking via LaunchDarkly
-- 🔐 **AWS SSO Integration** - Automatic token refresh
-- 🎨 **Production-Ready** - Error handling, CATASTROPHIC fallback detection
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Python 3.11+
-- AWS CLI configured with SSO
-- LaunchDarkly account (free tier works)
-- AWS Bedrock access (optional for RAG)
-
-### Installation
+## Quick Start
 
 ```bash
-# Clone the repository
-git clone https://github.com/marekdarkly/policy_agent.git
-cd policy_agent
-
-# Complete setup (installs deps, checks AWS, verifies LaunchDarkly)
+# Setup
 make setup
-```
 
-### Configuration
-
-1. **Copy and configure .env**:
-```bash
-cp .env.example .env
-# Edit .env with your LaunchDarkly SDK key
-```
-
-2. **Required environment variables**:
-```bash
-LAUNCHDARKLY_ENABLED=true
-LAUNCHDARKLY_SDK_KEY=api-your-key-here
-AWS_PROFILE=marek
-AWS_REGION=us-east-1
-```
-
-3. **Optional (for RAG)**:
-```bash
-BEDROCK_POLICY_KB_ID=your-policy-kb-id
-BEDROCK_PROVIDER_KB_ID=your-provider-kb-id
-```
-
-### Run the Chatbot
-
-```bash
-# Automatically checks AWS credentials and refreshes if needed
+# Run chatbot
 make run
 ```
 
-That's it! The chatbot will:
-- ✅ Check your AWS credentials (auto-refresh if expired)
-- ✅ Initialize LaunchDarkly AI configs
-- ✅ Start the interactive chatbot
-
-## 🎯 Architecture
+## System Architecture
 
 ```
-User Query
-    ↓
-Triage Router (LaunchDarkly: triage_agent)
-    ↓
-[Routing Decision based on confidence]
-    ↓
-    ├─→ Policy Specialist (LaunchDarkly: policy_agent)
-    │   └─ RAG: Bedrock KB semantic search (RAG-only)
-    │
-    ├─→ Provider Specialist (LaunchDarkly: provider_agent)
-    │   └─ RAG: Bedrock KB semantic search (RAG-only)
-    │
-    └─→ Scheduler Specialist (LaunchDarkly: scheduler_agent)
-        └─ Calendar: Available time slots
-             ↓
-        Brand Voice Agent (LaunchDarkly: brand_agent)
-             ├─ Transforms specialist response
-             ├─ Applies ToggleHealth brand voice
-             └─ Personalizes and structures output
-             ↓
-        Final Customer Response
+┌─────────────────────────────────────────────────────────────────────┐
+│                          USER QUERY                                 │
+└────────────────────────────────┬────────────────────────────────────┘
+                                 │
+                                 ▼
+                    ┌────────────────────────┐
+                    │   TRIAGE ROUTER        │
+                    │  (triage_agent)        │
+                    │  Classifies intent     │
+                    └────────┬───────────────┘
+                             │
+                ┌────────────┼────────────┐
+                │            │            │
+                ▼            ▼            ▼
+         ┌──────────┐ ┌──────────┐ ┌──────────┐
+         │ POLICY   │ │ PROVIDER │ │SCHEDULER │
+         │SPECIALIST│ │SPECIALIST│ │SPECIALIST│
+         │          │ │          │ │          │
+         │ RAG ✓    │ │ RAG ✓    │ │          │
+         └────┬─────┘ └────┬─────┘ └────┬─────┘
+              │            │            │
+              └────────────┼────────────┘
+                           │
+                           ▼
+                  ┌────────────────┐
+                  │  BRAND VOICE   │
+                  │  (brand_agent) │
+                  │  Transform &   │
+                  │  Personalize   │
+                  └───────┬────────┘
+                          │
+                          ▼
+              ┌───────────────────────┐
+              │   EVALUATION JUDGE    │
+              │   (G-Eval)            │
+              │   • Accuracy          │
+              │   • Coherence         │
+              │   → LaunchDarkly      │
+              └───────────┬───────────┘
+                          │
+                          ▼
+                ┌──────────────────┐
+                │ FINAL RESPONSE   │
+                └──────────────────┘
 ```
 
-### Agent Responsibilities
+## Agents
 
-| Agent | LaunchDarkly Key | RAG Enabled | Purpose |
-|-------|-----------------|-------------|---------|
-| **Triage Router** | `triage_agent` | ❌ | Query classification and routing |
-| **Policy Specialist** | `policy_agent` | ✅ | Coverage, benefits, claims questions |
-| **Provider Specialist** | `provider_agent` | ✅ | Find doctors, check network |
-| **Scheduler Specialist** | `scheduler_agent` | ❌ | Schedule callbacks, escalate |
-| **Brand Voice Agent** | `brand_agent` | ❌ | Final response transformation & brand voice |
+| Agent | LD Key | RAG | Purpose |
+|-------|--------|-----|---------|
+| Triage Router | `triage_agent` | No | Classify query intent |
+| Policy Specialist | `policy_agent` | Yes | Coverage, benefits, claims |
+| Provider Specialist | `provider_agent` | Yes | Find doctors, check network |
+| Scheduler Specialist | `scheduler_agent` | No | Schedule callbacks |
+| Brand Voice | `brand_agent` | No | Apply brand voice to response |
 
-## 📖 Documentation
+## Evaluation System
 
-### Essential Guides
+The system includes **online evaluation** using G-Eval methodology:
 
-- **[LAUNCHDARKLY.md](LAUNCHDARKLY.md)** - LaunchDarkly AI Config setup
-- **[BEDROCK_RAG.md](BEDROCK_RAG.md)** - RAG implementation guide
-- **[RAG_SETUP_GUIDE.md](RAG_SETUP_GUIDE.md)** - Quick start for Bedrock KB
-- **[AWS_BEDROCK.md](AWS_BEDROCK.md)** - Bedrock LLM configuration
-- **[SDD.md](SDD.md)** - System Design Document
+| Judge | LD Key | Metric | Threshold |
+|-------|--------|--------|-----------|
+| Accuracy Judge | `ai-judge-accuracy` | Global system accuracy vs RAG docs | 0.8 |
+| Coherence Judge | `ai-judge-coherence` | Response clarity & professionalism | 0.7 |
 
-View all documentation:
+**Metrics sent to LaunchDarkly:**
+- `$ld:ai:judge:accuracy` - Factual accuracy against RAG documents
+- `$ld:ai:judge:coherence` - Response quality and readability
+
+Evaluation runs asynchronously (non-blocking) on every brand voice output.
+
+## Configuration
+
+### Required: LaunchDarkly AI Configs
+
+Create these AI Configs in LaunchDarkly:
+
+**Agents:**
+- `triage_agent` - Agent-based config
+- `policy_agent` - Agent-based config (add `awskbid` custom param)
+- `provider_agent` - Agent-based config (add `awskbid` custom param)
+- `scheduler_agent` - Agent-based config
+- `brand_agent` - Completion-based config
+
+**Judges:**
+- `ai-judge-accuracy` - Agent-based config
+- `ai-judge-coherence` - Agent-based config
+
+See [EVALUATION_PROMPTS.md](EVALUATION_PROMPTS.md) for judge prompts.
+
+### Environment Variables
+
 ```bash
-make docs
+# .env file
+LAUNCHDARKLY_ENABLED=true
+LAUNCHDARKLY_SDK_KEY=api-your-key-here
+
+AWS_PROFILE=your-profile
+AWS_REGION=us-east-1
 ```
 
-## 🎮 Makefile Commands
+### AWS Bedrock Knowledge Bases (Optional)
 
-### Common Commands
+If using RAG, add KB IDs as custom parameters in LaunchDarkly AI Configs:
 
-```bash
-make run          # Start the chatbot (auto-checks AWS)
-make chat         # Alias for 'make run'
-make setup        # Complete setup from scratch
-make verify       # Verify LaunchDarkly & RAG configs
-make check        # Check all configurations
-make info         # Show system status
-make help         # Show all commands
+```
+policy_agent → Custom Parameters → awskbid: YOUR-POLICY-KB-ID
+provider_agent → Custom Parameters → awskbid: YOUR-PROVIDER-KB-ID
 ```
 
-### AWS Management
-
-```bash
-make aws-check    # Check AWS credentials (auto-refresh)
-make aws-login    # Force AWS SSO login
-make aws-info     # Show AWS identity
-```
-
-### Development
-
-```bash
-make format       # Format code with black
-make lint         # Lint with ruff
-make typecheck    # Type check with mypy
-make quality      # Run all quality checks
-make clean        # Remove cache files
-```
-
-## 💡 Usage Examples
+## Usage
 
 ### Interactive Chatbot
 
@@ -158,498 +133,213 @@ make clean        # Remove cache files
 make run
 ```
 
-Example session:
-```
-👤 You: Does my plan cover physical therapy?
+### Example Queries
 
-🔍 POLICY SPECIALIST: Retrieving policy information
-📚 Retrieving policy documents via RAG...
-  ✅ Retrieved 5 documents (top score: 0.892)
-  📄 Retrieved 5 relevant policy documents via RAG
-    Doc 1: Score 0.892, Length 1234 chars
-    
-🤖 Assistant: Yes, your Gold Plan covers physical therapy with a $50 copay 
-per visit, up to 30 visits per year. A referral from your primary care 
-physician is required...
+```
+What's my copay for seeing a specialist?
+Find me a cardiologist in San Francisco
+Does my plan cover physical therapy?
+I need to schedule a callback
 ```
 
-### Running Examples
-
-```bash
-make run-example              # Pre-defined example queries
-make run-interactive-example  # Interactive mode with examples
-make run-test                 # Quick test with one query
-```
-
-### Programmatic Usage
+### Programmatic
 
 ```python
 from src.graph.workflow import run_workflow
 
 result = run_workflow(
-    user_message="What is my copay for seeing a specialist?",
+    user_message="What is my copay?",
     user_context={
-        "policy_id": "POL-12345",
-        "coverage_type": "Gold Plan",
-        "network": "Premier Network",
-        "location": "Boston, MA"
+        "policy_id": "TH-HMO-GOLD-2024",
+        "coverage_type": "Gold HMO",
+        "location": "San Francisco, CA"
     }
 )
 
 print(result["final_response"])
 ```
 
-## 🔧 LaunchDarkly AI Configs
+## Makefile Commands
 
-### Setup
+### Basic
 
-1. **Create AI Configs** in LaunchDarkly with these keys:
-   - `triage_agent` - For query classification
-   - `policy_agent` - For policy questions  
-   - `provider_agent` - For provider lookup
-   - `scheduler_agent` - For scheduling
-
-2. **Configure each with**:
-```json
-{
-  "model": {
-    "name": "claude-3-5-sonnet",
-    "parameters": {
-      "temperature": 0.7,
-      "maxTokens": 2000
-    }
-  },
-  "provider": "bedrock",
-  "enabled": true
-}
-```
-
-3. **Verify**:
 ```bash
-make verify-ld
+make setup       # Install dependencies, check AWS & LaunchDarkly
+make run         # Run chatbot
+make verify      # Verify all configs loaded
+make help        # Show all commands
 ```
 
-See [LAUNCHDARKLY.md](LAUNCHDARKLY.md) for detailed instructions.
+### AWS
 
-## 📚 RAG (Optional but Recommended)
-
-### Why RAG?
-
-- 🎯 **Better Accuracy**: Grounded in comprehensive documentation
-- 🔍 **Semantic Search**: Finds relevant info even with different phrasing
-- 📈 **Scalability**: Add documents without code changes
-- 💡 **Smarter Responses**: Context from actual policy documents
-
-### Quick Setup
-
-1. **Create Bedrock Knowledge Bases** (AWS Console)
-2. **Upload documents** to S3
-3. **Add KB IDs** to `.env`
-4. **Verify**:
 ```bash
-make verify-rag
+make aws-check   # Check credentials (auto-refresh if expired)
+make aws-login   # Force SSO login
 ```
 
-See [RAG_SETUP_GUIDE.md](RAG_SETUP_GUIDE.md) for step-by-step instructions.
+### Development
 
-### How RAG Works
-
-```
-Query: "Does my plan cover physical therapy?"
-    ↓
-RAG Retrieval (Bedrock KB)
-  → Searches policy documents semantically
-  → Returns: "Physical Therapy: $50 copay, 30 visits/year, requires referral..."
-    ↓
-Database Lookup
-  → Gets: {copay: "$50", visits_allowed: 30}
-    ↓
-Combined Context → LLM
-    ↓
-Response: Comprehensive answer with citations
+```bash
+make format      # Format with black
+make lint        # Lint with ruff
+make clean       # Remove cache files
 ```
 
-## 📁 Project Structure
+## Data Flow
+
+### RAG Pipeline (Policy & Provider Agents)
+
+```
+1. User Query → "What's my copay?"
+
+2. Triage → Routes to Policy Specialist
+
+3. Policy Specialist:
+   - Enhances query with user context (policy_id, plan)
+   - Retrieves from Bedrock KB (5 documents)
+   - Generates response using RAG documents only
+
+4. Brand Voice:
+   - Receives specialist response
+   - Applies personalization & brand voice
+   - Preserves all factual information
+
+5. Evaluation Judge (async):
+   - Receives: Original query + RAG docs + Final output
+   - Evaluates accuracy (against RAG docs)
+   - Evaluates coherence (response quality)
+   - Sends metrics to LaunchDarkly
+
+6. Final Response → User
+```
+
+### Error Handling
+
+The system uses **CATASTROPHIC** error handling:
+- Missing LaunchDarkly config → Hard fail
+- No RAG documents retrieved → Hard fail
+- Missing KB ID in config → Hard fail
+- No prompts in AI config → Hard fail
+
+**No silent fallbacks.** This ensures data quality issues are caught immediately.
+
+## Key Features
+
+### 1. Dynamic Prompt Management
+All prompts managed in LaunchDarkly AI Configs:
+- Agent-based configs use "Goal or task" field
+- Completion-based configs use "Prompt" messages
+- No hardcoded prompts in code
+
+### 2. RAG-Only Specialists
+Policy and Provider specialists use **only** Bedrock KB retrieval:
+- No structured database fallback
+- No hardcoded data
+- All responses grounded in RAG documents
+
+### 3. Online Evaluation
+G-Eval judges run on every response:
+- Non-blocking (async)
+- Evaluates global system accuracy
+- Sends metrics to LaunchDarkly for monitoring
+
+### 4. AWS Token Management
+Makefile auto-refreshes AWS SSO tokens:
+- Checks expiry before running
+- Auto-runs `aws sso login` if needed
+- No manual token management
+
+## Project Structure
 
 ```
 policy_agent/
-├── Makefile                 # 🎯 Main entry point
-├── interactive_chatbot.py   # 💬 Interactive terminal UI
 ├── src/
-│   ├── agents/              # 🤖 Agent implementations
+│   ├── agents/              # Agent implementations
 │   │   ├── triage_router.py
-│   │   ├── policy_specialist.py      # 📚 RAG-enhanced
-│   │   ├── provider_specialist.py    # 📚 RAG-enhanced
-│   │   └── scheduler_specialist.py
-│   ├── graph/               # 🔄 LangGraph workflow
-│   │   ├── state.py
-│   │   └── workflow.py
-│   ├── tools/               # 🛠️ Backend tools
-│   │   ├── bedrock_rag.py           # 📚 RAG retrieval
-│   │   ├── policy_db.py             # Database
-│   │   ├── provider_db.py           # Database
-│   │   └── calendar.py
-│   └── utils/               # ⚙️ Utilities
-│       ├── aws_sso.py               # AWS authentication
-│       ├── bedrock_llm.py           # Bedrock LLM wrapper
-│       ├── launchdarkly_config.py   # LaunchDarkly integration
-│       ├── llm_config.py            # LLM configuration
-│       └── prompts.py
-├── examples/
-│   └── run_example.py       # Example queries
-├── verify_ld_configs.py     # LaunchDarkly verification
-└── test_rag_integration.py  # RAG testing
+│   │   ├── policy_specialist.py
+│   │   ├── provider_specialist.py
+│   │   ├── scheduler_specialist.py
+│   │   └── brand_voice_agent.py
+│   ├── evaluation/          # G-Eval judges
+│   │   └── judge.py
+│   ├── graph/               # LangGraph workflow
+│   │   ├── workflow.py
+│   │   └── state.py
+│   ├── tools/               # RAG & utilities
+│   │   └── bedrock_rag.py
+│   └── utils/               # Config & helpers
+│       ├── launchdarkly_config.py
+│       ├── llm_config.py
+│       └── user_profile.py
+├── data/                    # Sample data for RAG
+│   ├── markdown/            # Policy documents
+│   └── togglehealth_*.json  # Sample structured data
+├── interactive_chatbot.py   # Main chatbot entry
+├── Makefile                 # Commands
+├── EVALUATION_PROMPTS.md    # Judge prompt templates
+└── LAUNCHDARKLY.md          # LaunchDarkly setup guide
 ```
 
-## 🔍 Debug Logging
+## Documentation
 
-The chatbot provides extensive logging showing:
+- [LAUNCHDARKLY.md](LAUNCHDARKLY.md) - LaunchDarkly AI Config setup
+- [EVALUATION_PROMPTS.md](EVALUATION_PROMPTS.md) - G-Eval judge prompts
+- [SDD.md](SDD.md) - System Design Document
 
-- ✅ **LaunchDarkly**: Which configs retrieved, models used
-- ✅ **RAG**: Documents retrieved, relevance scores
-- ✅ **Routing**: Which agent handles the query, confidence
-- ✅ **AWS**: Credential status, auto-refresh
-- ✅ **Performance**: Token usage, latency
+## Requirements
 
-Example output:
-```
-🔍 POLICY SPECIALIST: Retrieving policy information
-📚 Retrieving policy documents via RAG...
-  ✅ Retrieved 5 documents (top score: 0.892)
-🔐 AWS SSO Manager initialized (profile: marek, region: us-east-1)
-✅ AWS credentials valid
-⚠️  Using default config for 'policy_agent' (config may not exist in LaunchDarkly)
-```
+- Python 3.11+
+- AWS CLI with SSO configured
+- LaunchDarkly account
+- AWS Bedrock access (optional, for RAG)
 
-## 🎨 Development
-
-### Code Quality
+## Installation
 
 ```bash
-make format      # Auto-format with black
-make lint        # Lint with ruff
-make typecheck   # Type check with mypy
-make quality     # Run all checks
-```
+# Clone
+git clone https://github.com/marekdarkly/policy_agent.git
+cd policy_agent
 
-### Adding New Agents
+# Setup
+make setup
 
-1. Create agent file in `src/agents/`
-2. Add agent node to `src/graph/workflow.py`
-3. Create LaunchDarkly AI Config
-4. Update routing logic in triage router
-
-See [SDD.md](SDD.md) for architecture details.
-
-## 🔐 AWS Authentication
-
-The Makefile automatically manages AWS SSO:
-
-```bash
-# make run automatically calls aws-check first
+# Run
 make run
 ```
 
-If credentials expired:
-```
-⚠️  AWS credentials expired or invalid
-🔄 Refreshing AWS SSO credentials...
-[Opens browser for authentication]
-✅ AWS SSO login successful!
-🚀 Starting chatbot...
-```
+## Troubleshooting
 
-Manual refresh:
+### AWS Credentials Expired
 ```bash
 make aws-login
 ```
 
-## 🧪 Testing & Verification
-
+### LaunchDarkly Config Not Found
+Check that all configs exist:
 ```bash
-make verify       # Verify all configurations
-make verify-ld    # LaunchDarkly AI configs only
-make verify-rag   # RAG integration only
-make test         # Run all tests
+make verify
 ```
 
-## 📊 Observability
-
-### LaunchDarkly Metrics
-
-Automatically tracked for each agent:
-- Token usage (input, output, total)
-- Response duration
-- Success/error rates
-- Model performance
-
-View in LaunchDarkly dashboard under AI Configs.
-
-### RAG Metrics
-
-Logged for each retrieval:
-- Number of documents retrieved
-- Relevance scores
-- Document lengths
-- Retrieval latency
-- Fallback usage
-
-## 🎓 How to Use
-
-### 1. First Time Setup
-
-```bash
-make all          # Complete setup from scratch
-```
-
-### 2. Daily Use
-
-```bash
-make run          # Start chatbot (checks AWS automatically)
-```
-
-### 3. Verify Configuration
-
-```bash
-make check        # Check AWS, LaunchDarkly, RAG status
-make info         # Show current system state
-```
-
-### 4. Development
-
-```bash
-make format       # Format your code
-make quality      # Run quality checks
-```
-
-## 🐛 Troubleshooting
-
-### AWS Credentials Expired
-
-```bash
-make aws-login    # Force re-authentication
-```
-
-### LaunchDarkly Not Working
-
-```bash
-make verify-ld    # Check LaunchDarkly configs
-```
-
-Issues to check:
-- SDK key in `.env` is correct
-- AI Configs created in LaunchDarkly with correct keys
-- Configs are enabled
-
-### RAG Not Working
-
-```bash
-make verify-rag   # Check RAG configuration
-```
-
-Issues to check:
-- Bedrock KB IDs in `.env`
-- Knowledge Bases exist in AWS
-- Data sources are synced
-- IAM permissions for `bedrock:Retrieve*`
-
-### General Issues
-
-```bash
-make info         # Show system status
-make clean        # Clear cache
-make setup        # Re-run setup
-```
-
-## 📦 Dependencies
-
-Core:
-- `langgraph` - Multi-agent orchestration
-- `langchain` - LLM framework
-- `langchain-aws` - AWS Bedrock integration
-
-AWS:
-- `boto3` - AWS SDK
-- AWS CLI with SSO configured
-
-LaunchDarkly:
-- `launchdarkly-server-sdk` - Feature flags
-- `launchdarkly-server-sdk-ai` - AI Configs
-
-## 🎯 Example Queries
-
-### Policy Questions
-```
-• "What is my copay for seeing a specialist?"
-• "Does my plan cover physical therapy?"
-• "What's my deductible for this year?"
-```
-
-### Provider Lookup
-```
-• "I need to find a cardiologist in Boston"
-• "Find me a dermatologist who accepts my insurance"
-• "Show me primary care doctors near me"
-```
-
-### Scheduling
-```
-• "I need to speak with someone about my claim"
-• "This is urgent, I need help now"
-• "Can I schedule a callback?"
-```
-
-## 🏗️ System Design
-
-### Multi-Agent Flow
-
-1. **Triage Router** analyzes query → determines type
-2. **Specialist Agent** retrieves context (RAG + DB)
-3. **LLM Generation** with LaunchDarkly config
-4. **Response** with citations and metadata
-
-### LaunchDarkly Integration
-
-Each agent:
-- Retrieves its own AI Config from LaunchDarkly
-- Uses configured model (can be different per agent)
-- Tracks metrics automatically
-- Supports A/B testing and dynamic updates
-
-### RAG Integration
-
-Policy & Provider specialists:
-- Search Bedrock Knowledge Base semantically
-- Retrieve top 5 most relevant documents
-- Combine with structured database
-- Generate grounded responses
-
-## 🔄 Workflow
-
-```mermaid
-graph TD
-    A[User Query] --> B[Triage Router]
-    B -->|Policy Question| C[Policy Specialist]
-    B -->|Provider Lookup| D[Provider Specialist]
-    B -->|Complex/Escalate| E[Scheduler Specialist]
-    
-    C -->|RAG| F[Bedrock Policy KB]
-    C -->|DB| G[Policy Database]
-    F --> H[Combined Context]
-    G --> H
-    H --> I[LLM with LD Config]
-    
-    D -->|RAG| J[Bedrock Provider KB]
-    D -->|DB| K[Provider Database]
-    J --> L[Combined Context]
-    K --> L
-    L --> M[LLM with LD Config]
-    
-    E --> N[Calendar System]
-    N --> O[LLM with LD Config]
-    
-    I --> P[Response]
-    M --> P
-    O --> P
-```
-
-## 🎨 Customization
-
-### Add New Agent
-
-1. Create agent file in `src/agents/`
-2. Add routing logic in `triage_router.py`
-3. Add node to `src/graph/workflow.py`
-4. Create LaunchDarkly AI Config with key: `{agent}_agent`
-
-### Modify Prompts
-
-Edit `src/utils/prompts.py` to customize agent behavior.
-
-### Change LLM Models
-
-Update in LaunchDarkly AI Config (no code changes needed):
-- Different models per agent
-- A/B test configurations
-- Dynamic updates
-
-## 📈 Production Deployment
-
-### Environment Variables
-
-```bash
-# Required
-LAUNCHDARKLY_ENABLED=true
-LAUNCHDARKLY_SDK_KEY=api-xxx
-AWS_PROFILE=production
-AWS_REGION=us-east-1
-
-# Optional RAG
-BEDROCK_POLICY_KB_ID=KB123
-BEDROCK_PROVIDER_KB_ID=KB456
-RAG_TOP_K=5
-
-# LLM Fallbacks (used if LD config missing)
-LLM_PROVIDER=bedrock
-LLM_MODEL=claude-3-5-sonnet
-```
-
-### Deployment Checklist
-
-- [ ] LaunchDarkly AI Configs created for all 4 agents
-- [ ] AWS credentials configured (IAM role or SSO)
-- [ ] Bedrock Knowledge Bases created and synced (optional)
-- [ ] Environment variables configured
-- [ ] Dependencies installed: `make install`
-- [ ] Configuration verified: `make verify`
-- [ ] Test run successful: `make run-test`
-
-### Monitoring
-
-- **LaunchDarkly Dashboard**: View AI Config metrics
-- **AWS CloudWatch**: Monitor Bedrock API calls
-- **Application Logs**: Debug logs from chatbot
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/amazing-feature`
-3. Make changes and test: `make quality`
-4. Commit: `git commit -m 'Add amazing feature'`
-5. Push: `git push origin feature/amazing-feature`
-6. Create Pull Request
-
-## 📝 License
-
-MIT License - see [LICENSE](LICENSE) file
-
-## 🙏 Acknowledgments
-
-- **LangChain** - LLM framework
-- **LangGraph** - Multi-agent orchestration
-- **LaunchDarkly** - AI Config management
-- **AWS Bedrock** - LLM inference and RAG
-
-## 🚀 Quick Reference Card
-
-```bash
-# Start here
-make setup        # Initial setup
-make run          # Run chatbot
-
-# Verification
-make verify       # Check everything
-make info         # System status
-
-# Development  
-make format       # Format code
-make quality      # All checks
-
-# Cleanup
-make clean        # Remove cache
-make clean-all    # Nuclear option
-```
-
----
-
-**Ready to chat?** Run `make run` and start asking questions! 🎉
+Expected configs:
+- `triage_agent`, `policy_agent`, `provider_agent`, `scheduler_agent`, `brand_agent`
+- `ai-judge-accuracy`, `ai-judge-coherence`
+
+### No RAG Documents Retrieved
+1. Check KB IDs are set in LaunchDarkly custom params (`awskbid`)
+2. Verify AWS Bedrock access
+3. Check KB actually has documents indexed
+
+### Evaluation Scores Low
+- **Accuracy 0.0-0.3**: Hallucinations or RAG retrieval issues
+- **Accuracy 0.3-0.7**: Missing information or incomplete responses
+- **Accuracy 0.7-1.0**: Good grounding in RAG documents
+- **Coherence 0.7+**: Response quality is acceptable
+
+Low accuracy usually indicates:
+- RAG retrieved wrong documents
+- Knowledge base missing relevant data
+- Agent hallucinating when no matches found
+
+## License
+
+MIT
