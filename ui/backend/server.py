@@ -119,6 +119,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Instrument FastAPI for observability (CRITICAL: Ensures FastAPI/ASGI request spans exist as parents for LLM spans)
+try:
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    FastAPIInstrumentor().instrument_app(app)
+    logger.info("✅ FastAPI instrumented for observability (parent spans for LLM correlation)")
+except Exception as e:
+    logger.warning(f"⚠️  Failed to instrument FastAPI: {e}")
+
 
 # Pydantic models
 class ChatRequest(BaseModel):

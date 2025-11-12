@@ -134,6 +134,17 @@ def initialize_observability(
         except Exception as e:
             logger.warning(f"⚠️  Failed to instrument Bedrock: {e}")
         
+        try:
+            # Botocore instrumentation (for AWS SDK calls)
+            from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
+            BotocoreInstrumentor().instrument()
+            logger.info("✅ Botocore instrumentation registered")
+            
+        except ImportError:
+            logger.info("ℹ️  Botocore instrumentation not available")
+        except Exception as e:
+            logger.warning(f"⚠️  Failed to instrument Botocore: {e}")
+        
         # Mark as initialized
         _observability_initialized = True
         

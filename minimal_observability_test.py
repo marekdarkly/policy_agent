@@ -24,7 +24,9 @@ ld = ldclient.get()
 ai_client = LDAIClient(ld)
 
 # ========== STEP 2: OpenLLMetry Instrumentation ==========
+from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 from opentelemetry.instrumentation.bedrock import BedrockInstrumentor
+BotocoreInstrumentor().instrument()
 BedrockInstrumentor().instrument()
 
 # ========== STEP 3: AWS Bedrock Client ==========
@@ -34,6 +36,10 @@ bedrock = session.client("bedrock-runtime")
 
 # ========== STEP 4: FastAPI App ==========
 app = FastAPI()
+
+# Instrument FastAPI (CRITICAL: Ensures request spans exist as parents for LLM spans)
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+FastAPIInstrumentor().instrument_app(app)
 
 class ChatRequest(BaseModel):
     userInput: str
