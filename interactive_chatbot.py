@@ -176,8 +176,8 @@ def create_default_context():
     profile = create_user_profile(
         name="Marek Poliks",
         location="San Francisco, CA",
-        policy_id="POL-12345",
-        coverage_type="Gold Plan"
+        policy_id="TH-HMO-GOLD-2024",
+        coverage_type="Gold HMO"
     )
     
     # Update session ID to be current
@@ -240,16 +240,6 @@ def process_query(user_query: str, user_context: dict):
             print_debug("Agent-Specific Data", "Available", indent=1)
             for agent_name, agent_info in result["agent_data"].items():
                 print_debug(f"  {agent_name}", f"{len(str(agent_info))} bytes", indent=2)
-                
-                # Show brand voice metadata if available
-                if agent_name == "brand_voice_agent":
-                    try:
-                        import json
-                        brand_info = json.loads(agent_info)
-                        if brand_info.get("brand_applied"):
-                            print_success(f"    ✨ Brand Voice Applied: Transformed {brand_info.get('specialist_type', 'unknown')} specialist response", indent=2)
-                    except:
-                        pass
                 
                 # Show RAG information if available
                 if "rag_enabled" in agent_info:

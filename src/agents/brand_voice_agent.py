@@ -1,5 +1,6 @@
 """Brand voice synthesis agent for customer-facing responses."""
 
+import asyncio
 from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -7,6 +8,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from ..graph.state import AgentState
 from ..utils.llm_config import get_model_invoker
 from ..utils.launchdarkly_config import get_ld_client
+from ..evaluation.judge import evaluate_brand_voice_async
 
 
 def brand_voice_node(state: AgentState) -> dict[str, Any]:
@@ -60,11 +62,64 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
 
     # Store the brand-voiced response
     final_response = response.content
+    
+    # Start async evaluation without blocking (fire-and-forget)
+    # This evaluates GLOBAL SYSTEM ACCURACY against RAG documents
+    try:
+        # Get RAG documents from agent_data (stored by specialist)
+        agent_data = state.get("agent_data", {})
+        rag_documents = []
+        
+        # Extract RAG docs from whichever specialist ran
+        for specialist in ["policy_specialist", "provider_specialist"]:
+            if specialist in agent_data:
+                rag_docs = agent_data[specialist].get("rag_documents", [])
+                if rag_docs:
+                    rag_documents = rag_docs
+                    break
+        
+        # Handle both sync and async contexts
+        try:
+            # Try to get the current event loop
+            loop = asyncio.get_running_loop()
+            # If we have a running loop, use create_task
+            asyncio.create_task(
+                evaluate_brand_voice_async(
+                    original_query=original_query,
+                    rag_documents=rag_documents,
+                    brand_voice_output=final_response,
+                    user_context=user_context,
+                    brand_tracker=model_invoker.tracker
+                )
+            )
+        except RuntimeError:
+            # No running loop - we're in a sync context
+            # Run evaluation in a background thread to avoid blocking
+            import threading
+            
+            def run_eval_in_thread():
+                asyncio.run(
+                    evaluate_brand_voice_async(
+                        original_query=original_query,
+                        rag_documents=rag_documents,
+                        brand_voice_output=final_response,
+                        user_context=user_context,
+                        brand_tracker=model_invoker.tracker
+                    )
+                )
+            
+            thread = threading.Thread(target=run_eval_in_thread, daemon=True)
+            thread.start()
+        
+        print(f"🔍 Background evaluation started (evaluating against {len(rag_documents)} RAG documents)")
+    except Exception as e:
+        # Never let evaluation errors affect the main flow
+        print(f"⚠️  Failed to start background evaluation: {e}")
 
-    # Add debug info to agent_data
+    # Add debug info to agent_data (store full responses for hallucination debugging)
     brand_data = {
-        "original_specialist_response": specialist_response[:200] + "..." if len(specialist_response) > 200 else specialist_response,
-        "final_customer_response": final_response[:200] + "..." if len(final_response) > 200 else final_response,
+        "original_specialist_response": specialist_response[:500] + "..." if len(specialist_response) > 500 else specialist_response,
+        "final_customer_response": final_response[:500] + "..." if len(final_response) > 500 else final_response,
         "brand_voice_applied": True,
         "personalization": {
             "customer_name": customer_name,
