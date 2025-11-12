@@ -61,46 +61,57 @@ def initialize_observability(
         
         logger.info("🔧 Initializing LaunchDarkly AI Observability with OpenLLMetry...")
         
-        # Initialize Traceloop SDK (OpenLLMetry)
-        # This automatically sets up OpenTelemetry and instruments supported frameworks
+        # Step 1: Ensure LaunchDarkly SDK is initialized FIRST (already done in launchdarkly_config.py)
+        # OpenLLMetry will detect and integrate with LaunchDarkly automatically
+        try:
+            import ldclient
+            
+            if not ldclient.get().is_initialized():
+                # LaunchDarkly not initialized yet - do it now
+                from ldclient.config import Config
+                config = Config(sdk_key=sdk_key)
+                ldclient.set_config(config)
+                
+                # Wait briefly for initialization
+                import time
+                for _ in range(10):
+                    if ldclient.get().is_initialized():
+                        break
+                    time.sleep(0.1)
+                
+                if ldclient.get().is_initialized():
+                    logger.info("✅ LaunchDarkly SDK initialized")
+                else:
+                    logger.warning("⚠️  LaunchDarkly SDK not fully initialized yet")
+            else:
+                logger.info("✅ LaunchDarkly SDK already initialized")
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize LaunchDarkly SDK: {e}")
+            return False
+        
+        # Step 2: Initialize OpenLLMetry (Traceloop SDK)
+        # With LaunchDarkly SDK present + Early Access enabled, spans will be exported automatically
         try:
             from traceloop.sdk import Traceloop
             
-            # Check if LaunchDarkly observability endpoint is configured
-            ld_obs_endpoint = os.getenv("LD_OBSERVABILITY_ENDPOINT")
-            
-            if ld_obs_endpoint:
-                # Export to LaunchDarkly observability
-                logger.info(f"   Exporting spans to: {ld_obs_endpoint}")
-                Traceloop.init(
-                    app_name=service_name,
-                    api_endpoint=ld_obs_endpoint,
-                    headers={
-                        "Authorization": sdk_key,
-                        "LD-Application-ID": os.getenv("LD_APPLICATION_ID", service_name)
-                    },
-                    disable_batch=False,
-                    resource_attributes={
-                        "service.name": service_name,
-                        "deployment.environment": environment,
-                    }
-                )
-            else:
-                # Local-only instrumentation (no export)
-                logger.warning("⚠️  LD_OBSERVABILITY_ENDPOINT not set. Spans will be instrumented but NOT exported.")
-                logger.warning("   To export to LaunchDarkly, set LD_OBSERVABILITY_ENDPOINT in .env")
-                Traceloop.init(
-                    app_name=service_name,
-                    disable_batch=True,  # Don't try to export
-                    resource_attributes={
-                        "service.name": service_name,
-                        "deployment.environment": environment,
-                    }
-                )
+            # Initialize OpenLLMetry without external export
+            # LaunchDarkly observability (with Early Access) will capture spans automatically
+            Traceloop.init(
+                app_name=service_name,
+                disable_batch=True,  # Don't export to Traceloop's endpoint
+                exporter="none",  # Disable external export
+                resource_attributes={
+                    "service.name": service_name,
+                    "deployment.environment": environment,
+                }
+            )
             
             logger.info("✅ Traceloop SDK (OpenLLMetry) initialized")
             logger.info(f"   Service: {service_name}")
             logger.info(f"   Environment: {environment}")
+            logger.info("   If LaunchDarkly observability Early Access is enabled,")
+            logger.info("   spans will appear in LaunchDarkly > Monitor > Traces")
             
         except ImportError:
             logger.error("❌ Traceloop SDK not installed")
@@ -108,7 +119,7 @@ def initialize_observability(
             return False
         except Exception as e:
             logger.error(f"❌ Failed to initialize Traceloop SDK: {e}")
-            logger.warning(f"   Continuing without observability...")
+            logger.warning(f"   Continuing without OpenLLMetry instrumentation...")
             return False
         
         # Register OpenTelemetry instrumentations for frameworks
