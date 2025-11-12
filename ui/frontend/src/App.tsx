@@ -154,15 +154,14 @@ function App() {
       {/* Header */}
       <header className="chat-header">
         <div className="header-content">
-          <div className="avatar-container">
+          <div className="logo-container">
             <img
-              src="/assets/ToggleAvatar.png"
-              alt="ToggleHealth Assistant"
-              className="avatar"
+              src="/health/toggleHealth_logo_horizontal.svg"
+              alt="ToggleHealth"
+              className="logo"
             />
           </div>
           <div className="header-text">
-            <h1 className="header-title">ToggleHealth Assistant</h1>
             <p className="header-subtitle">
               Multi-Agent AI powered by <span className="provider-badge">Amazon Bedrock</span>
             </p>
