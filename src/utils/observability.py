@@ -24,6 +24,20 @@ logger = logging.getLogger(__name__)
 _observability_initialized = False
 
 
+class EndedSpanFilter(logging.Filter):
+    """Filter to suppress 'ended span' warnings from OpenTelemetry.
+    
+    Background threads (like judge evaluations) may reference closed spans
+    from the main request. This is expected behavior and the warnings are noise.
+    """
+    def filter(self, record):
+        message = record.getMessage()
+        # Suppress specific "ended span" warnings
+        if "ended span" in message.lower() or "calling _add_event on an ended span" in message.lower():
+            return False
+        return True
+
+
 def initialize_observability(
     ld_sdk_key: Optional[str] = None,
     service_name: str = "togglehealth-policy-agent",
@@ -146,14 +160,27 @@ def initialize_observability(
         except Exception as e:
             logger.warning(f"⚠️  Failed to instrument Botocore: {e}")
         
-        # Mark as initialized
-        _observability_initialized = True
-        
-        logger.info("🎉 AI Observability fully initialized!")
-        logger.info("   📊 Spans will appear in LaunchDarkly > Monitor > Traces")
-        logger.info("   🟢 LLM spans marked with green LLM symbol")
-        
-        return True
+    # Add filter to suppress "ended span" warnings from OpenTelemetry
+    # These occur when background threads (judges) reference closed spans from main request
+    ended_span_filter = EndedSpanFilter()
+    
+    # Apply to OpenTelemetry loggers
+    for logger_name in ['opentelemetry', 'opentelemetry.trace', 'opentelemetry.sdk.trace']:
+        otel_logger = logging.getLogger(logger_name)
+        otel_logger.addFilter(ended_span_filter)
+    
+    # Also apply to root logger to catch any stragglers
+    logging.getLogger().addFilter(ended_span_filter)
+    
+    # Mark as initialized
+    _observability_initialized = True
+    
+    logger.info("🎉 AI Observability fully initialized!")
+    logger.info("   📊 Spans will appear in LaunchDarkly > Monitor > Traces")
+    logger.info("   🟢 LLM spans marked with green LLM symbol")
+    logger.info("   🔇 'Ended span' warnings suppressed (background threads expected)")
+    
+    return True
         
     except Exception as e:
         logger.error(f"❌ Observability initialization failed: {e}")
