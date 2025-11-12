@@ -151,13 +151,136 @@ function App() {
 
   return (
     <>
-      {/* ToggleHealth Logo */}
-      <img
-        src="/health/toggleHealth_logo_horizontal.svg"
-        alt="ToggleHealth"
-        className="page-logo"
-      />
-      
+      {/* Background Images */}
+      <div className="homepage-background">
+        <img
+          src="/health/backgrounds/health-homepage-background-left.svg"
+          alt=""
+          className="bg-left"
+        />
+        <img
+          src="/health/backgrounds/health-homepage-background-right.svg"
+          alt=""
+          className="bg-right"
+        />
+      </div>
+
+      {/* Main Page Content */}
+      <div className="homepage-wrapper">
+        {/* Navigation Header */}
+        <nav className="health-nav">
+          <img
+            src="/health/toggleHealth_logo_horizontal.svg"
+            alt="ToggleHealth"
+            className="nav-logo"
+          />
+          <div className="nav-links">
+            <a href="#services">Services</a>
+            <a href="#about">About</a>
+            <a href="#contact">Contact</a>
+          </div>
+        </nav>
+
+        {/* Hero Section */}
+        <header className="hero-section">
+          <img
+            src="/health/backgrounds/health-hero-background-pills.svg"
+            alt=""
+            className="hero-bg-pills"
+          />
+          <img
+            src="/health/backgrounds/health-hero-background-heart.svg"
+            alt=""
+            className="hero-bg-heart"
+          />
+          
+          <div className="hero-content">
+            <h1 className="hero-title">Your health, simplified with ToggleHealth</h1>
+            <p className="hero-subtitle">Trusted by over 100,000 patients nationwide</p>
+            <div className="hero-buttons">
+              <button className="btn-primary">Get Started</button>
+              <button className="btn-secondary">Learn More</button>
+            </div>
+          </div>
+        </header>
+
+        {/* Services Section */}
+        <section className="services-section">
+          <h2 className="services-title">OUR HEALTH SERVICES</h2>
+          <div className="services-grid">
+            <div className="service-item">
+              <div className="service-icon">
+                <img src="/health/icons/prescriptions.svg" alt="Prescriptions" />
+              </div>
+              <p>Prescriptions</p>
+            </div>
+            <div className="service-item">
+              <div className="service-icon">
+                <img src="/health/icons/telemedicine.svg" alt="Telemedicine" />
+              </div>
+              <p>Telemedicine</p>
+            </div>
+            <div className="service-item">
+              <div className="service-icon">
+                <img src="/health/icons/pharmacy.svg" alt="Pharmacy" />
+              </div>
+              <p>Pharmacy</p>
+            </div>
+            <div className="service-item">
+              <div className="service-icon">
+                <img src="/health/icons/wellness.svg" alt="Wellness" />
+              </div>
+              <p>Wellness</p>
+            </div>
+            <div className="service-item">
+              <div className="service-icon">
+                <img src="/health/icons/insurance.svg" alt="Insurance" />
+              </div>
+              <p>Insurance</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Content Cards Section */}
+        <section className="content-cards">
+          <div className="card-row">
+            <div className="card card-telemedicine">
+              <span className="card-label">TELEMEDICINE</span>
+              <h3>Virtual care at your fingertips</h3>
+              <p>Connect with healthcare providers from the comfort of your home, anytime, anywhere.</p>
+            </div>
+            <div className="card card-wellness">
+              <div className="card-text">
+                <span className="card-label-gray">WELLNESS PROGRAMS</span>
+                <h3 className="card-title-green">Preventive care & wellness</h3>
+                <p className="card-description">Join our wellness programs designed to keep you healthy and active.</p>
+              </div>
+              <img
+                src="/health/backgrounds/health-homepage-health-card-background.svg"
+                alt=""
+                className="card-image"
+              />
+            </div>
+          </div>
+
+          <div className="card-row">
+            <div className="card card-offer">
+              <span className="card-label-gray">SPECIAL OFFER</span>
+              <h3 className="card-title-green">New patient discount</h3>
+              <p className="card-description">Get 50% off your first consultation and prescription refill. Limited time offer.</p>
+            </div>
+            <div className="card card-offer-image">
+              <img
+                src="/health/backgrounds/health-homepage-specialoffer-background.svg"
+                alt="Special Offer"
+                className="offer-image"
+              />
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Floating Chat Widget */}
       <div className="app-container">
       {/* Header */}
       <header className="chat-header">
