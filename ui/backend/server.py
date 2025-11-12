@@ -78,16 +78,17 @@ def custom_print(*args, **kwargs):
     # Call original print
     _original_print(*args, **kwargs)
     
-    # Broadcast to SSE
-    message = ' '.join(str(arg) for arg in args)
-    if message.strip():  # Only broadcast non-empty messages
-        log_entry = {
-            "timestamp": datetime.now().isoformat(),
-            "level": "PRINT",
-            "message": message,
-            "name": "system"
-        }
-        broadcast_log(log_entry)
+    # Broadcast to SSE (only if clients are connected)
+    if LOG_QUEUES:  # Only broadcast if there are listeners
+        message = ' '.join(str(arg) for arg in args)
+        if message.strip():  # Only broadcast non-empty messages
+            log_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "level": "PRINT",
+                "message": message,
+                "name": "system"
+            }
+            broadcast_log(log_entry)
 
 # Replace built-in print
 import builtins
