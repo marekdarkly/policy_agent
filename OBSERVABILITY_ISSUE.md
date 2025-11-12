@@ -19,9 +19,15 @@ obs_config = ObservabilityConfig(service_name="my-service", service_version="1.0
 ldclient.set_config(Config(SDK_KEY, plugins=[ObservabilityPlugin(obs_config)]))
 ld = ldclient.get()
 
-# 2. Instrument Bedrock
+# 2. Instrument Botocore and Bedrock
+from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 from opentelemetry.instrumentation.bedrock import BedrockInstrumentor
+BotocoreInstrumentor().instrument()
 BedrockInstrumentor().instrument()
+
+# 2b. Instrument FastAPI (CRITICAL for parent span context)
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+FastAPIInstrumentor().instrument_app(app)
 
 # 3. In endpoint, set correlation attributes
 from opentelemetry import trace
