@@ -91,10 +91,15 @@ class BrandVoiceEvaluator:
             
             print(f"✅ Evaluation completed: Accuracy={accuracy_result['score']:.2f}, Coherence={coherence_result['score']:.2f}")
             
+            # Return flattened structure that matches frontend expectations
             return {
                 "accuracy": accuracy_result,
                 "coherence": coherence_result,
-                "overall_passed": accuracy_result["passed"] and coherence_result["passed"]
+                "overall_passed": accuracy_result["passed"] and coherence_result["passed"],
+                # Add judge model info (TODO: track actual model used)
+                "judge_model_name": "claude-3-5-sonnet-20241022",  
+                "judge_input_tokens": 0,  # TODO: track from judge LLM calls
+                "judge_output_tokens": 0,  # TODO: track from judge LLM calls
             }
             
         except Exception as e:
@@ -326,10 +331,16 @@ async def evaluate_brand_voice_async(
             try:
                 from ui.backend.server import EVALUATION_RESULTS
                 EVALUATION_RESULTS[request_id] = results
-                print(f"✅ Evaluation complete for request {request_id[:8]}... - stored results")
-            except ImportError:
+                print(f"✅ EVALUATION STORED for request_id={request_id}")
+                print(f"   Accuracy: {results.get('accuracy', {}).get('score', 'N/A')}")
+                print(f"   Coherence: {results.get('coherence', {}).get('score', 'N/A')}")
+                print(f"   Keys in EVALUATION_RESULTS: {list(EVALUATION_RESULTS.keys())}")
+            except ImportError as e:
                 # Server not running or not available - that's okay
+                print(f"⚠️  Could not import EVALUATION_RESULTS: {e}")
                 print(f"✅ Evaluation complete for request {request_id[:8]}... - no server to store in")
+        else:
+            print(f"⚠️  No request_id provided or no results - cannot store evaluation")
         
     except Exception as e:
         # Never let evaluation errors crash the main flow

@@ -220,8 +220,14 @@ async def get_evaluation(request_id: str):
     Check if evaluation results are ready for a given request_id.
     Returns evaluation results if available, or status indicating still processing.
     """
+    logger.info(f"[{request_id}] Polling for evaluation. Available keys: {list(EVALUATION_RESULTS.keys())}")
+    
     if request_id in EVALUATION_RESULTS:
         eval_data = EVALUATION_RESULTS[request_id]
+        logger.info(f"[{request_id}] ✅ Evaluation found! Returning results")
+        logger.info(f"[{request_id}] Accuracy: {eval_data.get('accuracy', {}).get('score', 'N/A')}")
+        logger.info(f"[{request_id}] Coherence: {eval_data.get('coherence', {}).get('score', 'N/A')}")
+        
         # Clean up old result after retrieval
         del EVALUATION_RESULTS[request_id]
         return {
@@ -229,6 +235,7 @@ async def get_evaluation(request_id: str):
             "evaluation": eval_data
         }
     else:
+        logger.debug(f"[{request_id}] Evaluation not ready yet")
         return {
             "ready": False,
             "message": "Evaluation still processing or not found"
