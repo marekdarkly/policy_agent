@@ -3,18 +3,19 @@
 import json
 from typing import Any
 
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from ..graph.state import AgentState
 from ..tools.calendar import get_available_slots
 from ..utils.llm_config import get_model_invoker
-from ..utils.prompts import SCHEDULER_SPECIALIST_PROMPT
+from ..utils.launchdarkly_config import get_ld_client
 
 
 def scheduler_specialist_node(state: AgentState) -> dict[str, Any]:
     """Scheduler specialist agent node.
 
     Handles complex queries and schedules callbacks with human agents.
+    Uses prompts from LaunchDarkly AI Config.
 
     Args:
         state: Current agent state
@@ -51,22 +52,24 @@ def scheduler_specialist_node(state: AgentState) -> dict[str, Any]:
         ]
     )
 
-    # Prepare prompt
-    prompt = SCHEDULER_SPECIALIST_PROMPT.format(
-        policy_id=policy_id,
-        user_context=json.dumps(user_context, indent=2),
-        available_slots=slots_str,
-        query=query,
-    )
-
-    # Get LLM response with LaunchDarkly AI Config (required)
-    model_invoker = get_model_invoker(
+    # Get LLM and messages from LaunchDarkly AI Config
+    model_invoker, ld_config = get_model_invoker(
         config_key="scheduler_agent",
         context=user_context,
         default_temperature=0.7,
     )
-    response = model_invoker.invoke([HumanMessage(content=prompt)])
+    
+    # Build LangChain messages from LaunchDarkly config (supports both agent-based and completion-based)
+    ld_client = get_ld_client()
+    context_vars = {
+        **user_context,
+        "query": query,
+        "policy_id": policy_id,
+        "available_slots": slots_str,
+    }
+    langchain_messages = ld_client.build_langchain_messages(ld_config, context_vars)
 
+    response = model_invoker.invoke(langchain_messages)
     response_text = response.content
 
     # Check if escalation was needed

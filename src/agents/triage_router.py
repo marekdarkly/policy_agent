@@ -3,17 +3,18 @@
 import json
 from typing import Any
 
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from ..graph.state import AgentState, QueryType
 from ..utils.llm_config import get_model_invoker
-from ..utils.prompts import TRIAGE_ROUTER_PROMPT
+from ..utils.launchdarkly_config import get_ld_client
 
 
 def triage_node(state: AgentState) -> dict[str, Any]:
     """Triage router agent node.
 
-    Analyzes the customer query and routes it to the appropriate specialist.
+    Analyzes the customer query and routes to the appropriate specialist.
+    Uses prompts from LaunchDarkly AI Config.
 
     Args:
         state: Current agent state
@@ -32,23 +33,25 @@ def triage_node(state: AgentState) -> dict[str, Any]:
 
     # Get user context
     user_context = state.get("user_context", {})
-    context_str = json.dumps(user_context, indent=2) if user_context else "None provided"
 
-    # Prepare prompt
-    prompt = TRIAGE_ROUTER_PROMPT.format(query=query, user_context=context_str)
-
-    # Get LLM response with LaunchDarkly AI Config (required)
-    model_invoker = get_model_invoker(
+    # Get LLM and LaunchDarkly AI Config (including messages/prompts)
+    model_invoker, ld_config = get_model_invoker(
         config_key="triage_agent",
         context=user_context,
         default_temperature=0.0,
     )
-    # Configure for JSON output if OpenAI (check the actual model type)
+    
+    # Build LangChain messages from LaunchDarkly config (supports both agent-based and completion-based)
+    ld_client = get_ld_client()
+    context_vars = {**user_context, "query": query}
+    langchain_messages = ld_client.build_langchain_messages(ld_config, context_vars)
+    
+    # Configure for JSON output if OpenAI
     from langchain_openai import ChatOpenAI
     if isinstance(model_invoker.model, ChatOpenAI):
         model_invoker.model.model_kwargs = {"response_format": {"type": "json_object"}}
 
-    response = model_invoker.invoke([HumanMessage(content=prompt)])
+    response = model_invoker.invoke(langchain_messages)
 
     # Parse the JSON response
     try:

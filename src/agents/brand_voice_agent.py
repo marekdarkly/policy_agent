@@ -2,11 +2,11 @@
 
 from typing import Any
 
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from ..graph.state import AgentState
 from ..utils.llm_config import get_model_invoker
-from ..utils.prompts import BRAND_VOICE_PROMPT
+from ..utils.launchdarkly_config import get_ld_client
 
 
 def brand_voice_node(state: AgentState) -> dict[str, Any]:
@@ -14,6 +14,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
 
     Takes the specialist's response and transforms it to match ToggleHealth's
     brand voice - friendly, empathetic, clear, and helpful.
+    Uses prompts from LaunchDarkly AI Config.
 
     Args:
         state: Current agent state with specialist response
@@ -37,28 +38,25 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
             original_query = msg.content
             break
 
-    # Get agent-specific context if available
-    agent_data = state.get("agent_data", {})
-    specialist_name = state.get("next_agent", "specialist")
-    specialist_context = agent_data.get(specialist_name, {})
-
-    # Prepare prompt with all context
-    prompt = BRAND_VOICE_PROMPT.format(
-        customer_name=customer_name,
-        original_query=original_query,
-        query_type=query_type,
-        specialist_response=specialist_response,
-        user_context=str(user_context),
-    )
-
-    # Get LLM response with LaunchDarkly AI Config
-    model_invoker = get_model_invoker(
+    # Get LLM and messages from LaunchDarkly AI Config
+    model_invoker, ld_config = get_model_invoker(
         config_key="brand_agent",
         context=user_context,
         default_temperature=0.7,  # Slightly creative for natural language
     )
+    
+    # Build LangChain messages from LaunchDarkly config (supports both agent-based and completion-based)
+    ld_client = get_ld_client()
+    context_vars = {
+        **user_context,
+        "customer_name": customer_name,
+        "original_query": original_query,
+        "query_type": str(query_type),
+        "specialist_response": specialist_response,
+    }
+    langchain_messages = ld_client.build_langchain_messages(ld_config, context_vars)
 
-    response = model_invoker.invoke([HumanMessage(content=prompt)])
+    response = model_invoker.invoke(langchain_messages)
 
     # Store the brand-voiced response
     final_response = response.content
@@ -83,6 +81,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
 
     return {
         "messages": [final_message],
+        "final_response": final_response,  # CRITICAL: Set this so the customer sees the brand-voiced response!
         "agent_data": updated_agent_data,
         "next_agent": "END",
     }

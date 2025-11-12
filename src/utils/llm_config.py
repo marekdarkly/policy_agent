@@ -141,8 +141,8 @@ def get_model_invoker(
     config_key: str,
     context: Optional[dict[str, Any]] = None,
     default_temperature: float = 0.7,
-) -> ModelInvoker:
-    """Get a ModelInvoker with tracking for the specified config.
+) -> Tuple[ModelInvoker, dict[str, Any]]:
+    """Get a ModelInvoker with tracking and full config (including messages) from LaunchDarkly.
 
     Args:
         config_key: The AI config key in LaunchDarkly
@@ -150,10 +150,30 @@ def get_model_invoker(
         default_temperature: Default temperature if not specified in config
 
     Returns:
-        ModelInvoker instance with tracking
+        Tuple of (ModelInvoker instance with tracking, full config dict including messages)
     """
-    llm, tracker = get_llm_from_config(config_key, context, default_temperature)
-    return ModelInvoker(llm, tracker)
+    ld_client = get_ld_client()
+    # Get config once from LaunchDarkly
+    config, tracker = ld_client.get_ai_config(config_key, context)
+    
+    # Create LLM directly from the config (don't call get_llm_from_config which would retrieve again)
+    provider = config.get("provider", "bedrock")
+    # Parse provider name (e.g., "Bedrock:Anthropic" -> "bedrock")
+    if ":" in provider:
+        provider = provider.split(":")[0]
+    provider = provider.lower().strip()
+    
+    model_config = config.get("model", {})
+    model_name = model_config.get("name", "claude-3-5-sonnet")
+    
+    # Get temperature from config or use default
+    parameters = model_config.get("parameters", {})
+    temperature = parameters.get("temperature", default_temperature)
+    max_tokens = parameters.get("max_tokens") or parameters.get("maxTokens", 2000)
+    
+    llm = _create_llm_for_provider(provider, model_name, temperature, max_tokens)
+    
+    return ModelInvoker(llm, tracker), config
 
 
 def _create_llm_for_provider(

@@ -89,8 +89,71 @@ class LaunchDarklyClient:
         else:
             default_ai_config = self._get_default_ai_config()
 
+        # Try agent-based config first (using .agents() method)
         try:
-            # Get AI config from LaunchDarkly (returns AIConfig object)
+            from ldai.client import LDAIAgentConfig, LDAIAgentDefaults
+            
+            # Create agent config with defaults
+            agent_config = LDAIAgentConfig(
+                key=config_key,
+                default_value=LDAIAgentDefaults(
+                    enabled=True,
+                    instructions="__DEFAULT_INSTRUCTIONS__"  # Sentinel value to detect if it's actually from LD
+                )
+            )
+            
+            agents = self.ai_client.agents([agent_config], ld_context)
+            
+            if config_key in agents and agents[config_key].enabled:
+                agent = agents[config_key]
+                
+                # Check if this is actually an agent-based config (has non-default instructions)
+                has_instructions = (
+                    hasattr(agent, 'instructions') and 
+                    agent.instructions and 
+                    agent.instructions != "__DEFAULT_INSTRUCTIONS__"
+                )
+                
+                if has_instructions:
+                    # This is truly an agent-based config (has "Goal or task" field)
+                    # Use agent.to_dict() to get all data including custom parameters
+                    agent_dict = agent.to_dict()
+                    
+                    # Extract provider
+                    provider_value = ""
+                    if agent_dict.get("provider"):
+                        provider_dict = agent_dict["provider"]
+                        provider_value = provider_dict.get("name", "") if isinstance(provider_dict, dict) else str(provider_dict)
+                    
+                    config_dict = {
+                        "enabled": agent_dict.get("_ldMeta", {}).get("enabled", True),
+                        "provider": provider_value,
+                    }
+                    
+                    # Extract model config with custom parameters
+                    if agent_dict.get("model"):
+                        model_dict = agent_dict["model"]
+                        config_dict["model"] = {
+                            "name": model_dict.get("name", ""),
+                            "parameters": model_dict.get("parameters", {}),
+                        }
+                        # Custom parameters (like awskbid) are available in agent.to_dict()!
+                        if model_dict.get("custom"):
+                            config_dict["model"]["custom"] = model_dict["custom"]
+                    
+                    # Store instructions separately (not as messages)
+                    config_dict["_instructions"] = agent_dict.get("instructions", "")
+                    
+                    tracker = agent.tracker
+                    print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly (agent-based with 'Goal or task')")
+                    return config_dict, tracker
+                # If no instructions, this is a completion-based config, fall through
+        except Exception as e:
+            # Agent-based retrieval failed, will try completion-based
+            pass
+
+        # Fall back to completion-based config (using .config() method)
+        try:
             config_value, tracker = self.ai_client.config(
                 config_key, ld_context, default_ai_config, {}
             )
@@ -98,22 +161,20 @@ class LaunchDarklyClient:
             # Convert AIConfig to dict
             config_dict = self._ai_config_to_dict(config_value)
             
-            # Check if config came from LaunchDarkly by comparing to default
-            # If it's different from default, it must have come from LD
+            # Check if config came from LaunchDarkly
             default_dict = self._ai_config_to_dict(default_ai_config)
             
-            # Compare key attributes to detect if it's actually from LD
             is_from_ld = (
                 config_dict.get("model", {}).get("name") != default_dict.get("model", {}).get("name") or
                 config_dict.get("provider") != default_dict.get("provider") or
-                "custom" in config_dict.get("model", {})  # Custom params = definitely from LD
+                "custom" in config_dict.get("model", {}) or
+                config_dict.get("messages")
             )
             
             if is_from_ld:
-                print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly")
+                print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly (completion-based)")
             else:
-                # If truly using default, this should be CATASTROPHIC
-                error_msg = f"CATASTROPHIC: AI config '{config_key}' not found in LaunchDarkly! Ensure the config exists in your LD dashboard."
+                error_msg = f"CATASTROPHIC: AI config '{config_key}' not found in LaunchDarkly!"
                 print(f"❌ {error_msg}")
                 raise RuntimeError(error_msg)
             
@@ -121,8 +182,6 @@ class LaunchDarklyClient:
             
         except Exception as e:
             print(f"❌ CATASTROPHIC: Error retrieving AI config '{config_key}': {e}")
-            import traceback
-            traceback.print_exc()
             raise RuntimeError(f"Failed to retrieve AI config '{config_key}' from LaunchDarkly: {e}")
 
     def _create_context(self, context_dict: dict[str, Any]) -> Context:
@@ -222,6 +281,18 @@ class LaunchDarklyClient:
         result = {
             "enabled": config_dict.get("_ldMeta", {}).get("enabled", True),
         }
+        
+        # Extract prompts from LaunchDarkly AI Config
+        # Support both prompt-based (messages array) and agent-based (_prompt field)
+        if config_dict.get("messages"):
+            # Prompt-based AI Config: uses messages array with roles
+            result["messages"] = config_dict["messages"]
+        elif config_dict.get("_prompt"):
+            # Agent-based AI Config: uses _prompt field (Goal or task in UI)
+            # Convert to messages format for consistency
+            result["messages"] = [
+                {"role": "system", "content": config_dict["_prompt"]}
+            ]
 
         if config_dict.get("model"):
             model_dict = config_dict["model"]
@@ -239,6 +310,109 @@ class LaunchDarklyClient:
             result["provider"] = provider_dict.get("name", "")
 
         return result
+
+    def build_langchain_messages(self, ld_config: dict[str, Any], context_vars: dict[str, Any]) -> list:
+        """Build LangChain messages from LaunchDarkly config (agent-based or completion-based).
+        
+        Args:
+            ld_config: The LaunchDarkly AI config dict
+            context_vars: Variables for template replacement
+            
+        Returns:
+            List of LangChain message objects (SystemMessage, HumanMessage, AIMessage)
+        """
+        from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+        import json
+        
+        langchain_messages = []
+        
+        if "_instructions" in ld_config:
+            # Agent-based config: instructions + user query
+            instructions = ld_config["_instructions"]
+            # Replace template variables in instructions
+            for key, value in context_vars.items():
+                instructions = instructions.replace(f"{{{{{key}}}}}", str(value))
+                instructions = instructions.replace(f"{{{{ldctx.{key}}}}}", str(value))
+            
+            # System message with instructions, then user message with query
+            query = context_vars.get("query", "")
+            user_context = {k: v for k, v in context_vars.items() if k != "query"}
+            langchain_messages = [
+                SystemMessage(content=instructions),
+                HumanMessage(content=f"User query: {query}\n\nUser context:\n{json.dumps(user_context, indent=2, default=str)}")
+            ]
+        elif "messages" in ld_config:
+            # Completion-based config: use messages from LaunchDarkly
+            ld_messages = ld_config["messages"]
+            formatted_messages = self.format_messages(ld_messages, context_vars)
+            
+            # Convert to LangChain message format
+            has_user_message = False
+            for msg in formatted_messages:
+                if msg["role"] == "system":
+                    langchain_messages.append(SystemMessage(content=msg["content"]))
+                elif msg["role"] == "user":
+                    langchain_messages.append(HumanMessage(content=msg["content"]))
+                    has_user_message = True
+                else:
+                    langchain_messages.append(AIMessage(content=msg["content"]))
+            
+            # AWS Bedrock requires conversations to start with a user message
+            # If we only have a system message, add a user message with query
+            if not has_user_message and langchain_messages:
+                query = context_vars.get("query", "")
+                user_context_minimal = {k: v for k, v in context_vars.items() if k not in ["query"]}
+                user_msg = f"User query: {query}\n\nContext:\n{json.dumps(user_context_minimal, indent=2, default=str)}"
+                langchain_messages.append(HumanMessage(content=user_msg))
+        else:
+            raise RuntimeError(
+                f"❌ CATASTROPHIC: No messages or instructions found in LaunchDarkly AI Config!\n"
+                f"  This means the config exists but has no prompt/instructions configured.\n"
+                f"  Please configure either:\n"
+                f"  - For agent-based: Set 'Goal or task' field\n"
+                f"  - For completion-based: Add messages in 'Prompt' section"
+            )
+        
+        return langchain_messages
+
+    def format_messages(self, messages: list[dict], context_vars: dict[str, Any]) -> list[dict]:
+        """Format LaunchDarkly messages with context variables.
+        
+        Replaces template variables like {{ldctx.name}} or {{variable_name}} with actual values.
+        
+        Args:
+            messages: List of message dicts with 'role' and 'content' from LaunchDarkly
+            context_vars: Dictionary of variables to substitute
+            
+        Returns:
+            List of formatted messages
+        """
+        import re
+        
+        formatted_messages = []
+        for msg in messages:
+            content = msg.get("content", "")
+            
+            # Replace {{ldctx.attribute}} with context values
+            def replace_ldctx(match):
+                attr = match.group(1)
+                return str(context_vars.get(attr, f"{{{{ldctx.{attr}}}}}"))  # Keep original if not found
+            
+            content = re.sub(r'\{\{ldctx\.(\w+)\}\}', replace_ldctx, content)
+            
+            # Replace {{variable_name}} with values
+            def replace_var(match):
+                var = match.group(1)
+                return str(context_vars.get(var, f"{{{{{var}}}}}"))  # Keep original if not found
+            
+            content = re.sub(r'\{\{(\w+)\}\}', replace_var, content)
+            
+            formatted_messages.append({
+                "role": msg.get("role", "user"),
+                "content": content
+            })
+        
+        return formatted_messages
 
     def close(self):
         """Close the LaunchDarkly client."""

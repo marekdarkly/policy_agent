@@ -230,8 +230,11 @@ def get_policy_retriever(
     kb_id = get_kb_id_from_ld_config(ld_config, POLICY_KB_ID)
     
     if not kb_id:
-        print("  ⚠️  Policy KB ID not configured (check LaunchDarkly custom.awskbid or BEDROCK_POLICY_KB_ID)")
-        return None
+        raise RuntimeError(
+            "❌ CATASTROPHIC: Policy Knowledge Base ID not configured!\n"
+            "  Please configure 'awskbid' in LaunchDarkly AI Config custom parameters,\n"
+            "  or set BEDROCK_POLICY_KB_ID environment variable."
+        )
     
     print(f"  📚 Using Policy KB from LaunchDarkly: {kb_id[:20]}...")
     return BedrockKnowledgeBaseRetriever(
@@ -257,8 +260,11 @@ def get_provider_retriever(
     kb_id = get_kb_id_from_ld_config(ld_config, PROVIDER_KB_ID)
     
     if not kb_id:
-        print("  ⚠️  Provider KB ID not configured (check LaunchDarkly custom.awskbid or BEDROCK_PROVIDER_KB_ID)")
-        return None
+        raise RuntimeError(
+            "❌ CATASTROPHIC: Provider Knowledge Base ID not configured!\n"
+            "  Please configure 'awskbid' in LaunchDarkly AI Config custom parameters,\n"
+            "  or set BEDROCK_PROVIDER_KB_ID environment variable."
+        )
     
     print(f"  📚 Using Provider KB from LaunchDarkly: {kb_id[:20]}...")
     return BedrockKnowledgeBaseRetriever(
@@ -284,10 +290,8 @@ def retrieve_policy_documents(
     """
     print(f"📚 Retrieving policy documents via RAG...")
     
+    # Get retriever - will raise RuntimeError if KB ID not configured
     retriever = get_policy_retriever(ld_config=ld_config)
-    if not retriever:
-        print("  ℹ️  Falling back to simulated policy database")
-        return []
     
     # Enhance query with policy ID if available
     enhanced_query = query
@@ -323,10 +327,8 @@ def retrieve_provider_documents(
     """
     print(f"📚 Retrieving provider documents via RAG...")
     
+    # Get retriever - will raise RuntimeError if KB ID not configured
     retriever = get_provider_retriever(ld_config=ld_config)
-    if not retriever:
-        print("  ℹ️  Falling back to simulated provider database")
-        return []
     
     # Enhance query with filters
     filters = []

@@ -5,13 +5,13 @@ A production-ready LangGraph-based multi-agent system for intelligent medical in
 ## 🌟 Features
 
 - 🤖 **Multi-Agent Orchestration** with LangGraph
-- 🎯 **LaunchDarkly AI Configs** - Dynamic model management per agent
+- 🎯 **LaunchDarkly AI Configs** - Dynamic model AND prompt management per agent
 - 📚 **RAG with Bedrock Knowledge Base** - Semantic search over policy & provider docs
 - ✨ **Brand Voice Synthesis** - Consistent, personalized customer responses
 - 💬 **Interactive Terminal Chatbot** - Beautiful UI with extensive debug logging
 - 📊 **Observability** - Full metrics tracking via LaunchDarkly
 - 🔐 **AWS SSO Integration** - Automatic token refresh
-- 🎨 **Production-Ready** - Error handling, fallbacks, logging
+- 🎨 **Production-Ready** - Error handling, CATASTROPHIC fallback detection
 
 ## 🚀 Quick Start
 

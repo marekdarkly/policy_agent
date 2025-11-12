@@ -3,19 +3,19 @@
 import json
 from typing import Any
 
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from ..graph.state import AgentState
-# Note: Using RAG (Bedrock KB) only - no structured database queries
 from ..tools.bedrock_rag import retrieve_provider_documents
 from ..utils.llm_config import get_model_invoker
-from ..utils.prompts import PROVIDER_SPECIALIST_PROMPT
+from ..utils.launchdarkly_config import get_ld_client
 
 
 def provider_specialist_node(state: AgentState) -> dict[str, Any]:
     """Provider lookup specialist agent node.
 
     Helps customers find in-network providers.
+    Uses prompts from LaunchDarkly AI Config.
 
     Args:
         state: Current agent state
@@ -44,10 +44,9 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
     location = user_context.get("location", "")
 
     # Extract search parameters from context or query
-    # In a real system, this would use NER or more sophisticated extraction
     specialty = user_context.get("specialty")
 
-    # Simple keyword matching for specialty (can be enhanced)
+    # Simple keyword matching for specialty
     query_lower = query.lower()
     if not specialty:
         if "cardiologist" in query_lower or "heart" in query_lower:
@@ -58,14 +57,15 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
             specialty = "orthopedic"
         elif "primary care" in query_lower or "family doctor" in query_lower:
             specialty = "primary care"
+        elif "physical therapy" in query_lower or "pt" in query_lower:
+            specialty = "physical therapy"
 
-    # Retrieve provider information using RAG + traditional database
+    # Retrieve provider information using RAG
     print(f"\n{'─'*80}")
     print(f"🔍 PROVIDER SPECIALIST: Searching for providers")
     print(f"{'─'*80}")
     
-    # Get LaunchDarkly config to extract KB ID from custom parameters
-    from ..utils.launchdarkly_config import get_ld_client
+    # Get LaunchDarkly config (including messages and KB ID)
     ld_client = get_ld_client()
     ld_config, _ = ld_client.get_ai_config("provider_agent", user_context)
     
@@ -79,38 +79,46 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
     )
 
     # Format RAG documents from Bedrock Knowledge Base
-    if rag_documents:
-        print(f"  📄 Retrieved {len(rag_documents)} provider documents from Bedrock KB")
-        provider_info_str = "\n\n=== PROVIDER NETWORK INFORMATION (from Bedrock Knowledge Base) ===\n"
-        for i, doc in enumerate(rag_documents, 1):
-            score = doc.get("score", 0.0)
-            content = doc.get("content", "")
-            print(f"    Doc {i}: Score {score:.3f}, Length {len(content)} chars")
-            provider_info_str += f"\n[Document {i} - Relevance: {score:.2f}]\n{content}\n"
-    else:
-        print(f"  ⚠️  No provider documents retrieved from Bedrock KB")
-        provider_info_str = "No providers found matching the criteria in the knowledge base."
-
-    # Enhanced prompt with RAG context from Bedrock Knowledge Base
-    enhanced_prompt = PROVIDER_SPECIALIST_PROMPT.format(
-        policy_id=policy_id or "Not provided",
-        network=network,
-        location=location or "Not specified",
-        user_context=json.dumps(user_context, indent=2),
-        provider_info=provider_info_str,
-        query=query,
-    )
+    if not rag_documents:
+        raise RuntimeError(
+            f"❌ CATASTROPHIC: No provider documents retrieved from Bedrock Knowledge Base!\n"
+            f"  Query: {query}\n"
+            f"  Location: {location}\n"
+            f"  Network: {network}\n"
+            f"  Specialty: {specialty}\n"
+            f"  This indicates either:\n"
+            f"  1. The Knowledge Base is empty\n"
+            f"  2. The query doesn't match any documents\n"
+            f"  3. The KB is not properly configured"
+        )
     
-    prompt = enhanced_prompt
+    print(f"  📄 Retrieved {len(rag_documents)} provider documents from Bedrock KB")
+    provider_info_str = "\n\n=== PROVIDER NETWORK INFORMATION (from Bedrock Knowledge Base) ===\n"
+    for i, doc in enumerate(rag_documents, 1):
+        score = doc.get("score", 0.0)
+        content = doc.get("content", "")
+        print(f"    Doc {i}: Score {score:.3f}, Length {len(content)} chars")
+        provider_info_str += f"\n[Document {i} - Relevance: {score:.2f}]\n{content}\n"
 
-    # Get LLM response with LaunchDarkly AI Config (required)
-    model_invoker = get_model_invoker(
+    # Get LLM and messages from LaunchDarkly AI Config
+    model_invoker, ld_config = get_model_invoker(
         config_key="provider_agent",
         context=user_context,
         default_temperature=0.7,
     )
-    response = model_invoker.invoke([HumanMessage(content=prompt)])
+    
+    # Build LangChain messages from LaunchDarkly config (supports both agent-based and completion-based)
+    context_vars = {
+        **user_context,
+        "query": query,
+        "policy_id": policy_id or "Not provided",
+        "network": network,
+        "location": location or "Not specified",
+        "provider_info": provider_info_str,
+    }
+    langchain_messages = ld_client.build_langchain_messages(ld_config, context_vars)
 
+    response = model_invoker.invoke(langchain_messages)
     response_text = response.content
 
     # Update state
@@ -122,14 +130,12 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
             **state.get("agent_data", {}),
             "provider_specialist": {
                 "source": "bedrock_kb_only",
+                "rag_enabled": True,
                 "rag_documents_retrieved": len(rag_documents),
-                "rag_enabled": len(rag_documents) > 0,
-                "search_params": {
-                    "specialty": specialty,
-                    "location": location,
-                    "network": network,
-                },
-                "response": response_text,
+                "query": query,
+                "specialty": specialty,
+                "location": location,
+                "network": network,
             },
         },
     }
