@@ -37,7 +37,7 @@ from datetime import datetime
 # Import LLM-related modules AFTER observability setup
 from src.graph.workflow import run_workflow
 from src.utils.user_profile import create_user_profile
-from ldai import FeedbackKind
+from ldai.tracker import FeedbackKind
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
