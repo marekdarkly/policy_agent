@@ -66,19 +66,37 @@ def initialize_observability(
         try:
             from traceloop.sdk import Traceloop
             
-            # Initialize with LaunchDarkly export configuration
-            Traceloop.init(
-                app_name=service_name,
-                api_endpoint=os.getenv("LD_OBSERVABILITY_ENDPOINT", "https://events.launchdarkly.com"),
-                headers={
-                    "Authorization": sdk_key
-                },
-                disable_batch=False,
-                resource_attributes={
-                    "service.name": service_name,
-                    "deployment.environment": environment,
-                }
-            )
+            # Check if LaunchDarkly observability endpoint is configured
+            ld_obs_endpoint = os.getenv("LD_OBSERVABILITY_ENDPOINT")
+            
+            if ld_obs_endpoint:
+                # Export to LaunchDarkly observability
+                logger.info(f"   Exporting spans to: {ld_obs_endpoint}")
+                Traceloop.init(
+                    app_name=service_name,
+                    api_endpoint=ld_obs_endpoint,
+                    headers={
+                        "Authorization": sdk_key,
+                        "LD-Application-ID": os.getenv("LD_APPLICATION_ID", service_name)
+                    },
+                    disable_batch=False,
+                    resource_attributes={
+                        "service.name": service_name,
+                        "deployment.environment": environment,
+                    }
+                )
+            else:
+                # Local-only instrumentation (no export)
+                logger.warning("⚠️  LD_OBSERVABILITY_ENDPOINT not set. Spans will be instrumented but NOT exported.")
+                logger.warning("   To export to LaunchDarkly, set LD_OBSERVABILITY_ENDPOINT in .env")
+                Traceloop.init(
+                    app_name=service_name,
+                    disable_batch=True,  # Don't try to export
+                    resource_attributes={
+                        "service.name": service_name,
+                        "deployment.environment": environment,
+                    }
+                )
             
             logger.info("✅ Traceloop SDK (OpenLLMetry) initialized")
             logger.info(f"   Service: {service_name}")
