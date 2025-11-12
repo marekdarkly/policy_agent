@@ -160,27 +160,27 @@ def initialize_observability(
         except Exception as e:
             logger.warning(f"⚠️  Failed to instrument Botocore: {e}")
         
-    # Add filter to suppress "ended span" warnings from OpenTelemetry
-    # These occur when background threads (judges) reference closed spans from main request
-    ended_span_filter = EndedSpanFilter()
-    
-    # Apply to OpenTelemetry loggers
-    for logger_name in ['opentelemetry', 'opentelemetry.trace', 'opentelemetry.sdk.trace']:
-        otel_logger = logging.getLogger(logger_name)
-        otel_logger.addFilter(ended_span_filter)
-    
-    # Also apply to root logger to catch any stragglers
-    logging.getLogger().addFilter(ended_span_filter)
-    
-    # Mark as initialized
-    _observability_initialized = True
-    
-    logger.info("🎉 AI Observability fully initialized!")
-    logger.info("   📊 Spans will appear in LaunchDarkly > Monitor > Traces")
-    logger.info("   🟢 LLM spans marked with green LLM symbol")
-    logger.info("   🔇 'Ended span' warnings suppressed (background threads expected)")
-    
-    return True
+        # Add filter to suppress "ended span" warnings from OpenTelemetry
+        # These occur when background threads (judges) reference closed spans from main request
+        ended_span_filter = EndedSpanFilter()
+        
+        # Apply to OpenTelemetry loggers
+        for logger_name in ['opentelemetry', 'opentelemetry.trace', 'opentelemetry.sdk.trace']:
+            otel_logger = logging.getLogger(logger_name)
+            otel_logger.addFilter(ended_span_filter)
+        
+        # Also apply to root logger to catch any stragglers
+        logging.getLogger().addFilter(ended_span_filter)
+        
+        # Mark as initialized
+        _observability_initialized = True
+        
+        logger.info("🎉 AI Observability fully initialized!")
+        logger.info("   📊 Spans will appear in LaunchDarkly > Monitor > Traces")
+        logger.info("   🟢 LLM spans marked with green LLM symbol")
+        logger.info("   🔇 'Ended span' warnings suppressed (background threads expected)")
+        
+        return True
         
     except Exception as e:
         logger.error(f"❌ Observability initialization failed: {e}")
