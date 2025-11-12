@@ -8,6 +8,11 @@ echo "║  Starting backend and frontend servers...                    ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 
+# Kill any existing servers
+pkill -f "python.*server.py" 2>/dev/null || true
+pkill -f "vite" 2>/dev/null || true
+sleep 1
+
 # Get script directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$SCRIPT_DIR/.."
