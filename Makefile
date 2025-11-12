@@ -1,4 +1,4 @@
-.PHONY: help install setup run test verify clean aws-login aws-check format lint
+.PHONY: help install setup run test verify clean aws-login aws-check format lint test-suite test-quick test-chunks
 
 # Configuration
 PYTHON := python3
@@ -319,6 +319,20 @@ ui: run-ui ## Alias for 'run-ui' - start the web UI
 check: aws-check verify ## Check all configurations (AWS + LaunchDarkly + RAG)
 
 status: info ## Alias for 'info' - show system status
+
+##@ Testing & Evaluation
+
+test-suite: aws-check ## Run automated agent test suite (50 iterations)
+	@echo "$(COLOR_CYAN)$(COLOR_BOLD)🧪 Running Agent Test Suite (50 iterations)...$(COLOR_RESET)"
+	@. venv/bin/activate && python test_agent_suite.py
+
+test-quick: aws-check ## Run quick test (5 iterations)
+	@echo "$(COLOR_CYAN)$(COLOR_BOLD)🧪 Running Quick Test (5 iterations)...$(COLOR_RESET)"
+	@. venv/bin/activate && TEST_ITERATIONS=5 python test_agent_suite.py
+
+test-chunks: aws-check ## Diagnose RAG chunk sizes
+	@echo "$(COLOR_CYAN)$(COLOR_BOLD)🔍 Diagnosing RAG Chunk Sizes...$(COLOR_RESET)"
+	@. venv/bin/activate && python test_chunk_sizes.py
 
 ##@ Default
 

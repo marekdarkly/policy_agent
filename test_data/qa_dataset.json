@@ -1,0 +1,719 @@
+{
+  "metadata": {
+    "dataset_name": "ToggleHealth Agent Evaluation Dataset",
+    "version": "1.0.0",
+    "created": "2024-11-12",
+    "total_questions": 100,
+    "categories": [
+      "policy_coverage",
+      "provider_search",
+      "pharmacy_benefits",
+      "special_programs",
+      "claims_preauth",
+      "scheduling"
+    ]
+  },
+  "questions": [
+    {
+      "id": "Q001",
+      "category": "policy_coverage",
+      "question": "What's my copay for a primary care visit?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["copay", "primary_care", "gold_hmo"]
+    },
+    {
+      "id": "Q002",
+      "category": "provider_search",
+      "question": "Find me a cardiologist in San Francisco",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "cardiology", "san_francisco"]
+    },
+    {
+      "id": "Q003",
+      "category": "policy_coverage",
+      "question": "Does my plan cover mental health therapy?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["mental_health", "coverage", "therapy"]
+    },
+    {
+      "id": "Q004",
+      "category": "provider_search",
+      "question": "I need a primary care doctor in Boston",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["primary_care", "boston"]
+    },
+    {
+      "id": "Q005",
+      "category": "pharmacy_benefits",
+      "question": "How much is a generic prescription at the pharmacy?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["pharmacy", "generic", "copay"]
+    },
+    {
+      "id": "Q006",
+      "category": "special_programs",
+      "question": "Do you have a diabetes management program?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["diabetes", "special_program", "disease_management"]
+    },
+    {
+      "id": "Q007",
+      "category": "provider_search",
+      "question": "Find me an endocrinologist in Seattle",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "endocrinology", "seattle"]
+    },
+    {
+      "id": "Q008",
+      "category": "policy_coverage",
+      "question": "What's my deductible for this year?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["deductible", "cost_sharing"]
+    },
+    {
+      "id": "Q009",
+      "category": "provider_search",
+      "question": "I need a dermatologist who speaks Spanish",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "dermatology", "language"]
+    },
+    {
+      "id": "Q010",
+      "category": "claims_preauth",
+      "question": "Do I need preauthorization for an MRI?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["preauth", "imaging", "mri"]
+    },
+    {
+      "id": "Q011",
+      "category": "policy_coverage",
+      "question": "How much will a hospital stay cost me?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["hospital", "inpatient", "cost"]
+    },
+    {
+      "id": "Q012",
+      "category": "provider_search",
+      "question": "Find me a family medicine doctor in Portland",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["primary_care", "family_medicine", "portland"]
+    },
+    {
+      "id": "Q013",
+      "category": "pharmacy_benefits",
+      "question": "Can I use mail order for my medications?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["pharmacy", "mail_order"]
+    },
+    {
+      "id": "Q014",
+      "category": "scheduling",
+      "question": "I need to talk to someone about my coverage",
+      "expected_route": "SCHEDULE_AGENT",
+      "tags": ["customer_service", "scheduling"]
+    },
+    {
+      "id": "Q015",
+      "category": "policy_coverage",
+      "question": "Is preventive care covered at 100%?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["preventive", "coverage"]
+    },
+    {
+      "id": "Q016",
+      "category": "provider_search",
+      "question": "I need an orthopedic surgeon in Los Angeles",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "orthopedics", "los_angeles"]
+    },
+    {
+      "id": "Q017",
+      "category": "policy_coverage",
+      "question": "What's the copay for urgent care?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["copay", "urgent_care"]
+    },
+    {
+      "id": "Q018",
+      "category": "provider_search",
+      "question": "Find me a psychiatrist in New York",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["mental_health", "psychiatry", "new_york"]
+    },
+    {
+      "id": "Q019",
+      "category": "special_programs",
+      "question": "What maternity programs do you offer?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["maternity", "special_program"]
+    },
+    {
+      "id": "Q020",
+      "category": "policy_coverage",
+      "question": "Does my plan cover acupuncture?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["alternative_medicine", "acupuncture"]
+    },
+    {
+      "id": "Q021",
+      "category": "provider_search",
+      "question": "I need a pediatrician in Chicago",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["pediatrics", "chicago"]
+    },
+    {
+      "id": "Q022",
+      "category": "pharmacy_benefits",
+      "question": "What's the cost for a specialty medication?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["pharmacy", "specialty", "tier4"]
+    },
+    {
+      "id": "Q023",
+      "category": "claims_preauth",
+      "question": "How do I submit a claim?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["claims", "submission"]
+    },
+    {
+      "id": "Q024",
+      "category": "provider_search",
+      "question": "Find me a gastroenterologist near me",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "gastroenterology"]
+    },
+    {
+      "id": "Q025",
+      "category": "policy_coverage",
+      "question": "What's my out-of-pocket maximum?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["oop_max", "cost_sharing"]
+    },
+    {
+      "id": "Q026",
+      "category": "provider_search",
+      "question": "I need an OB/GYN in San Diego",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "obgyn", "san_diego"]
+    },
+    {
+      "id": "Q027",
+      "category": "special_programs",
+      "question": "Do you have a weight management program?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["weight_management", "special_program"]
+    },
+    {
+      "id": "Q028",
+      "category": "policy_coverage",
+      "question": "How much is an emergency room visit?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["emergency", "copay"]
+    },
+    {
+      "id": "Q029",
+      "category": "provider_search",
+      "question": "Find me a physical therapist in Seattle",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "physical_therapy", "seattle"]
+    },
+    {
+      "id": "Q030",
+      "category": "pharmacy_benefits",
+      "question": "Can I get a 90-day supply of my medication?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["pharmacy", "mail_order", "90day"]
+    },
+    {
+      "id": "Q031",
+      "category": "provider_search",
+      "question": "I need an eye doctor in Phoenix",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "ophthalmology", "phoenix"]
+    },
+    {
+      "id": "Q032",
+      "category": "policy_coverage",
+      "question": "Does my plan cover chiropractic care?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["alternative_medicine", "chiropractic"]
+    },
+    {
+      "id": "Q033",
+      "category": "claims_preauth",
+      "question": "Do I need preauth for surgery?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["preauth", "surgery"]
+    },
+    {
+      "id": "Q034",
+      "category": "provider_search",
+      "question": "Find me a neurologist in Boston",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "neurology", "boston"]
+    },
+    {
+      "id": "Q035",
+      "category": "policy_coverage",
+      "question": "What's covered for maternity care?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["maternity", "prenatal"]
+    },
+    {
+      "id": "Q036",
+      "category": "scheduling",
+      "question": "Can I speak with a representative?",
+      "expected_route": "SCHEDULE_AGENT",
+      "tags": ["customer_service", "live_agent"]
+    },
+    {
+      "id": "Q037",
+      "category": "provider_search",
+      "question": "I need a dentist for my child",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["dental", "pediatric"]
+    },
+    {
+      "id": "Q038",
+      "category": "pharmacy_benefits",
+      "question": "Is my insulin covered?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["pharmacy", "diabetes", "insulin"]
+    },
+    {
+      "id": "Q039",
+      "category": "provider_search",
+      "question": "Find me an oncologist in Miami",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "oncology", "miami"]
+    },
+    {
+      "id": "Q040",
+      "category": "policy_coverage",
+      "question": "Do I need a referral to see a specialist?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["referral", "hmo", "specialist"]
+    },
+    {
+      "id": "Q041",
+      "category": "provider_search",
+      "question": "I need a psychologist for therapy in Denver",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["mental_health", "psychology", "denver"]
+    },
+    {
+      "id": "Q042",
+      "category": "special_programs",
+      "question": "What programs do you have for heart disease?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["heart_health", "special_program"]
+    },
+    {
+      "id": "Q043",
+      "category": "policy_coverage",
+      "question": "How much is a specialist visit?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["copay", "specialist"]
+    },
+    {
+      "id": "Q044",
+      "category": "provider_search",
+      "question": "Find me a urologist in Houston",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "urology", "houston"]
+    },
+    {
+      "id": "Q045",
+      "category": "pharmacy_benefits",
+      "question": "What's the difference between generic and brand name cost?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["pharmacy", "generic", "brand"]
+    },
+    {
+      "id": "Q046",
+      "category": "provider_search",
+      "question": "I need an allergist in Washington DC",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "allergy", "washington_dc"]
+    },
+    {
+      "id": "Q047",
+      "category": "policy_coverage",
+      "question": "Is physical therapy covered?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["physical_therapy", "coverage"]
+    },
+    {
+      "id": "Q048",
+      "category": "provider_search",
+      "question": "Find me a rheumatologist in Philadelphia",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "rheumatology", "philadelphia"]
+    },
+    {
+      "id": "Q049",
+      "category": "claims_preauth",
+      "question": "What imaging requires preauthorization?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["preauth", "imaging"]
+    },
+    {
+      "id": "Q050",
+      "category": "provider_search",
+      "question": "I need a pulmonologist in Atlanta",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "pulmonology", "atlanta"]
+    },
+    {
+      "id": "Q051",
+      "category": "policy_coverage",
+      "question": "What's the copay for an MRI?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["copay", "imaging", "mri"]
+    },
+    {
+      "id": "Q052",
+      "category": "provider_search",
+      "question": "Find me a nephrologist in Dallas",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "nephrology", "dallas"]
+    },
+    {
+      "id": "Q053",
+      "category": "pharmacy_benefits",
+      "question": "Do you cover specialty medications?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["pharmacy", "specialty"]
+    },
+    {
+      "id": "Q054",
+      "category": "provider_search",
+      "question": "I need a hand surgeon in Austin",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "orthopedics", "austin"]
+    },
+    {
+      "id": "Q055",
+      "category": "special_programs",
+      "question": "Is there a prenatal care program?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["maternity", "prenatal", "special_program"]
+    },
+    {
+      "id": "Q056",
+      "category": "policy_coverage",
+      "question": "What's covered for mental health inpatient care?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["mental_health", "inpatient"]
+    },
+    {
+      "id": "Q057",
+      "category": "provider_search",
+      "question": "Find me an ENT specialist in Charlotte",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "ent", "charlotte"]
+    },
+    {
+      "id": "Q058",
+      "category": "pharmacy_benefits",
+      "question": "How do I refill my prescription?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["pharmacy", "refill"]
+    },
+    {
+      "id": "Q059",
+      "category": "provider_search",
+      "question": "I need a pain management doctor in Detroit",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "pain_management", "detroit"]
+    },
+    {
+      "id": "Q060",
+      "category": "policy_coverage",
+      "question": "Does my plan cover ambulance services?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["ambulance", "emergency"]
+    },
+    {
+      "id": "Q061",
+      "category": "provider_search",
+      "question": "Find me an internal medicine doctor in Minneapolis",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["primary_care", "internal_medicine", "minneapolis"]
+    },
+    {
+      "id": "Q062",
+      "category": "claims_preauth",
+      "question": "How long does preauthorization take?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["preauth", "timeline"]
+    },
+    {
+      "id": "Q063",
+      "category": "provider_search",
+      "question": "I need a hematologist in San Francisco",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "hematology", "san_francisco"]
+    },
+    {
+      "id": "Q064",
+      "category": "special_programs",
+      "question": "Do you have a smoking cessation program?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["smoking_cessation", "wellness"]
+    },
+    {
+      "id": "Q065",
+      "category": "policy_coverage",
+      "question": "What's my maximum out-of-pocket cost?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["oop_max", "cost_limit"]
+    },
+    {
+      "id": "Q066",
+      "category": "provider_search",
+      "question": "Find me a sleep specialist in Seattle",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "sleep_medicine", "seattle"]
+    },
+    {
+      "id": "Q067",
+      "category": "pharmacy_benefits",
+      "question": "What tier is my blood pressure medication?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["pharmacy", "tier", "medication"]
+    },
+    {
+      "id": "Q068",
+      "category": "provider_search",
+      "question": "I need a vascular surgeon in Boston",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "vascular_surgery", "boston"]
+    },
+    {
+      "id": "Q069",
+      "category": "policy_coverage",
+      "question": "Is emergency care covered when traveling?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["emergency", "travel"]
+    },
+    {
+      "id": "Q070",
+      "category": "provider_search",
+      "question": "Find me an infectious disease doctor in Miami",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "infectious_disease", "miami"]
+    },
+    {
+      "id": "Q071",
+      "category": "scheduling",
+      "question": "I want to speak with a nurse about my symptoms",
+      "expected_route": "SCHEDULE_AGENT",
+      "tags": ["nurse_line", "scheduling"]
+    },
+    {
+      "id": "Q072",
+      "category": "provider_search",
+      "question": "I need a sports medicine doctor in Denver",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "sports_medicine", "denver"]
+    },
+    {
+      "id": "Q073",
+      "category": "policy_coverage",
+      "question": "Are lab tests covered?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["lab", "diagnostic"]
+    },
+    {
+      "id": "Q074",
+      "category": "provider_search",
+      "question": "Find me a podiatrist in Phoenix",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "podiatry", "phoenix"]
+    },
+    {
+      "id": "Q075",
+      "category": "pharmacy_benefits",
+      "question": "Can I split my prescription between retail and mail order?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["pharmacy", "mail_order", "retail"]
+    },
+    {
+      "id": "Q076",
+      "category": "provider_search",
+      "question": "I need a plastic surgeon in Los Angeles",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "plastic_surgery", "los_angeles"]
+    },
+    {
+      "id": "Q077",
+      "category": "claims_preauth",
+      "question": "What happens if I don't get preauthorization?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["preauth", "denial"]
+    },
+    {
+      "id": "Q078",
+      "category": "provider_search",
+      "question": "Find me a radiologist near me",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "radiology"]
+    },
+    {
+      "id": "Q079",
+      "category": "policy_coverage",
+      "question": "Is telehealth covered?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["telehealth", "virtual"]
+    },
+    {
+      "id": "Q080",
+      "category": "provider_search",
+      "question": "I need a colorectal surgeon in San Francisco",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "surgery", "san_francisco"]
+    },
+    {
+      "id": "Q081",
+      "category": "special_programs",
+      "question": "Do you have a cancer support program?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["oncology", "support_program"]
+    },
+    {
+      "id": "Q082",
+      "category": "policy_coverage",
+      "question": "What's the copay for X-rays?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["copay", "imaging", "xray"]
+    },
+    {
+      "id": "Q083",
+      "category": "provider_search",
+      "question": "Find me an immunologist in New York",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "immunology", "new_york"]
+    },
+    {
+      "id": "Q084",
+      "category": "pharmacy_benefits",
+      "question": "Do you cover diabetic supplies?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["pharmacy", "diabetes", "supplies"]
+    },
+    {
+      "id": "Q085",
+      "category": "provider_search",
+      "question": "I need a geriatric specialist in Portland",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "geriatrics", "portland"]
+    },
+    {
+      "id": "Q086",
+      "category": "claims_preauth",
+      "question": "How do I appeal a denied claim?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["claims", "appeal", "denial"]
+    },
+    {
+      "id": "Q087",
+      "category": "provider_search",
+      "question": "Find me a fertility specialist in Chicago",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "fertility", "chicago"]
+    },
+    {
+      "id": "Q088",
+      "category": "policy_coverage",
+      "question": "Does my plan cover vision care?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["vision", "ophthalmology"]
+    },
+    {
+      "id": "Q089",
+      "category": "provider_search",
+      "question": "I need an addiction medicine doctor in Seattle",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "addiction", "seattle"]
+    },
+    {
+      "id": "Q090",
+      "category": "pharmacy_benefits",
+      "question": "What's the copay for a brand name drug?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["pharmacy", "brand", "tier2"]
+    },
+    {
+      "id": "Q091",
+      "category": "provider_search",
+      "question": "Find me a bariatric surgeon in Houston",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "bariatric", "houston"]
+    },
+    {
+      "id": "Q092",
+      "category": "policy_coverage",
+      "question": "Are immunizations covered at no cost?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["preventive", "immunizations"]
+    },
+    {
+      "id": "Q093",
+      "category": "provider_search",
+      "question": "I need a hearing specialist in San Diego",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "audiology", "san_diego"]
+    },
+    {
+      "id": "Q094",
+      "category": "special_programs",
+      "question": "What wellness programs are available?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["wellness", "special_program"]
+    },
+    {
+      "id": "Q095",
+      "category": "policy_coverage",
+      "question": "Does my plan cover home health care?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["home_health", "coverage"]
+    },
+    {
+      "id": "Q096",
+      "category": "provider_search",
+      "question": "Find me a wound care specialist in Phoenix",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "wound_care", "phoenix"]
+    },
+    {
+      "id": "Q097",
+      "category": "pharmacy_benefits",
+      "question": "How do I get prior authorization for a medication?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["pharmacy", "prior_auth"]
+    },
+    {
+      "id": "Q098",
+      "category": "provider_search",
+      "question": "I need a hand therapist in Boston",
+      "expected_route": "PROVIDER_LOOKUP",
+      "tags": ["specialist", "hand_therapy", "boston"]
+    },
+    {
+      "id": "Q099",
+      "category": "scheduling",
+      "question": "Connect me with customer service",
+      "expected_route": "SCHEDULE_AGENT",
+      "tags": ["customer_service", "transfer"]
+    },
+    {
+      "id": "Q100",
+      "category": "policy_coverage",
+      "question": "What's my plan's annual deductible?",
+      "expected_route": "POLICY_LOOKUP",
+      "tags": ["deductible", "annual"]
+    }
+  ]
+}
+
