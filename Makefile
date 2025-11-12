@@ -73,11 +73,33 @@ aws-info: ## Show current AWS identity
 
 ##@ Running the Application
 
-run: aws-check ## Run the interactive chatbot (auto-checks AWS)
+run: aws-check ## Run the interactive chatbot (terminal version, auto-checks AWS)
 	@echo ""
-	@echo "$(COLOR_BOLD)$(COLOR_CYAN)🚀 Starting Medical Insurance Support Chatbot...$(COLOR_RESET)"
+	@echo "$(COLOR_BOLD)$(COLOR_CYAN)🚀 Starting Medical Insurance Support Chatbot (Terminal)...$(COLOR_RESET)"
 	@echo ""
 	@$(PYTHON_VENV) interactive_chatbot.py
+
+run-ui: aws-check ## Run the web UI (FastAPI backend + React frontend)
+	@echo ""
+	@echo "$(COLOR_BOLD)$(COLOR_CYAN)🚀 Starting ToggleHealth Web UI...$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Starting backend on http://localhost:8000...$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Starting frontend on http://localhost:5173...$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_CYAN)✨ Features enabled:$(COLOR_RESET)"
+	@echo "   • Streaming brand voice output (like ChatGPT)"
+	@echo "   • TTFT (Time to First Token) tracking"
+	@echo "   • Real-time agent status updates"
+	@echo "   • G-Eval online evaluation"
+	@echo "   • Live terminal logs"
+	@echo ""
+	@echo "$(COLOR_GREEN)Open http://localhost:5173 in your browser$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Press Ctrl+C to stop both services$(COLOR_RESET)"
+	@echo ""
+	@trap 'kill 0' INT; \
+	(cd ui/backend && ../../$(PYTHON_VENV) server.py) & \
+	(cd ui/frontend && npm run dev) & \
+	wait
 
 run-example: aws-check ## Run example queries
 	@echo "$(COLOR_BOLD)$(COLOR_CYAN)📋 Running example queries...$(COLOR_RESET)"
@@ -290,7 +312,9 @@ all: clean install setup verify ## Complete setup from scratch
 	@echo "$(COLOR_GREEN)$(COLOR_BOLD)🎉 Setup complete! Ready to run.$(COLOR_RESET)"
 	@echo "$(COLOR_CYAN)Run 'make run' to start the chatbot$(COLOR_RESET)"
 
-chat: run ## Alias for 'run' - start the chatbot
+chat: run ## Alias for 'run' - start the terminal chatbot
+
+ui: run-ui ## Alias for 'run-ui' - start the web UI
 
 check: aws-check verify ## Check all configurations (AWS + LaunchDarkly + RAG)
 
@@ -298,5 +322,5 @@ status: info ## Alias for 'info' - show system status
 
 ##@ Default
 
-.DEFAULT_GOAL := help
+.DEFAULT_GOAL := run-ui
 

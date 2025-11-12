@@ -594,6 +594,123 @@ class ModelInvoker:
                 pass
                 
             raise
+    
+    def stream(self, messages: list[BaseMessage]):
+        """Stream the model response with tracking.
+        
+        Args:
+            messages: List of messages to send to the model
+            
+        Yields:
+            Chunks from the model as they arrive
+        """
+        try:
+            # Skip span annotation for streaming (same as invoke)
+            if not self.skip_span_annotation:
+                try:
+                    from opentelemetry import trace
+                    current_span = trace.get_current_span()
+                    
+                    if (current_span and 
+                        self.config_key and 
+                        hasattr(current_span, 'is_recording') and 
+                        current_span.is_recording()):
+                        
+                        span_context = current_span.get_span_context()
+                        if not span_context or not span_context.is_valid:
+                            pass
+                        else:
+                            try:
+                                current_span.set_attribute("ld.ai_config.key", self.config_key)
+                                
+                                if self.user_context:
+                                    ctx_dict = self.user_context.to_dict() if hasattr(self.user_context, 'to_dict') else {}
+                                    ctx_id = ctx_dict.get('key') or ctx_dict.get('userKey') or 'anonymous'
+                                    
+                                    current_span.add_event(
+                                        "feature_flag",
+                                        attributes={
+                                            "feature_flag.key": self.config_key,
+                                            "feature_flag.provider.name": "LaunchDarkly",
+                                            "feature_flag.context.id": ctx_id,
+                                            "feature_flag.result.value": True,
+                                        },
+                                    )
+                                
+                                if self.user_context:
+                                    _ = ldclient.get().variation(self.config_key, self.user_context, True)
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
+            
+            # Track start time for duration
+            import time
+            start_time = time.time()
+            
+            # Stream from the model
+            accumulated_tokens = {"input": 0, "output": 0, "total": 0}
+            ttft_ms = None
+            
+            for chunk in self.model.stream(messages):
+                # Extract TTFT from first chunk
+                if ttft_ms is None:
+                    chunk_metadata = chunk.message.response_metadata if hasattr(chunk, 'message') else {}
+                    if isinstance(chunk_metadata, dict):
+                        ttft_ms = chunk_metadata.get("ttft_ms")
+                
+                # Extract token usage from final chunk
+                if hasattr(chunk, 'message') and hasattr(chunk.message, 'usage_metadata'):
+                    if chunk.message.usage_metadata:
+                        accumulated_tokens = {
+                            "input": chunk.message.usage_metadata.get("input_tokens", 0),
+                            "output": chunk.message.usage_metadata.get("output_tokens", 0),
+                            "total": chunk.message.usage_metadata.get("total_tokens", 0)
+                        }
+                
+                yield chunk
+            
+            # Track metrics after streaming completes
+            duration_ms = int((time.time() - start_time) * 1000)
+            
+            # Track success
+            self.tracker.track_success()
+            
+            # Track duration manually
+            self.tracker.track_duration(duration_ms)
+            
+            # Track tokens if we got them
+            if accumulated_tokens["total"] > 0:
+                from ldai.tracker import TokenUsage
+                token_usage = TokenUsage(
+                    input=accumulated_tokens["input"],
+                    output=accumulated_tokens["output"],
+                    total=accumulated_tokens["total"]
+                )
+                self.tracker.track_tokens(token_usage)
+            
+            # Track TTFT if we got it
+            if ttft_ms is not None:
+                try:
+                    self.tracker.track_time_to_first_token(ttft_ms)
+                except Exception as e:
+                    import logging
+                    logging.debug(f"Failed to track TTFT: {e}")
+        
+        except Exception as e:
+            self.tracker.track_error()
+            
+            try:
+                from opentelemetry import trace
+                span = trace.get_current_span()
+                if span and span.is_recording():
+                    from opentelemetry.trace import Status, StatusCode
+                    span.set_status(Status(StatusCode.ERROR, str(e)))
+                    span.record_exception(e)
+            except:
+                pass
+            
+            raise
 
     def _extract_tokens(self, response: Any) -> dict[str, int]:
         """Extract token counts from response.

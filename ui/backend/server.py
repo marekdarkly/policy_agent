@@ -280,37 +280,37 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
         agent_data = result.get("agent_data", {})
         confidence = result.get("confidence_score", 0)
         
-        # Triage - estimate duration and get tokens + TTFT
-        triage_duration = int(total_duration * 0.1)  # ~10% of time
+        # Triage - get real duration, TTFT, and tokens
         triage_data = agent_data.get("triage_router", {})
         triage_tokens = triage_data.get("tokens", {"input": 0, "output": 0})
         triage_ttft = triage_data.get("ttft_ms")
+        triage_duration = triage_data.get("duration_ms")  # Real duration from agent
         agent_flow.append({
             "agent": "triage_router",
             "name": "Triage Router",
             "status": "complete",
             "confidence": float(confidence) if confidence else 0.0,
             "icon": "🔍",
-            "duration": triage_duration,
-            "ttft_ms": triage_ttft,  # Time to first token from streaming
+            "duration": triage_duration,  # Total time to generate
+            "ttft_ms": triage_ttft,  # Time to first token
             "tokens": triage_tokens
         })
         
-        # Specialist
-        specialist_duration = int(total_duration * 0.6)  # ~60% of time
+        # Specialist - get real duration, TTFT, and tokens
         if "policy_specialist" in agent_data:
             policy_data = agent_data["policy_specialist"]
             rag_docs = policy_data.get("rag_documents_retrieved", 0)
             tokens = policy_data.get("tokens", {"input": 0, "output": 0})
             ttft_ms = policy_data.get("ttft_ms")
+            duration_ms = policy_data.get("duration_ms")
             agent_flow.append({
                 "agent": "policy_specialist",
                 "name": "Policy Specialist",
                 "status": "complete",
                 "rag_docs": rag_docs,
                 "icon": "📋",
-                "duration": specialist_duration,
-                "ttft_ms": ttft_ms,  # Time to first token from streaming
+                "duration": duration_ms,  # Total time to generate
+                "ttft_ms": ttft_ms,  # Time to first token
                 "tokens": tokens
             })
         elif "provider_specialist" in agent_data:
@@ -318,42 +318,44 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
             rag_docs = provider_data.get("rag_documents_retrieved", 0)
             tokens = provider_data.get("tokens", {"input": 0, "output": 0})
             ttft_ms = provider_data.get("ttft_ms")
+            duration_ms = provider_data.get("duration_ms")
             agent_flow.append({
                 "agent": "provider_specialist",
                 "name": "Provider Specialist",
                 "status": "complete",
                 "rag_docs": rag_docs,
                 "icon": "🏥",
-                "duration": specialist_duration,
-                "ttft_ms": ttft_ms,  # Time to first token from streaming
+                "duration": duration_ms,  # Total time to generate
+                "ttft_ms": ttft_ms,  # Time to first token
                 "tokens": tokens
             })
         elif "scheduler_specialist" in agent_data:
             scheduler_data = agent_data.get("scheduler_specialist", {})
             ttft_ms = scheduler_data.get("ttft_ms")
+            duration_ms = scheduler_data.get("duration_ms")
             agent_flow.append({
                 "agent": "scheduler_specialist",
                 "name": "Scheduler Specialist",
                 "status": "complete",
                 "icon": "📅",
-                "duration": specialist_duration,
-                "ttft_ms": ttft_ms,  # Time to first token from streaming
+                "duration": duration_ms,  # Total time to generate
+                "ttft_ms": ttft_ms,  # Time to first token
                 "tokens": {"input": 0, "output": 0}
             })
         
-        # Brand voice - estimate duration and get tokens + TTFT
-        brand_duration = int(total_duration * 0.3)  # ~30% of time
+        # Brand voice - get real duration, TTFT, and tokens
         if "brand_voice" in agent_data:
             brand_data_info = agent_data["brand_voice"]
             brand_tokens = brand_data_info.get("tokens", {"input": 0, "output": 0})
             brand_ttft = brand_data_info.get("ttft_ms")
+            brand_duration = brand_data_info.get("duration_ms")
             agent_flow.append({
                 "agent": "brand_voice",
                 "name": "Brand Voice",
                 "status": "complete",
                 "icon": "✨",
-                "duration": brand_duration,
-                "ttft_ms": brand_ttft,  # Time to first token from streaming
+                "duration": brand_duration,  # Total time to generate
+                "ttft_ms": brand_ttft,  # Time to first token
                 "tokens": brand_tokens
             })
         
@@ -398,6 +400,171 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
             agentFlow=[],
             error=str(e)
         )
+
+
+@app.post("/api/chat/stream")
+async def chat_stream(request: ChatRequest):
+    """
+    Streaming version of the chat endpoint.
+    Streams brand voice output progressively via Server-Sent Events (SSE).
+    """
+    async def event_generator():
+        try:
+            # Track start time for total duration
+            start_time = time.time()
+            
+            # Generate unique request ID
+            request_id = str(uuid4())
+            
+            # Send initial status
+            yield f"data: {json.dumps({'type': 'status', 'agent': 'system', 'message': 'Starting analysis...'})}\n\n"
+            
+            # Create user context using the same defaults as non-streaming endpoint
+            user_context = create_user_profile(
+                name=request.userName if hasattr(request, 'userName') else "Marek Poliks",
+                location=request.location if hasattr(request, 'location') else "San Francisco, CA",
+                policy_id=request.policyId if hasattr(request, 'policyId') else "TH-HMO-GOLD-2024",
+                coverage_type=request.coverageType if hasattr(request, 'coverageType') else "Gold HMO"
+            )
+            
+            # Send triage status
+            yield f"data: {json.dumps({'type': 'status', 'agent': 'triage', 'message': 'Analyzing your question...'})}\n\n"
+            
+            # Import and run the workflow to get to brand voice stage
+            # We'll need to modify the workflow to support streaming
+            # For now, run the full workflow and extract results
+            result = await asyncio.to_thread(
+                run_workflow,
+                user_message=request.userInput,
+                user_context=user_context,
+                request_id=request_id,
+                evaluation_results_store=EVALUATION_RESULTS,
+                brand_trackers_store=BRAND_TRACKERS
+            )
+            
+            # Send specialist status
+            agent_data = result.get("agent_data", {})
+            if "policy_specialist" in agent_data:
+                yield f"data: {json.dumps({'type': 'status', 'agent': 'policy_specialist', 'message': 'Researching policy details...'})}\n\n"
+            elif "provider_specialist" in agent_data:
+                yield f"data: {json.dumps({'type': 'status', 'agent': 'provider_specialist', 'message': 'Finding providers...'})}\n\n"
+            elif "scheduler_specialist" in agent_data:
+                yield f"data: {json.dumps({'type': 'status', 'agent': 'scheduler_specialist', 'message': 'Checking availability...'})}\n\n"
+            
+            # Send brand voice status
+            yield f"data: {json.dumps({'type': 'status', 'agent': 'brand_voice', 'message': 'Putting an answer together...'})}\n\n"
+            
+            # For now, send the complete response
+            # TODO: Modify workflow to actually stream brand voice chunks
+            final_response = result.get("final_response", "I'm sorry, I couldn't process your request.")
+            
+            # Simulate streaming by breaking response into chunks
+            chunk_size = 10  # words per chunk
+            words = final_response.split()
+            for i in range(0, len(words), chunk_size):
+                chunk = " ".join(words[i:i+chunk_size]) + " "
+                yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
+                await asyncio.sleep(0.05)  # Small delay to simulate streaming
+            
+            # Build metrics response
+            query_type = result.get("query_type", "UNKNOWN")
+            confidence = result.get("confidence_score", 0)
+            
+            # Build agent flow (same as non-streaming endpoint)
+            agent_flow = []
+            
+            # Triage
+            triage_data = agent_data.get("triage_router", {})
+            triage_tokens = triage_data.get("tokens", {"input": 0, "output": 0})
+            triage_ttft = triage_data.get("ttft_ms")
+            agent_flow.append({
+                "agent": "triage_router",
+                "name": "Triage Router",
+                "status": "complete",
+                "confidence": float(confidence) if confidence else 0.0,
+                "icon": "🔍",
+                "ttft_ms": triage_ttft,
+                "tokens": triage_tokens
+            })
+            
+            # Specialist
+            if "policy_specialist" in agent_data:
+                policy_data = agent_data["policy_specialist"]
+                agent_flow.append({
+                    "agent": "policy_specialist",
+                    "name": "Policy Specialist",
+                    "status": "complete",
+                    "rag_docs": policy_data.get("rag_documents_retrieved", 0),
+                    "icon": "📋",
+                    "ttft_ms": policy_data.get("ttft_ms"),
+                    "tokens": policy_data.get("tokens", {"input": 0, "output": 0})
+                })
+            elif "provider_specialist" in agent_data:
+                provider_data = agent_data["provider_specialist"]
+                agent_flow.append({
+                    "agent": "provider_specialist",
+                    "name": "Provider Specialist",
+                    "status": "complete",
+                    "rag_docs": provider_data.get("rag_documents_retrieved", 0),
+                    "icon": "🏥",
+                    "ttft_ms": provider_data.get("ttft_ms"),
+                    "tokens": provider_data.get("tokens", {"input": 0, "output": 0})
+                })
+            elif "scheduler_specialist" in agent_data:
+                scheduler_data = agent_data.get("scheduler_specialist", {})
+                agent_flow.append({
+                    "agent": "scheduler_specialist",
+                    "name": "Scheduler Specialist",
+                    "status": "complete",
+                    "icon": "📅",
+                    "ttft_ms": scheduler_data.get("ttft_ms"),
+                    "tokens": {"input": 0, "output": 0}
+                })
+            
+            # Brand voice
+            if "brand_voice" in agent_data:
+                brand_data_info = agent_data["brand_voice"]
+                agent_flow.append({
+                    "agent": "brand_voice",
+                    "name": "Brand Voice",
+                    "status": "complete",
+                    "icon": "✨",
+                    "ttft_ms": brand_data_info.get("ttft_ms"),
+                    "tokens": brand_data_info.get("tokens", {"input": 0, "output": 0})
+                })
+            
+            # Calculate total duration
+            total_duration = int((time.time() - start_time) * 1000)  # ms
+            
+            # Log completion with full metrics
+            logger.info(f"[{request_id}] Response generated: {len(final_response)} chars, {len(agent_flow)} agents, {total_duration}ms")
+            
+            # Send final event with metrics (including total_duration_ms)
+            yield f"data: {json.dumps({
+                'type': 'complete',
+                'requestId': request_id,
+                'agentFlow': agent_flow,
+                'metrics': {
+                    'query_type': str(query_type),
+                    'confidence': float(confidence) if confidence else 0.0,
+                    'agent_count': len(agent_flow),
+                    'rag_enabled': any(a.get('rag_docs', 0) > 0 for a in agent_flow),
+                    'total_duration_ms': total_duration
+                }
+            })}\n\n"
+            
+        except Exception as e:
+            logger.error(f"Error in streaming chat: {e}")
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+    )
 
 
 @app.get("/health")

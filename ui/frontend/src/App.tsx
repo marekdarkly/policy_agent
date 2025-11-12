@@ -518,6 +518,12 @@ function App() {
                       {(lastMetrics.confidence * 100).toFixed(1)}%
                     </span>
                   </div>
+                  {lastMetrics.total_duration_ms !== undefined && (
+                    <div className="metric-row">
+                      <span className="metric-label">Total Duration:</span>
+                      <span className="metric-value">{lastMetrics.total_duration_ms}ms</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Per-Agent Metrics */}
