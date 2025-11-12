@@ -460,7 +460,7 @@ class ModelInvoker:
             tracker: LaunchDarkly tracker for metrics
             config_key: The AI Config key (for observability linking)
             is_agent_config: Whether this is an agent-based config
-            user_context: LaunchDarkly user context (for ld.variation() correlation)
+            user_context: LaunchDarkly user context (unused now - correlation happens at endpoint level)
         """
         self.model = model
         self.tracker = tracker
@@ -478,86 +478,26 @@ class ModelInvoker:
             Model response
         """
         try:
-            # Set AI Config attributes on the current parent span (like ToggleBank RAG does)
-            # Don't create a new span - just annotate the existing parent (FastAPI/LangGraph span)
-            try:
-                from opentelemetry import trace
+            # Span correlation happens at the FastAPI endpoint level (see server.py)
+            # Just track the LLM call and token usage here
+            result = self.tracker.track_duration_of(lambda: self.model.invoke(messages))
+            
+            # Track success (no arguments)
+            self.tracker.track_success()
+            
+            # Extract and track token usage if available
+            if hasattr(result, "usage_metadata") and result.usage_metadata:
+                from ldai.tracker import TokenUsage
                 
-                parent_span = trace.get_current_span()
-                if parent_span and parent_span.is_recording():
-                    # Set the ld.ai_config.key attribute on the parent span
-                    parent_span.set_attribute("ld.ai_config.key", self.config_key)
-                    parent_span.set_attribute("ai.config.type", "agent" if self._is_agent_config else "completion")
-                    
-                    # Extract context ID for correlation
-                    ctx_id = "anonymous"
-                    if self.user_context:
-                        ctx_dict = self.user_context.to_dict() if hasattr(self.user_context, 'to_dict') else {}
-                        ctx_id = ctx_dict.get('key') or ctx_dict.get('userKey') or 'anonymous'
-                    
-                    # Add a feature_flag event (like ToggleBank RAG does) with context ID
-                    parent_span.add_event(
-                        "feature_flag",
-                        attributes={
-                            "feature_flag.key": self.config_key,
-                            "feature_flag.provider.name": "LaunchDarkly",
-                            "feature_flag.context.id": ctx_id,
-                            "feature_flag.result.value": True,  # Config is enabled
-                        },
-                    )
-                    
-                    # Trigger an official LD feature_flag evaluation for correlation (like ToggleBank RAG)
-                    try:
-                        if self.user_context:
-                            _ = ldclient.get().variation(self.config_key, self.user_context, True)
-                            ldclient.get().flush()
-                    except Exception as ld_err:
-                        # Don't fail if LD variation call fails
-                        pass
-                
-                # Use track_duration_of to wrap the model call (LaunchDarkly API)
-                result = self.tracker.track_duration_of(lambda: self.model.invoke(messages))
-                
-                # Track success (no arguments)
-                self.tracker.track_success()
-                
-                # Extract and track token usage if available
-                if hasattr(result, "usage_metadata") and result.usage_metadata:
-                    from ldai.tracker import TokenUsage
-                    
-                    usage_data = result.usage_metadata
-                    token_usage = TokenUsage(
-                        input=usage_data.get("input_tokens", 0),
-                        output=usage_data.get("output_tokens", 0),
-                        total=usage_data.get("total_tokens", 0)
-                    )
-                    self.tracker.track_tokens(token_usage)
-                    
-                    # Add token info to parent span
-                    if parent_span and parent_span.is_recording():
-                        parent_span.set_attribute("ai.tokens.input", token_usage.input)
-                        parent_span.set_attribute("ai.tokens.output", token_usage.output)
-                        parent_span.set_attribute("ai.tokens.total", token_usage.total)
-                
-                return result
-                    
-            except ImportError:
-                # OpenTelemetry not available, fall back to basic tracking
-                result = self.tracker.track_duration_of(lambda: self.model.invoke(messages))
-                self.tracker.track_success()
-                
-                if hasattr(result, "usage_metadata") and result.usage_metadata:
-                    from ldai.tracker import TokenUsage
-                    
-                    usage_data = result.usage_metadata
-                    token_usage = TokenUsage(
-                        input=usage_data.get("input_tokens", 0),
-                        output=usage_data.get("output_tokens", 0),
-                        total=usage_data.get("total_tokens", 0)
-                    )
-                    self.tracker.track_tokens(token_usage)
-                
-                return result
+                usage_data = result.usage_metadata
+                token_usage = TokenUsage(
+                    input=usage_data.get("input_tokens", 0),
+                    output=usage_data.get("output_tokens", 0),
+                    total=usage_data.get("total_tokens", 0)
+                )
+                self.tracker.track_tokens(token_usage)
+            
+            return result
 
         except Exception as e:
             # Track error (no arguments)

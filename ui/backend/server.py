@@ -23,6 +23,9 @@ load_dotenv()
 from src.utils.observability import initialize_observability
 initialize_observability()
 
+# Import FastAPI instrumentor BEFORE FastAPI itself (for proper instrumentation)
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
 # Now safe to import FastAPI and other modules
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -119,6 +122,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Instrument FastAPI for OpenTelemetry (CRITICAL for AI Config correlation)
+# This creates the parent HTTP request span that LLM spans attach to
+try:
+    FastAPIInstrumentor().instrument_app(app)
+    logger.info("✅ FastAPI instrumented for observability")
+except Exception as e:
+    logger.warning(f"⚠️  Failed to instrument FastAPI: {e}")
+
 
 # Pydantic models
 class ChatRequest(BaseModel):
@@ -155,6 +166,50 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
             policy_id=request.policyId,
             coverage_type=request.coverageType
         )
+        
+        # Correlate parent span with AI Configs (for Monitoring tab)
+        # This must happen BEFORE any LLM calls, at the endpoint level
+        try:
+            from opentelemetry import trace
+            import ldclient
+            from ldclient import Context
+            
+            parent_span = trace.get_current_span()
+            if parent_span and parent_span.is_recording():
+                # Convert user_context dict to LaunchDarkly Context
+                user_key = user_context.get("user_key", "anonymous")
+                ld_context = Context.builder(user_key)
+                for key, value in user_context.items():
+                    if key != "user_key":
+                        ld_context.set(key, value)
+                ld_context_obj = ld_context.build()
+                
+                # Set ld.ai_config.key on parent span for ALL configs we'll use
+                # (triage_agent, policy_agent/provider_agent/scheduler_agent, brand_agent)
+                parent_span.set_attribute("ld.ai_config.key", "triage_agent")
+                
+                # Add feature_flag event for correlation
+                ctx_dict = ld_context_obj.to_dict() if hasattr(ld_context_obj, 'to_dict') else {}
+                ctx_id = ctx_dict.get('key') or ctx_dict.get('userKey') or 'anonymous'
+                parent_span.add_event(
+                    "feature_flag",
+                    attributes={
+                        "feature_flag.key": "triage_agent",
+                        "feature_flag.provider.name": "LaunchDarkly",
+                        "feature_flag.context.id": ctx_id,
+                        "feature_flag.result.value": True,
+                    },
+                )
+                
+                # Trigger LD variation for correlation
+                try:
+                    _ = ldclient.get().variation("triage_agent", ld_context_obj, True)
+                    ldclient.get().flush()
+                except Exception:
+                    pass
+                    
+        except Exception as e:
+            logger.warning(f"⚠️  Failed to correlate span with AI Config: {e}")
         
         # Track agent start times for duration calculation
         agent_timings = {}
