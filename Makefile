@@ -322,5 +322,5 @@ status: info ## Alias for 'info' - show system status
 
 ##@ Default
 
-.DEFAULT_GOAL := help
+.DEFAULT_GOAL := run-ui
 
