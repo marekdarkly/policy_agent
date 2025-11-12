@@ -1,12 +1,12 @@
 """
-LaunchDarkly AI Observability Setup with OpenLLMetry
+LaunchDarkly AI Observability Setup
 
 CRITICAL: This module must be imported FIRST before any LLM-related imports.
 Import order matters for proper span capture and parent-child relationships.
 
 Order of operations:
-1. Initialize Traceloop SDK (OpenLLMetry) with LaunchDarkly config
-2. Register framework instrumentations (LangChain, etc.)
+1. Initialize LaunchDarkly SDK with ObservabilityPlugin
+2. Register framework instrumentations (via ldobserve)
 3. Import LLM modules (LangChain, Bedrock, etc.)
 
 Usage:
@@ -27,16 +27,18 @@ _observability_initialized = False
 def initialize_observability(
     ld_sdk_key: Optional[str] = None,
     service_name: str = "togglehealth-policy-agent",
+    service_version: str = "1.0.0",
     environment: Optional[str] = None
 ) -> bool:
     """
-    Initialize LaunchDarkly AI Observability with OpenLLMetry.
+    Initialize LaunchDarkly AI Observability using ldobserve.
     
     Must be called BEFORE importing any LLM modules.
     
     Args:
         ld_sdk_key: LaunchDarkly SDK key (defaults to LAUNCHDARKLY_SDK_KEY env var)
         service_name: Name of the service for span attribution
+        service_version: Version of the service
         environment: Environment name (e.g., 'production', 'development')
         
     Returns:
@@ -59,93 +61,76 @@ def initialize_observability(
         if environment is None:
             environment = os.getenv("ENVIRONMENT", "development")
         
-        logger.info("🔧 Initializing LaunchDarkly AI Observability with OpenLLMetry...")
+        logger.info("🔧 Initializing LaunchDarkly AI Observability with ldobserve...")
         
-        # Step 1: Ensure LaunchDarkly SDK is initialized FIRST (already done in launchdarkly_config.py)
-        # OpenLLMetry will detect and integrate with LaunchDarkly automatically
+        # Import LaunchDarkly observability components
         try:
             import ldclient
+            from ldclient.config import Config
+            from ldobserve import ObservabilityConfig, ObservabilityPlugin
             
-            if not ldclient.get().is_initialized():
-                # LaunchDarkly not initialized yet - do it now
-                from ldclient.config import Config
-                config = Config(sdk_key=sdk_key)
-                ldclient.set_config(config)
-                
-                # Wait briefly for initialization
-                import time
-                for _ in range(10):
-                    if ldclient.get().is_initialized():
-                        break
-                    time.sleep(0.1)
-                
-                if ldclient.get().is_initialized():
-                    logger.info("✅ LaunchDarkly SDK initialized")
-                else:
-                    logger.warning("⚠️  LaunchDarkly SDK not fully initialized yet")
-            else:
-                logger.info("✅ LaunchDarkly SDK already initialized")
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to initialize LaunchDarkly SDK: {e}")
+        except ImportError as e:
+            logger.error(f"❌ LaunchDarkly observability packages not installed: {e}")
+            logger.error("   Install: pip install launchdarkly-observability")
             return False
         
-        # Step 2: Initialize OpenLLMetry (Traceloop SDK)
-        # With LaunchDarkly SDK present + Early Access enabled, spans will be exported automatically
+        # Configure LaunchDarkly with observability plugin
         try:
-            from traceloop.sdk import Traceloop
-            
-            # Initialize OpenLLMetry without external export
-            # LaunchDarkly observability (with Early Access) will capture spans automatically
-            Traceloop.init(
-                app_name=service_name,
-                disable_batch=True,  # Don't export to Traceloop's endpoint
-                exporter="none",  # Disable external export
-                resource_attributes={
-                    "service.name": service_name,
-                    "deployment.environment": environment,
-                }
+            config = Config(
+                sdk_key,
+                plugins=[
+                    ObservabilityPlugin(
+                        ObservabilityConfig(
+                            service_name=service_name,
+                            service_version=service_version,
+                        )
+                    )
+                ]
             )
             
-            logger.info("✅ Traceloop SDK (OpenLLMetry) initialized")
-            logger.info(f"   Service: {service_name}")
-            logger.info(f"   Environment: {environment}")
-            logger.info("   If LaunchDarkly observability Early Access is enabled,")
-            logger.info("   spans will appear in LaunchDarkly > Monitor > Traces")
+            # Initialize LaunchDarkly client
+            ldclient.set_config(config)
             
-        except ImportError:
-            logger.error("❌ Traceloop SDK not installed")
-            logger.error("   Install: pip install traceloop-sdk")
-            return False
+            # Wait for initialization
+            import time
+            for _ in range(10):
+                if ldclient.get().is_initialized():
+                    break
+                time.sleep(0.1)
+            
+            if ldclient.get().is_initialized():
+                logger.info("✅ LaunchDarkly SDK initialized with observability plugin")
+                logger.info(f"   Service: {service_name}")
+                logger.info(f"   Version: {service_version}")
+                logger.info(f"   Environment: {environment}")
+            else:
+                logger.warning("⚠️  LaunchDarkly SDK not fully initialized yet")
+            
         except Exception as e:
-            logger.error(f"❌ Failed to initialize Traceloop SDK: {e}")
-            logger.warning(f"   Continuing without OpenLLMetry instrumentation...")
+            logger.error(f"❌ Failed to initialize LaunchDarkly with observability: {e}")
             return False
         
-        # Register OpenTelemetry instrumentations for frameworks
-        # These must be registered AFTER Traceloop.init() but BEFORE importing frameworks
-        
-        # LangChain instrumentation (if available)
+        # Register OpenTelemetry instrumentations
+        # The ldobserve package includes instrumentations for LangChain, Bedrock, etc.
         try:
+            # LangChain instrumentation
             from opentelemetry.instrumentation.langchain import LangChainInstrumentor
-            
             LangChainInstrumentor().instrument()
             logger.info("✅ LangChain instrumentation registered")
             
         except ImportError:
-            logger.info("ℹ️  LangChain instrumentation not available (install: pip install opentelemetry-instrumentation-langchain)")
+            logger.info("ℹ️  LangChain instrumentation not available")
         except Exception as e:
             logger.warning(f"⚠️  Failed to instrument LangChain: {e}")
         
-        # AWS Bedrock instrumentation (if available)
         try:
+            # Bedrock instrumentation
             from opentelemetry.instrumentation.bedrock import BedrockInstrumentor
-            
             BedrockInstrumentor().instrument()
             logger.info("✅ Bedrock instrumentation registered")
             
         except ImportError:
-            logger.info("ℹ️  Bedrock instrumentation not available (install: pip install opentelemetry-instrumentation-bedrock)")
+            logger.info("ℹ️  Bedrock instrumentation not available")
         except Exception as e:
             logger.warning(f"⚠️  Failed to instrument Bedrock: {e}")
         
@@ -154,7 +139,7 @@ def initialize_observability(
         
         logger.info("🎉 AI Observability fully initialized!")
         logger.info("   📊 Spans will appear in LaunchDarkly > Monitor > Traces")
-        logger.info("   🔍 LLM spans marked with green LLM symbol")
+        logger.info("   🟢 LLM spans marked with green LLM symbol")
         
         return True
         
