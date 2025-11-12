@@ -474,18 +474,23 @@ class ModelInvoker:
             Model response
         """
         try:
-            # Link OpenTelemetry span to AI Config using ldobserve
+            # Create a parent span with AI Config context that child LLM spans will inherit
             try:
-                from ldobserve import observe
+                from opentelemetry import trace
+                from opentelemetry.trace import Status, StatusCode
                 
-                # Create a span associated with this AI Config
-                with observe.start_span(
-                    f"ai.config.{self.config_key}",
+                tracer = trace.get_tracer(__name__)
+                
+                # Create a parent span with AI Config attributes
+                # The auto-instrumented LLM span will be a child and inherit context
+                with tracer.start_as_current_span(
+                    f"ai_config.{self.config_key}",
                     attributes={
                         "ai.config.key": self.config_key,
                         "ai.config.type": "agent" if self._is_agent_config else "completion",
+                        "service.name": "togglehealth-policy-agent",
                     }
-                ):
+                ) as span:
                     # Use track_duration_of to wrap the model call (LaunchDarkly API)
                     result = self.tracker.track_duration_of(lambda: self.model.invoke(messages))
                     
@@ -503,11 +508,17 @@ class ModelInvoker:
                             total=usage_data.get("total_tokens", 0)
                         )
                         self.tracker.track_tokens(token_usage)
+                        
+                        # Add token info to parent span
+                        span.set_attribute("ai.tokens.input", token_usage.input)
+                        span.set_attribute("ai.tokens.output", token_usage.output)
+                        span.set_attribute("ai.tokens.total", token_usage.total)
                     
+                    span.set_status(Status(StatusCode.OK))
                     return result
                     
             except ImportError:
-                # ldobserve not available, fall back to basic tracking
+                # OpenTelemetry not available, fall back to basic tracking
                 result = self.tracker.track_duration_of(lambda: self.model.invoke(messages))
                 self.tracker.track_success()
                 
@@ -524,9 +535,21 @@ class ModelInvoker:
                 
                 return result
 
-        except Exception:
+        except Exception as e:
             # Track error (no arguments)
             self.tracker.track_error()
+            
+            # Mark span as error if available
+            try:
+                from opentelemetry import trace
+                span = trace.get_current_span()
+                if span and span.is_recording():
+                    from opentelemetry.trace import Status, StatusCode
+                    span.set_status(Status(StatusCode.ERROR, str(e)))
+                    span.record_exception(e)
+            except:
+                pass
+                
             raise
 
     def _extract_tokens(self, response: Any) -> dict[str, int]:
