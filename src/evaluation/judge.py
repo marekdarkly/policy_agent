@@ -145,10 +145,12 @@ class BrandVoiceEvaluator:
             Tuple of (result_dict, model_name, tokens_dict)
         """
         # Get the judge LLM and config (with prompts from LaunchDarkly)
+        # Skip span annotation for judges since they run in background threads
         model_invoker, judge_config = get_model_invoker(
             config_key="ai-judge-accuracy",
             context=user_context,
-            default_temperature=0.0  # Deterministic for evaluation
+            default_temperature=0.0,  # Deterministic for evaluation
+            skip_span_annotation=True  # Background thread - don't try to annotate closed request spans
         )
         
         # Extract model name from config
@@ -197,10 +199,12 @@ class BrandVoiceEvaluator:
             Tuple of (result_dict, model_name, tokens_dict)
         """
         # Get the judge LLM and config (with prompts from LaunchDarkly)
+        # Skip span annotation for judges since they run in background threads
         model_invoker, judge_config = get_model_invoker(
             config_key="ai-judge-coherence",
             context=user_context,
-            default_temperature=0.0
+            default_temperature=0.0,
+            skip_span_annotation=True  # Background thread - don't try to annotate closed request spans
         )
         
         # Extract model name from config

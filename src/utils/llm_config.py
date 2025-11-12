@@ -141,6 +141,7 @@ def get_model_invoker(
     config_key: str,
     context: Optional[dict[str, Any]] = None,
     default_temperature: float = 0.7,
+    skip_span_annotation: bool = False,
 ) -> Tuple[ModelInvoker, dict[str, Any]]:
     """Get a ModelInvoker with tracking and full config (including messages) from LaunchDarkly.
 
@@ -148,6 +149,7 @@ def get_model_invoker(
         config_key: The AI config key in LaunchDarkly
         context: User/session context for targeting
         default_temperature: Default temperature if not specified in config
+        skip_span_annotation: If True, skip all span annotation (for background threads like judges)
 
     Returns:
         Tuple of (ModelInvoker instance with tracking, full config dict including messages)
@@ -177,7 +179,14 @@ def get_model_invoker(
     is_agent_config = "_instructions" in config or config.get("_enabled", False)
     
     # Pass ld_context to ModelInvoker for ld.variation() correlation
-    return ModelInvoker(llm, tracker, config_key=config_key, is_agent_config=is_agent_config, user_context=ld_context), config
+    return ModelInvoker(
+        llm,
+        tracker,
+        config_key=config_key,
+        is_agent_config=is_agent_config,
+        user_context=ld_context,
+        skip_span_annotation=skip_span_annotation
+    ), config
 
 
 def _create_llm_for_provider(

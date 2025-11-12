@@ -452,7 +452,15 @@ class ModelInvoker:
     https://github.com/launchdarkly/hello-python-ai/blob/main/examples/langchain_example.py
     """
 
-    def __init__(self, model: BaseChatModel, tracker: Any, config_key: str = "", is_agent_config: bool = False, user_context: Optional[Context] = None):
+    def __init__(
+        self,
+        model: BaseChatModel,
+        tracker: Any,
+        config_key: str = "",
+        is_agent_config: bool = False,
+        user_context: Optional[Context] = None,
+        skip_span_annotation: bool = False
+    ):
         """Initialize model invoker.
 
         Args:
@@ -460,13 +468,15 @@ class ModelInvoker:
             tracker: LaunchDarkly tracker for metrics
             config_key: The AI Config key (for observability linking)
             is_agent_config: Whether this is an agent-based config
-            user_context: LaunchDarkly user context (unused now - correlation happens at endpoint level)
+            user_context: LaunchDarkly user context (for span annotation)
+            skip_span_annotation: If True, skip all span annotation (for background threads)
         """
         self.model = model
         self.tracker = tracker
         self.config_key = config_key
         self._is_agent_config = is_agent_config
         self.user_context = user_context
+        self.skip_span_annotation = skip_span_annotation
 
     def invoke(self, messages: list[BaseMessage]) -> Any:
         """Invoke the model with tracking.
@@ -478,55 +488,57 @@ class ModelInvoker:
             Model response
         """
         try:
-            # Set ld.ai_config.key on the CURRENT span for THIS agent
-            # Skip span annotation for background threads (judges) - they reference closed spans
-            try:
-                from opentelemetry import trace
-                
-                current_span = trace.get_current_span()
-                
-                # Check if span is valid and recording BEFORE any operations
-                # Background threads will have invalid/ended spans - skip them entirely
-                if (current_span and 
-                    self.config_key and 
-                    hasattr(current_span, 'is_recording') and 
-                    current_span.is_recording()):
+            # Skip span annotation entirely if flag is set (background threads like judges)
+            if not self.skip_span_annotation:
+                # Set ld.ai_config.key on the CURRENT span for THIS agent
+                # Skip span annotation for background threads (judges) - they reference closed spans
+                try:
+                    from opentelemetry import trace
                     
-                    # Additional check: is this a valid span context?
-                    span_context = current_span.get_span_context()
-                    if not span_context or not span_context.is_valid:
-                        # Invalid context - skip annotation (background thread)
-                        pass
-                    else:
-                        # Valid, recording span - safe to annotate
-                        try:
-                            current_span.set_attribute("ld.ai_config.key", self.config_key)
-                            
-                            # Add feature_flag event
-                            if self.user_context:
-                                ctx_dict = self.user_context.to_dict() if hasattr(self.user_context, 'to_dict') else {}
-                                ctx_id = ctx_dict.get('key') or ctx_dict.get('userKey') or 'anonymous'
-                                
-                                current_span.add_event(
-                                    "feature_flag",
-                                    attributes={
-                                        "feature_flag.key": self.config_key,
-                                        "feature_flag.provider.name": "LaunchDarkly",
-                                        "feature_flag.context.id": ctx_id,
-                                        "feature_flag.result.value": True,
-                                    },
-                                )
-                            
-                            # Trigger LD variation for correlation
-                            if self.user_context:
-                                _ = ldclient.get().variation(self.config_key, self.user_context, True)
-                        except Exception:
-                            # Silently ignore any annotation errors - don't let them break LLM calls
+                    current_span = trace.get_current_span()
+                    
+                    # Check if span is valid and recording BEFORE any operations
+                    # Background threads will have invalid/ended spans - skip them entirely
+                    if (current_span and 
+                        self.config_key and 
+                        hasattr(current_span, 'is_recording') and 
+                        current_span.is_recording()):
+                        
+                        # Additional check: is this a valid span context?
+                        span_context = current_span.get_span_context()
+                        if not span_context or not span_context.is_valid:
+                            # Invalid context - skip annotation (background thread)
                             pass
-                            
-            except Exception:
-                # Don't fail model invocation if span annotation fails entirely
-                pass
+                        else:
+                            # Valid, recording span - safe to annotate
+                            try:
+                                current_span.set_attribute("ld.ai_config.key", self.config_key)
+                                
+                                # Add feature_flag event
+                                if self.user_context:
+                                    ctx_dict = self.user_context.to_dict() if hasattr(self.user_context, 'to_dict') else {}
+                                    ctx_id = ctx_dict.get('key') or ctx_dict.get('userKey') or 'anonymous'
+                                    
+                                    current_span.add_event(
+                                        "feature_flag",
+                                        attributes={
+                                            "feature_flag.key": self.config_key,
+                                            "feature_flag.provider.name": "LaunchDarkly",
+                                            "feature_flag.context.id": ctx_id,
+                                            "feature_flag.result.value": True,
+                                        },
+                                    )
+                                
+                                # Trigger LD variation for correlation
+                                if self.user_context:
+                                    _ = ldclient.get().variation(self.config_key, self.user_context, True)
+                            except Exception:
+                                # Silently ignore any annotation errors - don't let them break LLM calls
+                                pass
+                                
+                except Exception:
+                    # Don't fail model invocation if span annotation fails entirely
+                    pass
             
             # Track the LLM call
             result = self.tracker.track_duration_of(lambda: self.model.invoke(messages))
