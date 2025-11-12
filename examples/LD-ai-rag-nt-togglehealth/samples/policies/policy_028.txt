@@ -1,0 +1,7 @@
+What is the process for setting a travel notice?
+
+1. In the mobile app go to Card Controls ▸ Travel Notice.
+2. Confirm contact number in case of fraud alerts abroad.
+3. You’ll receive an email confirmation; notices can be edited or canceled anytime.
+4. Enter destination country, start date, and end date (up to 90 days).
+5. If you need further assistance, contact ToggleSupport via chat 24/7.

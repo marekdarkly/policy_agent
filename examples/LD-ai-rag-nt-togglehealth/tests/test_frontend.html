@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Frontend Metrics</title>
+</head>
+<body>
+    <h1>API Test</h1>
+    <button onclick="testAPI()">Test API Call</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            console.log("Making API call...");
+            try {
+                const response = await fetch('http://localhost:3000/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        aiConfigKey: 'toggle-rag',
+                        userInput: 'test metrics'
+                    })
+                });
+                
+                const data = await response.json();
+                console.log("API Response:", data);
+                
+                document.getElementById('result').innerHTML = `
+                    <h3>Response:</h3>
+                    <p><strong>Message:</strong> ${data.response}</p>
+                    <p><strong>Model:</strong> ${data.modelName}</p>
+                    <p><strong>Has Metrics:</strong> ${!!data.metrics}</p>
+                    ${data.metrics ? `
+                        <h4>Metrics:</h4>
+                        <pre>${JSON.stringify(data.metrics, null, 2)}</pre>
+                    ` : ''}
+                `;
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById('result').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html> 

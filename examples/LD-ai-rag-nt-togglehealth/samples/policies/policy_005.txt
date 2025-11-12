@@ -1,0 +1,8 @@
+How can I add an external account for transfers?
+
+1. ToggleBank sends two micro‑deposits within 1‑2 business days.
+2. Verify the amounts in the app to activate the link.
+3. You can then schedule one‑time or recurring transfers up to $10 000 per day.
+4. Enter the routing and account numbers.
+5. Go to Transfers ▸ Add External Account.
+6. If you need further assistance, contact ToggleSupport via chat 24/7.

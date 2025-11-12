@@ -1,0 +1,16 @@
+platform,minimum_investment,management_fee,account_types,key_features,pros,cons
+Betterment,0,0.25%,IRA, 401k, taxable,Automated rebalancing, tax-loss harvesting,Low fees, easy to use,Limited customization
+Wealthfront,500,0.25%,IRA, 401k, taxable,Tax-loss harvesting, direct indexing,Low fees, advanced features,High minimum
+Vanguard Personal Advisor,50000,0.30%,IRA, 401k, taxable,Human advisors, low-cost funds,Professional advice,High minimum
+Schwab Intelligent Portfolios,5000,0%,IRA, 401k, taxable,No management fees, human advisors,No fees, professional support,Higher cash allocation
+Fidelity Go,0,0.35%,IRA, 401k, taxable,Human advisors, comprehensive platform,Professional support, higher fees
+SoFi Automated Investing,1,0%,IRA, 401k, taxable,No fees, financial planning,No management fees, comprehensive services,Limited investment options
+Acorns,0,1-5/month,IRA, 401k, taxable,Round-up investing, micro-investing,Very easy to start, high fees for small accounts
+M1 Finance,100,0%,IRA, 401k, taxable,Pie investing, fractional shares,No fees, customization,Basic features
+Ally Invest,0,0.30%,IRA, 401k, taxable,Low fees, comprehensive platform,Low fees, good platform,Limited features
+Personal Capital,100000,0.89%,IRA, 401k, taxable,Financial planning, human advisors,Comprehensive planning, high fees
+Ellevest,0,0.25%,IRA, 401k, taxable,Women-focused, impact investing,Socially responsible, limited customization
+Blooom,0,10/month,401k only,401k optimization, 401k focus,401k expertise, limited to 401ks
+FutureAdvisor,10000,0.50%,IRA, 401k, taxable,Financial planning, human advisors,Professional advice, high fees
+SigFig,2000,0.25%,IRA, 401k, taxable,Portfolio analysis, low fees,Low fees, good analysis,Limited features
+WiseBanyan,0,0%,IRA, 401k, taxable,No fees, goal-based investing,No fees, goal focus,Limited features

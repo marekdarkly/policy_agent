@@ -1,0 +1,16 @@
+investment_type,description,minimum_investment,returns,liquidity,risks,advantages
+Single Family Home,Direct property ownership,50,000+,8-12%,Low,Property management, market risk,Direct control, tax benefits
+Multi-Family,Apartment buildings,100,000+,10-15%,Low,Property management, tenant risk,Higher cash flow, economies of scale
+Commercial Real Estate,Office, retail, industrial,500,000+,8-12%,Low,Tenant risk, market cycles,Long-term leases, stable income
+REITs,Real Estate Investment Trusts,100+,8-12%,High,Market risk, interest rate risk,High liquidity, diversification
+Real Estate Crowdfunding,Pooled property investments,1,000+,8-15%,Medium,Platform risk, illiquidity,Low minimum, diversification
+Real Estate ETFs,Exchange-traded funds,100+,6-10%,High,Market risk, management fees,High liquidity, low minimum
+Real Estate Mutual Funds,Managed property funds,1,000+,6-10%,High,Market risk, management fees,Professional management, diversification
+Real Estate Notes,Private mortgage investments,10,000+,8-12%,Low,Credit risk, default risk,Regular income, collateral
+Tax Lien Investing,Government tax liens,1,000+,10-20%,Low,Redemption risk, property value,High returns, government backed
+Real Estate Syndication,Group property investments,25,000+,10-20%,Low,Sponsor risk, illiquidity,Professional management, high returns
+Mobile Home Parks,Manufactured housing communities,100,000+,10-15%,Low,Management, regulatory risk,Stable tenants, lower costs
+Self-Storage,Storage unit facilities,200,000+,8-12%,Low,Competition, management,Low maintenance, high demand
+Student Housing,University area properties,100,000+,10-15%,Low,Seasonal, student risk,High demand, premium rents
+Senior Housing,Assisted living facilities,500,000+,8-12%,Low,Regulatory, healthcare risk,Demographic trends, government support
+Vacation Rentals,Short-term rental properties,50,000+,10-20%,Medium,Seasonal, management,High returns, personal use

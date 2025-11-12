@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Check - ToggleHealth UI</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #ffffff;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Background SVGs */
+        body::before {
+            content: '';
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 500px;
+            height: 100vh;
+            background-image: url('/health/backgrounds/health-homepage-background-left.svg');
+            background-repeat: no-repeat;
+            background-position: left bottom;
+            background-size: contain;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            width: 500px;
+            height: 100vh;
+            background-image: url('/health/backgrounds/health-homepage-background-right.svg');
+            background-repeat: no-repeat;
+            background-position: right bottom;
+            background-size: contain;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Logo */
+        .page-logo {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            width: 200px;
+            height: auto;
+            z-index: 10;
+        }
+
+        /* Chat Widget */
+        .chat-widget {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 450px;
+            max-height: 700px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            z-index: 1000;
+        }
+
+        .chat-header {
+            padding: 1.5rem 2rem;
+            background: linear-gradient(178.76deg, #10B981 1.06%, #059669 123.42%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0 0 0.25rem 0;
+        }
+
+        .chat-subtitle {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .provider-badge {
+            font-weight: 600;
+            color: #ffd700;
+        }
+
+        .chat-content {
+            padding: 1.5rem;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 1rem 1.25rem;
+            border-radius: 18px;
+            margin-bottom: 1rem;
+        }
+
+        .message-assistant {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .message-user {
+            background: linear-gradient(178.76deg, #10B981 1.06%, #059669 123.42%);
+            color: white;
+            margin-left: auto;
+        }
+
+        .chat-footer {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 24px;
+            font-size: 1rem;
+        }
+
+        .send-button {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(178.76deg, #10B981 1.06%, #059669 123.42%);
+            color: white;
+            cursor: pointer;
+        }
+
+        .info-box {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 300px;
+            z-index: 100;
+        }
+
+        .info-box h3 {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: #10B981;
+        }
+
+        .info-box ul {
+            font-size: 0.8rem;
+            color: #666;
+            list-style: none;
+            padding: 0;
+        }
+
+        .info-box li {
+            margin-bottom: 0.25rem;
+        }
+
+        .info-box li::before {
+            content: "✓ ";
+            color: #10B981;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- ToggleHealth Logo -->
+    <img src="/health/toggleHealth_logo_horizontal.svg" alt="ToggleHealth" class="page-logo">
+
+    <!-- Info Box -->
+    <div class="info-box">
+        <h3>Visual Check Completed</h3>
+        <ul>
+            <li>Green gradient theme (#10B981)</li>
+            <li>White background</li>
+            <li>Background SVGs in corners</li>
+            <li>Floating chat widget</li>
+            <li>ToggleHealth branding</li>
+        </ul>
+    </div>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget">
+        <div class="chat-header">
+            <div>
+                <div class="chat-title">AI Assistant</div>
+                <div class="chat-subtitle">
+                    Powered by <span class="provider-badge">Amazon Bedrock</span>
+                </div>
+            </div>
+            <div>
+                <button style="background: #55efc4; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.5rem; cursor: pointer; margin-right: 0.5rem;">😊</button>
+                <button style="background: #ff7675; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.5rem; cursor: pointer;">☹️</button>
+            </div>
+        </div>
+        
+        <div class="chat-content">
+            <div class="message message-assistant">
+                Hello! I'm your ToggleHealth assistant. How can I help you today?
+            </div>
+            <div class="message message-user">
+                What are my dental benefits?
+            </div>
+            <div class="message message-assistant">
+                Your Gold HMO plan includes comprehensive dental coverage with preventive care at no cost, and specialist visits with a $30 copay.
+            </div>
+        </div>
+
+        <div class="chat-footer">
+            <input type="text" class="chat-input" placeholder="Type your message..." />
+            <button class="send-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="m22 2-7 20-4-9-9-4Z" />
+                    <path d="M22 2 11 13" />
+                </svg>
+            </button>
+        </div>
+    </div>
+</body>
+</html>
+

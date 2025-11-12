@@ -1,0 +1,1007 @@
+{
+  "total_canonical_policies": 40,
+  "original_files_processed": 400,
+  "reduction_ratio": 10.0,
+  "policies": [
+    {
+      "id": "policy_001",
+      "question": "How are overdraft fees charged and how can I avoid them?",
+      "content": [
+        "1. Platinum and Diamond tiers receive one fee waiver per statement cycle automatically.",
+        "2. Enroll in Overdraft Protection to link a savings account—transfers are $5 instead of the standard fee.",
+        "3. Set up Balance Alerts to receive push notifications when your balance falls below a custom threshold.",
+        "4. Standard overdraft fee: $29 per occurrence (max 3 per day).",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7.",
+        "5. Consider maintaining a buffer amount in your account to avoid overdrafts.",
+        "6. Review your account daily using mobile banking to stay aware of your balance."
+      ],
+      "source_files": [
+        "faq_0119.txt",
+        "faq_0134.txt",
+        "faq_0154.txt",
+        "faq_0168.txt",
+        "faq_0239.txt",
+        "faq_0245.txt",
+        "faq_0271.txt",
+        "faq_0299.txt",
+        "faq_0301.txt",
+        "faq_0342.txt"
+      ],
+      "variations_merged": 10
+    },
+    {
+      "id": "policy_002",
+      "question": "What are the daily ATM withdrawal limits?",
+      "content": [
+        "1. Diamond tier: $3 000",
+        "2. Gold tier: $1 000",
+        "3. Platinum tier: $1 500",
+        "4. Bronze & Silver tiers: $500",
+        "5. Limits reset at 12:01 AM local time; increase requests can be made in‑app under Card Controls ▸ Temporary Limit.",
+        "6. If you need further assistance, contact ToggleSupport via chat 24/7.",
+        "6. You can request temporary limit increases through the mobile app for special circumstances.",
+        "7. International ATM withdrawals may have additional fees and restrictions."
+      ],
+      "source_files": [
+        "faq_0052.txt",
+        "faq_0060.txt",
+        "faq_0068.txt",
+        "faq_0083.txt",
+        "faq_0122.txt",
+        "faq_0136.txt",
+        "faq_0147.txt",
+        "faq_0176.txt",
+        "faq_0186.txt",
+        "faq_0218.txt",
+        "faq_0290.txt",
+        "faq_0304.txt"
+      ],
+      "variations_merged": 12
+    },
+    {
+      "id": "policy_003",
+      "question": "What are the different account tiers and how do I qualify?",
+      "content": [
+        "1. Diamond: invitation‑only, requires $250 000+ in combined balances.",
+        "2. Silver: maintain average daily balance of $1 000 or more.",
+        "3. Bronze: default tier, no minimum balance.",
+        "4. Gold: maintain $10 000 or more across all accounts or direct deposit $2 000+/month.",
+        "5. Platinum: maintain $50 000+ or a ToggleBank mortgage.",
+        "6. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0035.txt",
+        "faq_0110.txt",
+        "faq_0150.txt",
+        "faq_0163.txt",
+        "faq_0212.txt",
+        "faq_0286.txt",
+        "faq_0288.txt",
+        "faq_0296.txt",
+        "faq_0379.txt"
+      ],
+      "variations_merged": 9
+    },
+    {
+      "id": "policy_004",
+      "question": "What are the standard interest rates for savings accounts?",
+      "content": [
+        "1. Diamond: 1.85% APY (rates subject to change weekly).",
+        "2. Silver: 0.60% APY",
+        "3. Platinum: 1.35% APY",
+        "4. Bronze: 0.45% APY",
+        "5. Gold: 1.10% APY",
+        "6. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0042.txt",
+        "faq_0053.txt",
+        "faq_0089.txt",
+        "faq_0130.txt",
+        "faq_0131.txt",
+        "faq_0137.txt",
+        "faq_0264.txt",
+        "faq_0322.txt",
+        "faq_0348.txt",
+        "faq_0389.txt"
+      ],
+      "variations_merged": 10
+    },
+    {
+      "id": "policy_005",
+      "question": "How can I add an external account for transfers?",
+      "content": [
+        "1. ToggleBank sends two micro‑deposits within 1‑2 business days.",
+        "2. Verify the amounts in the app to activate the link.",
+        "3. You can then schedule one‑time or recurring transfers up to $10 000 per day.",
+        "4. Enter the routing and account numbers.",
+        "5. Go to Transfers ▸ Add External Account.",
+        "6. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0038.txt",
+        "faq_0085.txt",
+        "faq_0123.txt",
+        "faq_0211.txt",
+        "faq_0276.txt",
+        "faq_0283.txt",
+        "faq_0291.txt",
+        "faq_0312.txt",
+        "faq_0318.txt",
+        "faq_0346.txt",
+        "faq_0370.txt"
+      ],
+      "variations_merged": 11
+    },
+    {
+      "id": "policy_006",
+      "question": "How can I dispute an unauthorized transaction?",
+      "content": [
+        "1. Navigate to Transactions in the mobile app and select the charge.",
+        "2. Provide any supporting details or receipts; photos can be uploaded.",
+        "3. Tap “Report Issue” and choose “Unauthorized”.",
+        "4. You’ll receive status updates via push notification and email.",
+        "5. ToggleBank immediately places a temporary credit on your account while we investigate (may take up to 45 days).",
+        "6. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0160.txt",
+        "faq_0237.txt",
+        "faq_0314.txt",
+        "faq_0339.txt",
+        "faq_0353.txt",
+        "faq_0385.txt",
+        "faq_0387.txt"
+      ],
+      "variations_merged": 7
+    },
+    {
+      "id": "policy_007",
+      "question": "What fees are waived for Gold tier customers?",
+      "content": [
+        "1. Free standard checks once per year.",
+        "2. No monthly maintenance fee.",
+        "3. No domestic ATM withdrawal fees at any network.",
+        "4. Two free cashier’s checks per month.",
+        "5. Waived incoming wire fees.",
+        "6. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0184.txt",
+        "faq_0189.txt",
+        "faq_0195.txt",
+        "faq_0247.txt",
+        "faq_0279.txt"
+      ],
+      "variations_merged": 5
+    },
+    {
+      "id": "policy_008",
+      "question": "How are overdraft fees charged and how can I avoid them?",
+      "content": [
+        "1. Enroll in Overdraft Protection to link a savings account—transfers are $5 instead of the standard fee.",
+        "2. Standard overdraft fee: $29 per occurrence (max 3 per day).",
+        "3. Platinum and Diamond tiers receive one fee waiver per statement cycle automatically.",
+        "4. Set up Balance Alerts to receive push notifications when your balance falls below a custom threshold.",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7.",
+        "5. Consider maintaining a buffer amount in your account to avoid overdrafts.",
+        "6. Review your account daily using mobile banking to stay aware of your balance."
+      ],
+      "source_files": [
+        "faq_0006.txt",
+        "faq_0028.txt",
+        "faq_0082.txt",
+        "faq_0096.txt",
+        "faq_0098.txt",
+        "faq_0107.txt",
+        "faq_0129.txt",
+        "faq_0214.txt",
+        "faq_0231.txt",
+        "faq_0233.txt",
+        "faq_0315.txt",
+        "faq_0367.txt",
+        "faq_0373.txt"
+      ],
+      "variations_merged": 13
+    },
+    {
+      "id": "policy_009",
+      "question": "How can I add an external account for transfers?",
+      "content": [
+        "1. Verify the amounts in the app to activate the link.",
+        "2. You can then schedule one‑time or recurring transfers up to $10 000 per day.",
+        "3. Go to Transfers ▸ Add External Account.",
+        "4. Enter the routing and account numbers.",
+        "5. ToggleBank sends two micro‑deposits within 1‑2 business days.",
+        "If you need further assistance, contact ToggleSupport via chat 24/7 or call 1‑800‑TOGGLE."
+      ],
+      "source_files": [
+        "faq_0010.txt",
+        "faq_0065.txt",
+        "faq_0166.txt",
+        "faq_0188.txt",
+        "faq_0324.txt",
+        "faq_0376.txt",
+        "faq_0399.txt"
+      ],
+      "variations_merged": 7
+    },
+    {
+      "id": "policy_010",
+      "question": "How can I dispute an unauthorized transaction?",
+      "content": [
+        "1. You’ll receive status updates via push notification and email.",
+        "2. Navigate to Transactions in the mobile app and select the charge.",
+        "3. Provide any supporting details or receipts; photos can be uploaded.",
+        "4. ToggleBank immediately places a temporary credit on your account while we investigate (may take up to 45 days).",
+        "5. Tap “Report Issue” and choose “Unauthorized”.",
+        "6. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0003.txt",
+        "faq_0057.txt",
+        "faq_0067.txt",
+        "faq_0070.txt",
+        "faq_0084.txt",
+        "faq_0142.txt",
+        "faq_0220.txt",
+        "faq_0240.txt",
+        "faq_0255.txt",
+        "faq_0262.txt",
+        "faq_0335.txt",
+        "faq_0350.txt",
+        "faq_0397.txt"
+      ],
+      "variations_merged": 13
+    },
+    {
+      "id": "policy_011",
+      "question": "How do I close my account?",
+      "content": [
+        "1. You’ll receive written confirmation once the account is closed (may take up to 5 business days).",
+        "2. Download or export any statements you need for your records.",
+        "3. Call 1‑800‑TOGGLE or visit a branch to submit the closure request.",
+        "4. Ensure your balance is $0 or transfer remaining funds.",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0012.txt",
+        "faq_0078.txt",
+        "faq_0114.txt",
+        "faq_0180.txt",
+        "faq_0183.txt",
+        "faq_0226.txt",
+        "faq_0246.txt",
+        "faq_0265.txt",
+        "faq_0269.txt",
+        "faq_0300.txt",
+        "faq_0341.txt",
+        "faq_0343.txt"
+      ],
+      "variations_merged": 12
+    },
+    {
+      "id": "policy_012",
+      "question": "How do I deposit a check using the mobile app?",
+      "content": [
+        "1. Tap Deposit ▸ Mobile Check Deposit.",
+        "2. Endorse the back with “For ToggleBank Mobile Deposit” and today’s date.",
+        "3. Snap photos of the front and back ensuring all four corners are visible.",
+        "4. Enter the amount and choose the destination account.",
+        "5. Keep the physical check for 14 days; funds are usually available the next business day.",
+        "6. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0008.txt",
+        "faq_0063.txt",
+        "faq_0125.txt",
+        "faq_0151.txt",
+        "faq_0202.txt",
+        "faq_0213.txt",
+        "faq_0236.txt",
+        "faq_0263.txt",
+        "faq_0285.txt",
+        "faq_0310.txt",
+        "faq_0349.txt",
+        "faq_0359.txt",
+        "faq_0381.txt"
+      ],
+      "variations_merged": 13
+    },
+    {
+      "id": "policy_013",
+      "question": "How do I enable biometric login?",
+      "content": [
+        "1. Toggle “Enable Face ID / Fingerprint”.",
+        "2. Authenticate with your device’s biometrics to confirm.",
+        "3. In the mobile app go to Settings ▸ Login & Security.",
+        "4. Next time you open the app, you can log in with biometrics instead of a password.",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0018.txt",
+        "faq_0090.txt",
+        "faq_0094.txt",
+        "faq_0228.txt",
+        "faq_0260.txt",
+        "faq_0336.txt",
+        "faq_0344.txt",
+        "faq_0368.txt"
+      ],
+      "variations_merged": 8
+    },
+    {
+      "id": "policy_014",
+      "question": "How do I enable two‑factor authentication (2FA)?",
+      "content": [
+        "1. Log in and go to Settings ▸ Security.",
+        "2. Toggle “Two‑Factor Authentication”.",
+        "3. 2FA is required for high‑risk actions like adding new payees or changing contact info.",
+        "4. Choose SMS, Email, or Authenticator App.",
+        "5. Enter the verification code to confirm activation.",
+        "6. If you need further assistance, contact ToggleSupport via chat 24/7.",
+        "6. Backup codes are provided in case you lose access to your primary 2FA method.",
+        "7. 2FA significantly improves account security and is strongly recommended."
+      ],
+      "source_files": [
+        "faq_0005.txt",
+        "faq_0032.txt",
+        "faq_0045.txt",
+        "faq_0047.txt",
+        "faq_0073.txt",
+        "faq_0097.txt",
+        "faq_0203.txt",
+        "faq_0313.txt",
+        "faq_0369.txt"
+      ],
+      "variations_merged": 9
+    },
+    {
+      "id": "policy_015",
+      "question": "How do I request a credit limit increase?",
+      "content": [
+        "1. You’ll receive approval or further steps instantly in most cases.",
+        "2. A soft credit pull is performed (does not affect credit score).",
+        "3. Navigate to Cards ▸ Credit Card ▸ Manage ▸ Request Limit Increase.",
+        "4. Provide current annual income and monthly housing payment.",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7.",
+        "5. Factors considered include payment history, credit score, income verification, and account standing.",
+        "6. If declined, you may reapply after 60 days or after improving credit factors."
+      ],
+      "source_files": [
+        "faq_0014.txt",
+        "faq_0077.txt",
+        "faq_0105.txt",
+        "faq_0128.txt",
+        "faq_0197.txt",
+        "faq_0224.txt",
+        "faq_0229.txt",
+        "faq_0248.txt",
+        "faq_0398.txt"
+      ],
+      "variations_merged": 9
+    },
+    {
+      "id": "policy_016",
+      "question": "How do I reset my online banking password?",
+      "content": [
+        "1. From the login screen choose “Forgot Password”.",
+        "2. Enter the code within 10 minutes and choose a new strong password.",
+        "3. Enter your username and the last 4 digits of your Social Security Number.",
+        "4. Select a delivery method to receive a one‑time verification code.",
+        "5. Log in with the new password; the change takes effect immediately.",
+        "6. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0001.txt",
+        "faq_0076.txt",
+        "faq_0234.txt",
+        "faq_0280.txt",
+        "faq_0317.txt",
+        "faq_0323.txt",
+        "faq_0357.txt",
+        "faq_0364.txt"
+      ],
+      "variations_merged": 8
+    },
+    {
+      "id": "policy_017",
+      "question": "How do I set up balance alerts?",
+      "content": [
+        "1. Select delivery method: push notification, SMS, or email.",
+        "2. Go to Settings ▸ Alerts ▸ Balance.",
+        "3. Save preferences; alerts are sent in real time when the threshold is crossed.",
+        "4. Choose threshold type: fixed dollar amount or percentage of average balance.",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7.",
+        "5. Multiple alerts can be set for different thresholds and accounts.",
+        "6. Alerts help prevent overdrafts and monitor unusual account activity."
+      ],
+      "source_files": [
+        "faq_0016.txt",
+        "faq_0054.txt",
+        "faq_0058.txt",
+        "faq_0102.txt",
+        "faq_0116.txt",
+        "faq_0140.txt",
+        "faq_0141.txt",
+        "faq_0167.txt",
+        "faq_0179.txt",
+        "faq_0194.txt",
+        "faq_0210.txt",
+        "faq_0219.txt",
+        "faq_0272.txt",
+        "faq_0287.txt",
+        "faq_0295.txt",
+        "faq_0325.txt",
+        "faq_0327.txt"
+      ],
+      "variations_merged": 17
+    },
+    {
+      "id": "policy_018",
+      "question": "How do I view or download tax documents?",
+      "content": [
+        "1. Log in and select More ▸ Documents ▸ Tax Documents.",
+        "2. Choose the tax year; statements are available in PDF.",
+        "3. Download or print as needed for your records or tax preparer.",
+        "4. Forms (e.g., 1099‑INT) are released by January 31 for the prior year.",
+        "If you need further assistance, contact ToggleSupport via chat 24/7 or call 1‑800‑TOGGLE."
+      ],
+      "source_files": [
+        "faq_0020.txt",
+        "faq_0056.txt",
+        "faq_0132.txt",
+        "faq_0159.txt",
+        "faq_0172.txt",
+        "faq_0190.txt",
+        "faq_0319.txt"
+      ],
+      "variations_merged": 7
+    },
+    {
+      "id": "policy_019",
+      "question": "How do I close my account?",
+      "content": [
+        "1. Ensure your balance is $0 or transfer remaining funds.",
+        "2. Call 1‑800‑TOGGLE or visit a branch to submit the closure request.",
+        "3. Download or export any statements you need for your records.",
+        "4. You’ll receive written confirmation once the account is closed (may take up to 5 business days).",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0030.txt",
+        "faq_0062.txt",
+        "faq_0069.txt",
+        "faq_0115.txt",
+        "faq_0117.txt",
+        "faq_0148.txt",
+        "faq_0243.txt",
+        "faq_0244.txt",
+        "faq_0277.txt",
+        "faq_0293.txt",
+        "faq_0308.txt",
+        "faq_0351.txt",
+        "faq_0365.txt",
+        "faq_0391.txt",
+        "faq_0396.txt"
+      ],
+      "variations_merged": 15
+    },
+    {
+      "id": "policy_020",
+      "question": "How do I deposit a check using the mobile app?",
+      "content": [
+        "1. Keep the physical check for 14 days; funds are usually available the next business day.",
+        "2. Tap Deposit ▸ Mobile Check Deposit.",
+        "3. Enter the amount and choose the destination account.",
+        "4. Endorse the back with “For ToggleBank Mobile Deposit” and today’s date.",
+        "5. Snap photos of the front and back ensuring all four corners are visible.",
+        "6. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0023.txt",
+        "faq_0192.txt",
+        "faq_0201.txt",
+        "faq_0235.txt",
+        "faq_0261.txt",
+        "faq_0282.txt",
+        "faq_0297.txt",
+        "faq_0305.txt",
+        "faq_0338.txt",
+        "faq_0380.txt",
+        "faq_0386.txt"
+      ],
+      "variations_merged": 11
+    },
+    {
+      "id": "policy_021",
+      "question": "How do I enable biometric login?",
+      "content": [
+        "1. In the mobile app go to Settings ▸ Login & Security.",
+        "2. Next time you open the app, you can log in with biometrics instead of a password.",
+        "3. Authenticate with your device’s biometrics to confirm.",
+        "4. Toggle “Enable Face ID / Fingerprint”.",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0036.txt",
+        "faq_0081.txt",
+        "faq_0088.txt",
+        "faq_0112.txt",
+        "faq_0181.txt",
+        "faq_0204.txt",
+        "faq_0256.txt",
+        "faq_0306.txt",
+        "faq_0321.txt",
+        "faq_0371.txt",
+        "faq_0388.txt"
+      ],
+      "variations_merged": 11
+    },
+    {
+      "id": "policy_022",
+      "question": "How do I enable two‑factor authentication (2FA)?",
+      "content": [
+        "1. 2FA is required for high‑risk actions like adding new payees or changing contact info.",
+        "2. Toggle “Two‑Factor Authentication”.",
+        "3. Choose SMS, Email, or Authenticator App.",
+        "4. Enter the verification code to confirm activation.",
+        "5. Log in and go to Settings ▸ Security.",
+        "6. If you need further assistance, contact ToggleSupport via chat 24/7.",
+        "6. Backup codes are provided in case you lose access to your primary 2FA method.",
+        "7. 2FA significantly improves account security and is strongly recommended."
+      ],
+      "source_files": [
+        "faq_0037.txt",
+        "faq_0074.txt",
+        "faq_0092.txt",
+        "faq_0158.txt",
+        "faq_0177.txt",
+        "faq_0199.txt",
+        "faq_0259.txt",
+        "faq_0298.txt",
+        "faq_0309.txt",
+        "faq_0331.txt",
+        "faq_0362.txt",
+        "faq_0377.txt",
+        "faq_0394.txt"
+      ],
+      "variations_merged": 13
+    },
+    {
+      "id": "policy_023",
+      "question": "How do I request a credit limit increase?",
+      "content": [
+        "1. You’ll receive approval or further steps instantly in most cases.",
+        "2. Navigate to Cards ▸ Credit Card ▸ Manage ▸ Request Limit Increase.",
+        "3. Provide current annual income and monthly housing payment.",
+        "4. A soft credit pull is performed (does not affect credit score).",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7.",
+        "5. Factors considered include payment history, credit score, income verification, and account standing.",
+        "6. If declined, you may reapply after 60 days or after improving credit factors."
+      ],
+      "source_files": [
+        "faq_0050.txt",
+        "faq_0157.txt",
+        "faq_0196.txt",
+        "faq_0266.txt"
+      ],
+      "variations_merged": 4
+    },
+    {
+      "id": "policy_024",
+      "question": "How do I reset my online banking password?",
+      "content": [
+        "1. From the login screen choose “Forgot Password”.",
+        "2. Log in with the new password; the change takes effect immediately.",
+        "3. Enter your username and the last 4 digits of your Social Security Number.",
+        "4. Enter the code within 10 minutes and choose a new strong password.",
+        "5. Select a delivery method to receive a one‑time verification code.",
+        "6. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0025.txt",
+        "faq_0033.txt",
+        "faq_0040.txt",
+        "faq_0044.txt",
+        "faq_0064.txt",
+        "faq_0071.txt",
+        "faq_0087.txt",
+        "faq_0111.txt",
+        "faq_0170.txt",
+        "faq_0329.txt"
+      ],
+      "variations_merged": 10
+    },
+    {
+      "id": "policy_025",
+      "question": "How do I set up balance alerts?",
+      "content": [
+        "1. Save preferences; alerts are sent in real time when the threshold is crossed.",
+        "2. Go to Settings ▸ Alerts ▸ Balance.",
+        "3. Select delivery method: push notification, SMS, or email.",
+        "4. Choose threshold type: fixed dollar amount or percentage of average balance.",
+        "5. Multiple alerts can be set for different thresholds and accounts.",
+        "6. Alerts help prevent overdrafts and monitor unusual account activity.",
+        "If you need further assistance, contact ToggleSupport via chat 24/7 or call 1‑800‑TOGGLE."
+      ],
+      "source_files": [
+        "faq_0206.txt",
+        "faq_0208.txt",
+        "faq_0216.txt",
+        "faq_0225.txt",
+        "faq_0241.txt",
+        "faq_0289.txt",
+        "faq_0356.txt",
+        "faq_0374.txt"
+      ],
+      "variations_merged": 8
+    },
+    {
+      "id": "policy_026",
+      "question": "How do I view or download tax documents?",
+      "content": [
+        "1. Log in and select More ▸ Documents ▸ Tax Documents.",
+        "2. Forms (e.g., 1099‑INT) are released by January 31 for the prior year.",
+        "3. Download or print as needed for your records or tax preparer.",
+        "4. Choose the tax year; statements are available in PDF.",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0079.txt",
+        "faq_0099.txt",
+        "faq_0103.txt",
+        "faq_0124.txt",
+        "faq_0138.txt",
+        "faq_0182.txt",
+        "faq_0185.txt",
+        "faq_0316.txt",
+        "faq_0360.txt",
+        "faq_0382.txt"
+      ],
+      "variations_merged": 10
+    },
+    {
+      "id": "policy_027",
+      "question": "What is the grace period for credit card payments?",
+      "content": [
+        "1. If the full balance is paid by the due date, no interest is charged.",
+        "2. ToggleBank credit cards have a 25‑day grace period from the statement close date.",
+        "3. Automatic payments can be set to avoid late fees.",
+        "4. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0024.txt",
+        "faq_0048.txt",
+        "faq_0049.txt",
+        "faq_0061.txt",
+        "faq_0066.txt",
+        "faq_0100.txt",
+        "faq_0113.txt",
+        "faq_0126.txt",
+        "faq_0135.txt",
+        "faq_0144.txt",
+        "faq_0249.txt",
+        "faq_0270.txt",
+        "faq_0334.txt",
+        "faq_0354.txt",
+        "faq_0366.txt",
+        "faq_0400.txt"
+      ],
+      "variations_merged": 16
+    },
+    {
+      "id": "policy_028",
+      "question": "What is the process for setting a travel notice?",
+      "content": [
+        "1. In the mobile app go to Card Controls ▸ Travel Notice.",
+        "2. Confirm contact number in case of fraud alerts abroad.",
+        "3. You’ll receive an email confirmation; notices can be edited or canceled anytime.",
+        "4. Enter destination country, start date, and end date (up to 90 days).",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0080.txt",
+        "faq_0091.txt",
+        "faq_0143.txt",
+        "faq_0198.txt",
+        "faq_0232.txt",
+        "faq_0355.txt"
+      ],
+      "variations_merged": 6
+    },
+    {
+      "id": "policy_029",
+      "question": "What is ToggleBank’s policy on wire transfer cut‑off times?",
+      "content": [
+        "1. Domestic wires: 5 PM ET on business days.",
+        "2. Outgoing wire fees vary by tier; incoming wires are free for Gold and above.",
+        "3. Requests submitted after cut‑off are processed the next business day.",
+        "4. International wires: 3 PM ET.",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0027.txt",
+        "faq_0034.txt",
+        "faq_0043.txt",
+        "faq_0121.txt",
+        "faq_0352.txt",
+        "faq_0392.txt"
+      ],
+      "variations_merged": 6
+    },
+    {
+      "id": "policy_030",
+      "question": "What is ToggleBank’s privacy policy regarding customer data?",
+      "content": [
+        "1. Data is shared only with service providers who support banking operations and are bound by contract to safeguard it.",
+        "2. Customers may opt out of certain marketing communications under Settings ▸ Privacy.",
+        "3. For a full policy see togglebank.com/privacy.",
+        "4. ToggleBank does not sell personal information to third parties.",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0149.txt",
+        "faq_0257.txt",
+        "faq_0307.txt",
+        "faq_0326.txt",
+        "faq_0332.txt"
+      ],
+      "variations_merged": 5
+    },
+    {
+      "id": "policy_031",
+      "question": "What should I do if my debit card is lost or stolen?",
+      "content": [
+        "1. Call 1‑800‑TOGGLE within 24 hours to report the loss (available 24/7).",
+        "2. A replacement card ships via priority mail within 3–5 calendar days (free for Gold tier and above).",
+        "3. Review recent transactions with the agent; disputed items are refunded provisionally in 10 business days.",
+        "4. Open the ToggleBank mobile app and tap Card Controls ▸ Lock Card.",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7.",
+        "5. Monitor your account closely for any unauthorized transactions.",
+        "6. Update any automatic payments or subscriptions with your new card information once received."
+      ],
+      "source_files": [
+        "faq_0021.txt",
+        "faq_0075.txt",
+        "faq_0153.txt",
+        "faq_0155.txt",
+        "faq_0178.txt",
+        "faq_0258.txt",
+        "faq_0320.txt",
+        "faq_0358.txt",
+        "faq_0390.txt",
+        "faq_0395.txt"
+      ],
+      "variations_merged": 10
+    },
+    {
+      "id": "policy_032",
+      "question": "What are the daily ATM withdrawal limits?",
+      "content": [
+        "1. Bronze & Silver tiers: $500",
+        "2. Diamond tier: $3 000",
+        "3. Gold tier: $1 000",
+        "4. Platinum tier: $1 500",
+        "5. Limits reset at 12:01 AM local time; increase requests can be made in‑app under Card Controls ▸ Temporary Limit.",
+        "6. If you need further assistance, contact ToggleSupport via chat 24/7.",
+        "6. You can request temporary limit increases through the mobile app for special circumstances.",
+        "7. International ATM withdrawals may have additional fees and restrictions."
+      ],
+      "source_files": [
+        "faq_0004.txt",
+        "faq_0039.txt",
+        "faq_0051.txt",
+        "faq_0095.txt",
+        "faq_0164.txt",
+        "faq_0242.txt",
+        "faq_0383.txt",
+        "faq_0384.txt"
+      ],
+      "variations_merged": 8
+    },
+    {
+      "id": "policy_033",
+      "question": "What are the different account tiers and how do I qualify?",
+      "content": [
+        "1. Bronze: default tier, no minimum balance.",
+        "2. Silver: maintain average daily balance of $1 000 or more.",
+        "3. Platinum: maintain $50 000+ or a ToggleBank mortgage.",
+        "4. Gold: maintain $10 000 or more across all accounts or direct deposit $2 000+/month.",
+        "5. Diamond: invitation‑only, requires $250 000+ in combined balances.",
+        "6. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0013.txt",
+        "faq_0022.txt",
+        "faq_0029.txt",
+        "faq_0127.txt",
+        "faq_0174.txt",
+        "faq_0230.txt",
+        "faq_0372.txt",
+        "faq_0375.txt"
+      ],
+      "variations_merged": 8
+    },
+    {
+      "id": "policy_034",
+      "question": "What are the standard interest rates for savings accounts?",
+      "content": [
+        "1. Bronze: 0.45% APY",
+        "2. Diamond: 1.85% APY (rates subject to change weekly).",
+        "3. Gold: 1.10% APY",
+        "4. Silver: 0.60% APY",
+        "5. Platinum: 1.35% APY",
+        "6. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0019.txt",
+        "faq_0093.txt",
+        "faq_0101.txt",
+        "faq_0171.txt",
+        "faq_0175.txt",
+        "faq_0191.txt",
+        "faq_0253.txt",
+        "faq_0333.txt",
+        "faq_0337.txt",
+        "faq_0378.txt"
+      ],
+      "variations_merged": 10
+    },
+    {
+      "id": "policy_035",
+      "question": "What fees are waived for Gold tier customers?",
+      "content": [
+        "1. No monthly maintenance fee.",
+        "2. Two free cashier’s checks per month.",
+        "3. No domestic ATM withdrawal fees at any network.",
+        "4. Free standard checks once per year.",
+        "5. Waived incoming wire fees.",
+        "6. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0009.txt",
+        "faq_0046.txt",
+        "faq_0193.txt",
+        "faq_0250.txt",
+        "faq_0267.txt",
+        "faq_0328.txt",
+        "faq_0363.txt"
+      ],
+      "variations_merged": 7
+    },
+    {
+      "id": "policy_036",
+      "question": "What is the grace period for credit card payments?",
+      "content": [
+        "1. ToggleBank credit cards have a 25‑day grace period from the statement close date.",
+        "2. Automatic payments can be set to avoid late fees.",
+        "3. If the full balance is paid by the due date, no interest is charged.",
+        "4. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0015.txt",
+        "faq_0086.txt",
+        "faq_0120.txt",
+        "faq_0139.txt",
+        "faq_0145.txt",
+        "faq_0146.txt",
+        "faq_0156.txt",
+        "faq_0200.txt",
+        "faq_0205.txt",
+        "faq_0209.txt",
+        "faq_0238.txt",
+        "faq_0303.txt",
+        "faq_0393.txt"
+      ],
+      "variations_merged": 13
+    },
+    {
+      "id": "policy_037",
+      "question": "What is the process for setting a travel notice?",
+      "content": [
+        "1. Enter destination country, start date, and end date (up to 90 days).",
+        "2. Confirm contact number in case of fraud alerts abroad.",
+        "3. In the mobile app go to Card Controls ▸ Travel Notice.",
+        "4. You’ll receive an email confirmation; notices can be edited or canceled anytime.",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0007.txt",
+        "faq_0072.txt",
+        "faq_0133.txt",
+        "faq_0173.txt",
+        "faq_0187.txt",
+        "faq_0223.txt",
+        "faq_0227.txt",
+        "faq_0252.txt",
+        "faq_0274.txt",
+        "faq_0292.txt",
+        "faq_0311.txt",
+        "faq_0340.txt",
+        "faq_0361.txt"
+      ],
+      "variations_merged": 13
+    },
+    {
+      "id": "policy_038",
+      "question": "What is ToggleBank’s policy on wire transfer cut‑off times?",
+      "content": [
+        "1. International wires: 3 PM ET.",
+        "2. Domestic wires: 5 PM ET on business days.",
+        "3. Outgoing wire fees vary by tier; incoming wires are free for Gold and above.",
+        "4. Requests submitted after cut‑off are processed the next business day.",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0017.txt",
+        "faq_0041.txt",
+        "faq_0059.txt",
+        "faq_0104.txt",
+        "faq_0108.txt",
+        "faq_0109.txt",
+        "faq_0118.txt",
+        "faq_0162.txt",
+        "faq_0207.txt",
+        "faq_0221.txt",
+        "faq_0273.txt",
+        "faq_0330.txt"
+      ],
+      "variations_merged": 12
+    },
+    {
+      "id": "policy_039",
+      "question": "What is ToggleBank’s privacy policy regarding customer data?",
+      "content": [
+        "1. Customers may opt out of certain marketing communications under Settings ▸ Privacy.",
+        "2. Data is shared only with service providers who support banking operations and are bound by contract to safeguard it.",
+        "3. For a full policy see togglebank.com/privacy.",
+        "4. ToggleBank does not sell personal information to third parties.",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7."
+      ],
+      "source_files": [
+        "faq_0011.txt",
+        "faq_0026.txt",
+        "faq_0055.txt",
+        "faq_0152.txt",
+        "faq_0161.txt",
+        "faq_0165.txt",
+        "faq_0215.txt",
+        "faq_0222.txt",
+        "faq_0251.txt",
+        "faq_0268.txt",
+        "faq_0275.txt",
+        "faq_0281.txt",
+        "faq_0294.txt",
+        "faq_0302.txt",
+        "faq_0345.txt"
+      ],
+      "variations_merged": 15
+    },
+    {
+      "id": "policy_040",
+      "question": "What should I do if my debit card is lost or stolen?",
+      "content": [
+        "1. Open the ToggleBank mobile app and tap Card Controls ▸ Lock Card.",
+        "2. Review recent transactions with the agent; disputed items are refunded provisionally in 10 business days.",
+        "3. A replacement card ships via priority mail within 3–5 calendar days (free for Gold tier and above).",
+        "4. Call 1‑800‑TOGGLE within 24 hours to report the loss (available 24/7).",
+        "5. If you need further assistance, contact ToggleSupport via chat 24/7.",
+        "5. Monitor your account closely for any unauthorized transactions.",
+        "6. Update any automatic payments or subscriptions with your new card information once received."
+      ],
+      "source_files": [
+        "faq_0002.txt",
+        "faq_0031.txt",
+        "faq_0106.txt",
+        "faq_0169.txt",
+        "faq_0217.txt",
+        "faq_0254.txt",
+        "faq_0278.txt",
+        "faq_0284.txt",
+        "faq_0347.txt"
+      ],
+      "variations_merged": 9
+    }
+  ]
+}

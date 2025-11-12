@@ -1,0 +1,21 @@
+cryptocurrency,type,description,use_case,market_cap_rank,volatility,risks
+Bitcoin,BTC,First cryptocurrency, digital gold,Store of value, payment system,1,Very High,Regulatory, security, volatility
+Ethereum,ETH,Smart contract platform,Decentralized applications, DeFi,2,Very High,Technical, regulatory, competition
+Binance Coin,BNB,Exchange token,Platform utility, trading fees,3,Very High,Centralization, regulatory
+Cardano,ADA,Proof of stake blockchain,Smart contracts, DeFi,4,Very High,Technical, competition, adoption
+Solana,SOL,High-speed blockchain,Fast transactions, DeFi,5,Very High,Technical, centralization, competition
+Ripple,XRP,Payment protocol,Bank transfers, cross-border payments,6,Very High,Regulatory, centralization
+Polkadot,DOT,Interoperability platform,Blockchain connectivity,7,Very High,Technical, competition, adoption
+Dogecoin,DOGE,Meme cryptocurrency,Payment, tipping,8,Very High,Speculative, no utility
+Avalanche,AVAX,Smart contract platform,DeFi, applications,9,Very High,Technical, competition
+Polygon,MATIC,Scaling solution,Ethereum scaling,10,Very High,Technical, centralization
+Chainlink,LINK,Oracle network,Data feeds for smart contracts,11,Very High,Technical, competition
+Litecoin,LTC,Bitcoin fork,Faster payments,12,Very High,Competition, limited adoption
+Uniswap,UNI,Decentralized exchange,Token trading,13,Very High,Technical, competition
+Bitcoin Cash,BCH,Bitcoin fork,Faster payments,14,Very High,Competition, limited adoption
+Stellar,XLM,Payment protocol,Cross-border payments,15,Very High,Competition, centralization
+Tron,TRX,Content platform,Entertainment, gaming,16,Very High,Centralization, regulatory
+VeChain,VET,Supply chain,Supply chain tracking,17,Very High,Adoption, competition
+Filecoin,FIL,Storage network,Decentralized storage,18,Very High,Technical, competition
+Cosmos,ATOM,Interoperability,Blockchain connectivity,19,Very High,Technical, competition
+Monero,XMR,Privacy coin,Private transactions,20,Very High,Regulatory, adoption

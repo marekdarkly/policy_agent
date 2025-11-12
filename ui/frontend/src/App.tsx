@@ -150,7 +150,15 @@ function App() {
   };
 
   return (
-    <div className="app-container">
+    <>
+      {/* ToggleHealth Logo */}
+      <img
+        src="/health/toggleHealth_logo_horizontal.svg"
+        alt="ToggleHealth"
+        className="page-logo"
+      />
+      
+      <div className="app-container">
       {/* Header */}
       <header className="chat-header">
         <div className="header-content">
@@ -291,6 +299,7 @@ function App() {
         </button>
       </div>
     </div>
+    </>
   );
 }
 

@@ -1,0 +1,1029 @@
+{
+  "total_canonical_profiles": 68,
+  "original_files_processed": 1000,
+  "reduction_ratio": 14.705882352941176,
+  "unique_names_generated": 68,
+  "locations_used": 41,
+  "profiles": [
+    {
+      "id": "customer_001",
+      "name": "Keira Zayed",
+      "city": "Mesa, AZ",
+      "account_tier": "Bronze",
+      "account_since": "2021-05-22",
+      "last_login": "2025-05-27",
+      "average_balance": "1k-10k",
+      "rewards_points": "32722",
+      "preferred_channel": "branch",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00169.txt"
+      ]
+    },
+    {
+      "id": "customer_002",
+      "name": "Aaliyah Jiménez",
+      "city": "Santa Ana, CA",
+      "account_tier": "Bronze",
+      "account_since": "2022-01-28",
+      "last_login": "2025-05-23",
+      "average_balance": "50k-100k",
+      "rewards_points": "44426",
+      "preferred_channel": "web",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00929.txt"
+      ]
+    },
+    {
+      "id": "customer_003",
+      "name": "Rebecca Sato",
+      "city": "Pittsburgh, PA",
+      "account_tier": "Bronze",
+      "account_since": "2016-10-07",
+      "last_login": "2025-05-26",
+      "average_balance": "10k-50k",
+      "rewards_points": "46183",
+      "preferred_channel": "mobile",
+      "language_preference": "es",
+      "source_files": [
+        "CUST00265.txt"
+      ]
+    },
+    {
+      "id": "customer_004",
+      "name": "Tristan Ibrahim",
+      "city": "Wichita, KS",
+      "account_tier": "Bronze",
+      "account_since": "2016-03-24",
+      "last_login": "2025-05-14",
+      "average_balance": ">100k",
+      "rewards_points": "20163",
+      "preferred_channel": "mobile",
+      "language_preference": "de",
+      "source_files": [
+        "CUST00121.txt"
+      ]
+    },
+    {
+      "id": "customer_005",
+      "name": "Nova Davis",
+      "city": "El Paso, TX",
+      "account_tier": "Diamond",
+      "account_since": "2023-09-14",
+      "last_login": "2025-05-07",
+      "average_balance": ">100k",
+      "rewards_points": "49838",
+      "preferred_channel": "web",
+      "language_preference": "es",
+      "source_files": [
+        "CUST00257.txt"
+      ]
+    },
+    {
+      "id": "customer_006",
+      "name": "Lucian Chen",
+      "city": "Honolulu, HI",
+      "account_tier": "Silver",
+      "account_since": "2024-06-14",
+      "last_login": "2025-05-21",
+      "average_balance": "50k-100k",
+      "rewards_points": "18726",
+      "preferred_channel": "mobile",
+      "language_preference": "en",
+      "source_files": [
+        "CUST00114.txt"
+      ]
+    },
+    {
+      "id": "customer_007",
+      "name": "Zara González",
+      "city": "Los Angeles, CA",
+      "account_tier": "Silver",
+      "account_since": "2019-09-11",
+      "last_login": "2025-05-31",
+      "average_balance": "1k-10k",
+      "rewards_points": "13087",
+      "preferred_channel": "web",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00070.txt"
+      ]
+    },
+    {
+      "id": "customer_008",
+      "name": "Owen Chavez",
+      "city": "Miami, FL",
+      "account_tier": "Gold",
+      "account_since": "2015-03-29",
+      "last_login": "2025-05-10",
+      "average_balance": "1k-10k",
+      "rewards_points": "4125",
+      "preferred_channel": "mobile",
+      "language_preference": "es",
+      "source_files": [
+        "CUST00669.txt"
+      ]
+    },
+    {
+      "id": "customer_009",
+      "name": "Luna Wang",
+      "city": "Lexington, KY",
+      "account_tier": "Silver",
+      "account_since": "2024-06-12",
+      "last_login": "2025-05-06",
+      "average_balance": ">100k",
+      "rewards_points": "39694",
+      "preferred_channel": "phone",
+      "language_preference": "es",
+      "source_files": [
+        "CUST00566.txt"
+      ]
+    },
+    {
+      "id": "customer_010",
+      "name": "Soren Omar",
+      "city": "Fresno, CA",
+      "account_tier": "Silver",
+      "account_since": "2015-11-23",
+      "last_login": "2025-05-10",
+      "average_balance": "<1k",
+      "rewards_points": "24754",
+      "preferred_channel": "mobile",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00957.txt"
+      ]
+    },
+    {
+      "id": "customer_011",
+      "name": "Qadir Tanaka",
+      "city": "Los Angeles, CA",
+      "account_tier": "Gold",
+      "account_since": "2024-02-06",
+      "last_login": "2025-05-13",
+      "average_balance": "50k-100k",
+      "rewards_points": "43495",
+      "preferred_channel": "web",
+      "language_preference": "de",
+      "source_files": [
+        "CUST00001.txt"
+      ]
+    },
+    {
+      "id": "customer_012",
+      "name": "Victoria Ivanov",
+      "city": "Wichita, KS",
+      "account_tier": "Bronze",
+      "account_since": "2024-08-31",
+      "last_login": "2025-05-20",
+      "average_balance": "1k-10k",
+      "rewards_points": "348",
+      "preferred_channel": "phone",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00993.txt"
+      ]
+    },
+    {
+      "id": "customer_013",
+      "name": "Joaquin Jankowski",
+      "city": "Nashville, TN",
+      "account_tier": "Silver",
+      "account_since": "2016-09-03",
+      "last_login": "2025-05-03",
+      "average_balance": "10k-50k",
+      "rewards_points": "11149",
+      "preferred_channel": "mobile",
+      "language_preference": "en",
+      "source_files": [
+        "CUST00756.txt"
+      ]
+    },
+    {
+      "id": "customer_014",
+      "name": "Felix Fisher",
+      "city": "San Jose, CA",
+      "account_tier": "Gold",
+      "account_since": "2017-09-30",
+      "last_login": "2025-05-14",
+      "average_balance": "1k-10k",
+      "rewards_points": "39705",
+      "preferred_channel": "web",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00939.txt"
+      ]
+    },
+    {
+      "id": "customer_015",
+      "name": "Quinton Stevens",
+      "city": "Stockton, CA",
+      "account_tier": "Bronze",
+      "account_since": "2019-03-11",
+      "last_login": "2025-05-07",
+      "average_balance": "50k-100k",
+      "rewards_points": "36736",
+      "preferred_channel": "phone",
+      "language_preference": "de",
+      "source_files": [
+        "CUST00472.txt"
+      ]
+    },
+    {
+      "id": "customer_016",
+      "name": "Piper Roberts",
+      "city": "Fresno, CA",
+      "account_tier": "Bronze",
+      "account_since": "2018-06-30",
+      "last_login": "2025-05-24",
+      "average_balance": "10k-50k",
+      "rewards_points": "37197",
+      "preferred_channel": "mobile",
+      "language_preference": "en",
+      "source_files": [
+        "CUST00043.txt"
+      ]
+    },
+    {
+      "id": "customer_017",
+      "name": "Sage Eriksson",
+      "city": "Mesa, AZ",
+      "account_tier": "Bronze",
+      "account_since": "2015-10-16",
+      "last_login": "2025-05-19",
+      "average_balance": "1k-10k",
+      "rewards_points": "16950",
+      "preferred_channel": "phone",
+      "language_preference": "de",
+      "source_files": [
+        "CUST00389.txt"
+      ]
+    },
+    {
+      "id": "customer_018",
+      "name": "Mason Traore",
+      "city": "Anaheim, CA",
+      "account_tier": "Silver",
+      "account_since": "2022-11-10",
+      "last_login": "2025-05-27",
+      "average_balance": "10k-50k",
+      "rewards_points": "16269",
+      "preferred_channel": "branch",
+      "language_preference": "en",
+      "source_files": [
+        "CUST00442.txt"
+      ]
+    },
+    {
+      "id": "customer_019",
+      "name": "Chelsea Yusuf",
+      "city": "Nashville, TN",
+      "account_tier": "Bronze",
+      "account_since": "2019-12-06",
+      "last_login": "2025-05-14",
+      "average_balance": "50k-100k",
+      "rewards_points": "30437",
+      "preferred_channel": "web",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00108.txt"
+      ]
+    },
+    {
+      "id": "customer_020",
+      "name": "Francesca Campbell",
+      "city": "Miami, FL",
+      "account_tier": "Silver",
+      "account_since": "2015-11-27",
+      "last_login": "2025-05-11",
+      "average_balance": ">100k",
+      "rewards_points": "9721",
+      "preferred_channel": "mobile",
+      "language_preference": "es",
+      "source_files": [
+        "CUST00032.txt"
+      ]
+    },
+    {
+      "id": "customer_021",
+      "name": "Giuseppe Said",
+      "city": "Lexington, KY",
+      "account_tier": "Bronze",
+      "account_since": "2016-07-05",
+      "last_login": "2025-05-04",
+      "average_balance": "10k-50k",
+      "rewards_points": "21575",
+      "preferred_channel": "phone",
+      "language_preference": "es",
+      "source_files": [
+        "CUST00555.txt"
+      ]
+    },
+    {
+      "id": "customer_022",
+      "name": "Gabriel Pérez",
+      "city": "Honolulu, HI",
+      "account_tier": "Platinum",
+      "account_since": "2023-02-17",
+      "last_login": "2025-05-25",
+      "average_balance": "<1k",
+      "rewards_points": "2111",
+      "preferred_channel": "phone",
+      "language_preference": "en",
+      "source_files": [
+        "CUST00154.txt"
+      ]
+    },
+    {
+      "id": "customer_023",
+      "name": "Lucia Diallo",
+      "city": "Henderson, NV",
+      "account_tier": "Silver",
+      "account_since": "2017-03-30",
+      "last_login": "2025-05-06",
+      "average_balance": "10k-50k",
+      "rewards_points": "1917",
+      "preferred_channel": "mobile",
+      "language_preference": "es",
+      "source_files": [
+        "CUST00702.txt"
+      ]
+    },
+    {
+      "id": "customer_024",
+      "name": "Catherine Liu",
+      "city": "Boston, MA",
+      "account_tier": "Silver",
+      "account_since": "2020-09-10",
+      "last_login": "2025-05-18",
+      "average_balance": "<1k",
+      "rewards_points": "25588",
+      "preferred_channel": "phone",
+      "language_preference": "en",
+      "source_files": [
+        "CUST00080.txt"
+      ]
+    },
+    {
+      "id": "customer_025",
+      "name": "River Wong",
+      "city": "Philadelphia, PA",
+      "account_tier": "Silver",
+      "account_since": "2018-07-03",
+      "last_login": "2025-05-30",
+      "average_balance": ">100k",
+      "rewards_points": "21580",
+      "preferred_channel": "phone",
+      "language_preference": "es",
+      "source_files": [
+        "CUST00529.txt"
+      ]
+    },
+    {
+      "id": "customer_026",
+      "name": "Helena Asante",
+      "city": "Austin, TX",
+      "account_tier": "Bronze",
+      "account_since": "2020-02-05",
+      "last_login": "2025-05-11",
+      "average_balance": ">100k",
+      "rewards_points": "40616",
+      "preferred_channel": "phone",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00361.txt"
+      ]
+    },
+    {
+      "id": "customer_027",
+      "name": "Phoenix Mueller",
+      "city": "Indianapolis, IN",
+      "account_tier": "Silver",
+      "account_since": "2023-09-09",
+      "last_login": "2025-05-10",
+      "average_balance": "50k-100k",
+      "rewards_points": "36154",
+      "preferred_channel": "mobile",
+      "language_preference": "es",
+      "source_files": [
+        "CUST00401.txt"
+      ]
+    },
+    {
+      "id": "customer_028",
+      "name": "Kai Al-Rashid",
+      "city": "Omaha, NE",
+      "account_tier": "Platinum",
+      "account_since": "2016-09-23",
+      "last_login": "2025-05-27",
+      "average_balance": "50k-100k",
+      "rewards_points": "49332",
+      "preferred_channel": "phone",
+      "language_preference": "de",
+      "source_files": [
+        "CUST00608.txt"
+      ]
+    },
+    {
+      "id": "customer_029",
+      "name": "Benjamin Parker",
+      "city": "Charlotte, NC",
+      "account_tier": "Silver",
+      "account_since": "2024-10-02",
+      "last_login": "2025-05-23",
+      "average_balance": "50k-100k",
+      "rewards_points": "35628",
+      "preferred_channel": "mobile",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00199.txt"
+      ]
+    },
+    {
+      "id": "customer_030",
+      "name": "Jaxon Abebe",
+      "city": "New Orleans, LA",
+      "account_tier": "Gold",
+      "account_since": "2021-07-22",
+      "last_login": "2025-05-04",
+      "average_balance": "50k-100k",
+      "rewards_points": "15931",
+      "preferred_channel": "mobile",
+      "language_preference": "en",
+      "source_files": [
+        "CUST00484.txt"
+      ]
+    },
+    {
+      "id": "customer_031",
+      "name": "Bianca Fernández",
+      "city": "Tucson, AZ",
+      "account_tier": "Silver",
+      "account_since": "2019-12-05",
+      "last_login": "2025-05-17",
+      "average_balance": ">100k",
+      "rewards_points": "39964",
+      "preferred_channel": "web",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00060.txt"
+      ]
+    },
+    {
+      "id": "customer_032",
+      "name": "Hunter Petrov",
+      "city": "Austin, TX",
+      "account_tier": "Gold",
+      "account_since": "2018-03-24",
+      "last_login": "2025-05-23",
+      "average_balance": "<1k",
+      "rewards_points": "25007",
+      "preferred_channel": "phone",
+      "language_preference": "de",
+      "source_files": [
+        "CUST00375.txt"
+      ]
+    },
+    {
+      "id": "customer_033",
+      "name": "Ivy O'Brien",
+      "city": "Indianapolis, IN",
+      "account_tier": "Silver",
+      "account_since": "2021-06-25",
+      "last_login": "2025-05-16",
+      "average_balance": "1k-10k",
+      "rewards_points": "46670",
+      "preferred_channel": "branch",
+      "language_preference": "de",
+      "source_files": [
+        "CUST00598.txt"
+      ]
+    },
+    {
+      "id": "customer_034",
+      "name": "Finn Sánchez",
+      "city": "Denver, CO",
+      "account_tier": "Gold",
+      "account_since": "2020-03-10",
+      "last_login": "2025-05-06",
+      "average_balance": "1k-10k",
+      "rewards_points": "25752",
+      "preferred_channel": "mobile",
+      "language_preference": "en",
+      "source_files": [
+        "CUST00785.txt"
+      ]
+    },
+    {
+      "id": "customer_035",
+      "name": "Fatima Khalil",
+      "city": "Baltimore, MD",
+      "account_tier": "Platinum",
+      "account_since": "2024-05-31",
+      "last_login": "2025-05-12",
+      "average_balance": ">100k",
+      "rewards_points": "42424",
+      "preferred_channel": "branch",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00321.txt"
+      ]
+    },
+    {
+      "id": "customer_036",
+      "name": "Edward Nielsen",
+      "city": "Mesa, AZ",
+      "account_tier": "Silver",
+      "account_since": "2022-07-18",
+      "last_login": "2025-05-26",
+      "average_balance": "10k-50k",
+      "rewards_points": "47400",
+      "preferred_channel": "mobile",
+      "language_preference": "de",
+      "source_files": [
+        "CUST00148.txt"
+      ]
+    },
+    {
+      "id": "customer_037",
+      "name": "Diana Ferrari",
+      "city": "Raleigh, NC",
+      "account_tier": "Silver",
+      "account_since": "2015-04-30",
+      "last_login": "2025-05-27",
+      "average_balance": "1k-10k",
+      "rewards_points": "12715",
+      "preferred_channel": "branch",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00562.txt"
+      ]
+    },
+    {
+      "id": "customer_038",
+      "name": "Leonardo Kennedy",
+      "city": "Pittsburgh, PA",
+      "account_tier": "Gold",
+      "account_since": "2017-05-28",
+      "last_login": "2025-05-20",
+      "average_balance": "10k-50k",
+      "rewards_points": "45480",
+      "preferred_channel": "phone",
+      "language_preference": "es",
+      "source_files": [
+        "CUST00095.txt"
+      ]
+    },
+    {
+      "id": "customer_039",
+      "name": "Omar Hassan",
+      "city": "Fort Worth, TX",
+      "account_tier": "Gold",
+      "account_since": "2019-03-07",
+      "last_login": "2025-05-26",
+      "average_balance": "1k-10k",
+      "rewards_points": "36462",
+      "preferred_channel": "mobile",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00037.txt"
+      ]
+    },
+    {
+      "id": "customer_040",
+      "name": "Sienna Lewis",
+      "city": "Indianapolis, IN",
+      "account_tier": "Bronze",
+      "account_since": "2024-02-01",
+      "last_login": "2025-05-11",
+      "average_balance": "1k-10k",
+      "rewards_points": "46973",
+      "preferred_channel": "web",
+      "language_preference": "es",
+      "source_files": [
+        "CUST00979.txt"
+      ]
+    },
+    {
+      "id": "customer_041",
+      "name": "Damon Rivera",
+      "city": "Saint Paul, MN",
+      "account_tier": "Bronze",
+      "account_since": "2017-06-16",
+      "last_login": "2025-05-01",
+      "average_balance": "10k-50k",
+      "rewards_points": "3839",
+      "preferred_channel": "phone",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00276.txt"
+      ]
+    },
+    {
+      "id": "customer_042",
+      "name": "Chloe Mansour",
+      "city": "Tampa, FL",
+      "account_tier": "Gold",
+      "account_since": "2016-02-19",
+      "last_login": "2025-05-17",
+      "average_balance": ">100k",
+      "rewards_points": "48407",
+      "preferred_channel": "mobile",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00066.txt"
+      ]
+    },
+    {
+      "id": "customer_043",
+      "name": "Blake Garcia",
+      "city": "Santa Ana, CA",
+      "account_tier": "Silver",
+      "account_since": "2017-10-13",
+      "last_login": "2025-05-18",
+      "average_balance": ">100k",
+      "rewards_points": "39322",
+      "preferred_channel": "branch",
+      "language_preference": "en",
+      "source_files": [
+        "CUST00239.txt"
+      ]
+    },
+    {
+      "id": "customer_044",
+      "name": "Alexander Adebayo",
+      "city": "Baltimore, MD",
+      "account_tier": "Bronze",
+      "account_since": "2019-02-18",
+      "last_login": "2025-05-22",
+      "average_balance": "10k-50k",
+      "rewards_points": "38309",
+      "preferred_channel": "phone",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00019.txt"
+      ]
+    },
+    {
+      "id": "customer_045",
+      "name": "Grace Harris",
+      "city": "San Antonio, TX",
+      "account_tier": "Gold",
+      "account_since": "2016-05-03",
+      "last_login": "2025-05-13",
+      "average_balance": "<1k",
+      "rewards_points": "28082",
+      "preferred_channel": "branch",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00378.txt"
+      ]
+    },
+    {
+      "id": "customer_046",
+      "name": "Theodora Nakamura",
+      "city": "Dallas, TX",
+      "account_tier": "Silver",
+      "account_since": "2018-06-06",
+      "last_login": "2025-05-23",
+      "average_balance": ">100k",
+      "rewards_points": "9987",
+      "preferred_channel": "branch",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00399.txt"
+      ]
+    },
+    {
+      "id": "customer_047",
+      "name": "Devon Singh",
+      "city": "Denver, CO",
+      "account_tier": "Diamond",
+      "account_since": "2019-07-01",
+      "last_login": "2025-05-03",
+      "average_balance": "50k-100k",
+      "rewards_points": "18501",
+      "preferred_channel": "branch",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00255.txt"
+      ]
+    },
+    {
+      "id": "customer_048",
+      "name": "Kenji Mensah",
+      "city": "Lexington, KY",
+      "account_tier": "Bronze",
+      "account_since": "2017-05-27",
+      "last_login": "2025-05-11",
+      "average_balance": "50k-100k",
+      "rewards_points": "12583",
+      "preferred_channel": "web",
+      "language_preference": "es",
+      "source_files": [
+        "CUST00065.txt"
+      ]
+    },
+    {
+      "id": "customer_049",
+      "name": "Mateo López",
+      "city": "Virginia Beach, VA",
+      "account_tier": "Gold",
+      "account_since": "2015-02-20",
+      "last_login": "2025-05-08",
+      "average_balance": "<1k",
+      "rewards_points": "30917",
+      "preferred_channel": "branch",
+      "language_preference": "de",
+      "source_files": [
+        "CUST00252.txt"
+      ]
+    },
+    {
+      "id": "customer_050",
+      "name": "Eva Bergmann",
+      "city": "Kansas City, MO",
+      "account_tier": "Bronze",
+      "account_since": "2024-01-15",
+      "last_login": "2025-05-04",
+      "average_balance": "<1k",
+      "rewards_points": "20535",
+      "preferred_channel": "branch",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00235.txt"
+      ]
+    },
+    {
+      "id": "customer_051",
+      "name": "Jonathan Díaz",
+      "city": "Boston, MA",
+      "account_tier": "Silver",
+      "account_since": "2016-12-25",
+      "last_login": "2025-05-11",
+      "average_balance": "<1k",
+      "rewards_points": "308",
+      "preferred_channel": "phone",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00332.txt"
+      ]
+    },
+    {
+      "id": "customer_052",
+      "name": "Brandon Klein",
+      "city": "Atlanta, GA",
+      "account_tier": "Gold",
+      "account_since": "2017-12-29",
+      "last_login": "2025-05-27",
+      "average_balance": "10k-50k",
+      "rewards_points": "42339",
+      "preferred_channel": "web",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00735.txt"
+      ]
+    },
+    {
+      "id": "customer_053",
+      "name": "Patrick Schmidt",
+      "city": "Houston, TX",
+      "account_tier": "Bronze",
+      "account_since": "2016-04-06",
+      "last_login": "2025-05-11",
+      "average_balance": "1k-10k",
+      "rewards_points": "47914",
+      "preferred_channel": "phone",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00138.txt"
+      ]
+    },
+    {
+      "id": "customer_054",
+      "name": "Meredith Okafor",
+      "city": "Baltimore, MD",
+      "account_tier": "Silver",
+      "account_since": "2024-09-01",
+      "last_login": "2025-05-07",
+      "average_balance": ">100k",
+      "rewards_points": "31030",
+      "preferred_channel": "phone",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00653.txt"
+      ]
+    },
+    {
+      "id": "customer_055",
+      "name": "Ophelia Morales",
+      "city": "Raleigh, NC",
+      "account_tier": "Silver",
+      "account_since": "2023-05-26",
+      "last_login": "2025-05-31",
+      "average_balance": "10k-50k",
+      "rewards_points": "2455",
+      "preferred_channel": "mobile",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00136.txt"
+      ]
+    },
+    {
+      "id": "customer_056",
+      "name": "Isabella Rahman",
+      "city": "Oklahoma City, OK",
+      "account_tier": "Platinum",
+      "account_since": "2022-07-28",
+      "last_login": "2025-05-04",
+      "average_balance": "1k-10k",
+      "rewards_points": "36353",
+      "preferred_channel": "web",
+      "language_preference": "fr",
+      "source_files": [
+        "CUST00844.txt"
+      ]
+    },
+    {
+      "id": "customer_057",
+      "name": "Nicholas Kone",
+      "city": "Tucson, AZ",
+      "account_tier": "Gold",
+      "account_since": "2015-07-15",
+      "last_login": "2025-05-13",
+      "average_balance": "<1k",
+      "rewards_points": "45255",
+      "preferred_channel": "web",
+      "language_preference": "en",
+      "source_files": [
+        "CUST00456.txt"
+      ]
+    },
+    {
+      "id": "customer_058",
+      "name": "Olivia Patel",
+      "city": "Charlotte, NC",
+      "account_tier": "Bronze",
+      "account_since": "2017-10-29",
+      "last_login": "2025-05-07",
+      "average_balance": "50k-100k",
+      "rewards_points": "19801",
+      "preferred_channel": "phone",
+      "language_preference": "en",
+      "source_files": [
+        "CUST00320.txt"
+      ]
+    },
+    {
+      "id": "customer_059",
+      "name": "Rhiannon Rodríguez",
+      "city": "Riverside, CA",
+      "account_tier": "Bronze",
+      "account_since": "2023-05-23",
+      "last_login": "2025-05-05",
+      "average_balance": "50k-100k",
+      "rewards_points": "40375",
+      "preferred_channel": "phone",
+      "language_preference": "es",
+      "source_files": [
+        "CUST00237.txt"
+      ]
+    },
+    {
+      "id": "customer_060",
+      "name": "Esperanza Edwards",
+      "city": "Indianapolis, IN",
+      "account_tier": "Bronze",
+      "account_since": "2016-05-30",
+      "last_login": "2025-05-26",
+      "average_balance": ">100k",
+      "rewards_points": "13448",
+      "preferred_channel": "mobile",
+      "language_preference": "es",
+      "source_files": [
+        "CUST00026.txt"
+      ]
+    },
+    {
+      "id": "customer_061",
+      "name": "Hiroshi Yamamoto",
+      "city": "Tampa, FL",
+      "account_tier": "Bronze",
+      "account_since": "2022-02-26",
+      "last_login": "2025-05-31",
+      "average_balance": "10k-50k",
+      "rewards_points": "1089",
+      "preferred_channel": "branch",
+      "language_preference": "en",
+      "source_files": [
+        "CUST00964.txt"
+      ]
+    },
+    {
+      "id": "customer_062",
+      "name": "Priya Lee",
+      "city": "Albuquerque, NM",
+      "account_tier": "Bronze",
+      "account_since": "2017-03-27",
+      "last_login": "2025-05-21",
+      "average_balance": ">100k",
+      "rewards_points": "16328",
+      "preferred_channel": "mobile",
+      "language_preference": "de",
+      "source_files": [
+        "CUST00274.txt"
+      ]
+    },
+    {
+      "id": "customer_063",
+      "name": "Nadia Brown",
+      "city": "Bakersfield, CA",
+      "account_tier": "Gold",
+      "account_since": "2015-01-22",
+      "last_login": "2025-05-31",
+      "average_balance": ">100k",
+      "rewards_points": "10350",
+      "preferred_channel": "phone",
+      "language_preference": "de",
+      "source_files": [
+        "CUST00133.txt"
+      ]
+    },
+    {
+      "id": "customer_064",
+      "name": "Dmitri Wanjiku",
+      "city": "Lexington, KY",
+      "account_tier": "Silver",
+      "account_since": "2024-05-15",
+      "last_login": "2025-05-03",
+      "average_balance": ">100k",
+      "rewards_points": "16487",
+      "preferred_channel": "phone",
+      "language_preference": "es",
+      "source_files": [
+        "CUST00411.txt"
+      ]
+    },
+    {
+      "id": "customer_065",
+      "name": "Ingrid Zhou",
+      "city": "Jacksonville, FL",
+      "account_tier": "Diamond",
+      "account_since": "2022-08-06",
+      "last_login": "2025-05-21",
+      "average_balance": "50k-100k",
+      "rewards_points": "49327",
+      "preferred_channel": "branch",
+      "language_preference": "de",
+      "source_files": [
+        "CUST00201.txt"
+      ]
+    },
+    {
+      "id": "customer_066",
+      "name": "Carmen Kim",
+      "city": "Seattle, WA",
+      "account_tier": "Bronze",
+      "account_since": "2020-03-03",
+      "last_login": "2025-05-29",
+      "average_balance": "1k-10k",
+      "rewards_points": "23421",
+      "preferred_channel": "web",
+      "language_preference": "en",
+      "source_files": [
+        "CUST00691.txt"
+      ]
+    },
+    {
+      "id": "customer_067",
+      "name": "Rosa Dubois",
+      "city": "Santa Ana, CA",
+      "account_tier": "Bronze",
+      "account_since": "2020-09-22",
+      "last_login": "2025-05-24",
+      "average_balance": ">100k",
+      "rewards_points": "36568",
+      "preferred_channel": "web",
+      "language_preference": "de",
+      "source_files": [
+        "CUST00202.txt"
+      ]
+    },
+    {
+      "id": "customer_068",
+      "name": "Margaret Nkomo",
+      "city": "Wichita, KS",
+      "account_tier": "Platinum",
+      "account_since": "2023-06-23",
+      "last_login": "2025-05-04",
+      "average_balance": "<1k",
+      "rewards_points": "40014",
+      "preferred_channel": "mobile",
+      "language_preference": "en",
+      "source_files": [
+        "CUST00805.txt"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+ticker,company_name,sector,dividend_yield,dividend_growth,payment_frequency,payout_ratio
+JNJ,Johnson & Johnson,Healthcare,3.2%,6.5%,Quarterly,43%
+PG,Procter & Gamble,Consumer Staples,2.4%,5.8%,Quarterly,58%
+KO,Coca-Cola,Consumer Staples,3.1%,3.2%,Quarterly,70%
+PEP,PepsiCo,Consumer Staples,2.8%,7.1%,Quarterly,65%
+WMT,Walmart,Consumer Staples,1.4%,1.9%,Quarterly,35%
+HD,Home Depot,Consumer Discretionary,2.3%,15.8%,Quarterly,45%
+MCD,McDonald's,Consumer Discretionary,2.2%,8.9%,Quarterly,55%
+DIS,Walt Disney,Communication Services,0.3%,0.0%,Semi-Annual,15%
+T,AT&T,Communication Services,6.8%,1.2%,Quarterly,45%
+VZ,Verizon,Communication Services,7.2%,2.1%,Quarterly,50%
+XOM,Exxon Mobil,Energy,3.8%,3.4%,Quarterly,35%
+CVX,Chevron,Energy,4.1%,6.2%,Quarterly,40%
+JPM,JPMorgan Chase,Financial Services,2.8%,10.5%,Quarterly,30%
+BAC,Bank of America,Financial Services,3.1%,8.7%,Quarterly,25%
+WFC,Wells Fargo,Financial Services,3.4%,12.3%,Quarterly,30%
+MSFT,Microsoft,Technology,0.8%,10.2%,Quarterly,25%
+AAPL,Apple,Technology,0.5%,5.8%,Quarterly,15%
+IBM,IBM,Technology,4.2%,0.8%,Quarterly,70%
+INTC,Intel,Technology,1.6%,5.2%,Quarterly,40%
+CSCO,Cisco Systems,Technology,3.1%,6.8%,Quarterly,45%
