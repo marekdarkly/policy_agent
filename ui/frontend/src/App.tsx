@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
 import './App.css';
 
 interface Message {
@@ -322,7 +323,7 @@ function App() {
         <div className="initial-message">
           <img src="/assets/ToggleAvatar.png" alt="" className="message-avatar" />
           <div className="message message-assistant">
-            Hello! I'm your ToggleHealth assistant. How can I help you today?
+            <ReactMarkdown>Hello! I'm your ToggleHealth assistant. How can I help you today?</ReactMarkdown>
           </div>
         </div>
 
@@ -339,8 +340,8 @@ function App() {
             return (
               <div key={message.id} className="message-row">
                 <img src="/assets/ToggleAvatar.png" alt="" className="message-avatar" />
-                <div className="message message-assistant">
-                  {message.content}
+                <div className="message message-assistant markdown-content">
+                  <ReactMarkdown>{message.content}</ReactMarkdown>
                 </div>
               </div>
             );
