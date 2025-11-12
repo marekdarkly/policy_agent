@@ -485,15 +485,20 @@ class ModelInvoker:
                 
                 current_span = trace.get_current_span()
                 
-                # Check if we have a valid, recording span
-                # Background threads may get a reference to a closed span - skip annotation in that case
-                if current_span and current_span.is_recording() and self.config_key:
+                # Only try to annotate if we have a span and config_key
+                # Each operation is wrapped individually because span can end between operations
+                if current_span and self.config_key:
+                    # Operation 1: Set attribute (can fail if span ends)
                     try:
-                        # Set the AI Config key for this specific agent
                         current_span.set_attribute("ld.ai_config.key", self.config_key)
-                        
-                        # Add feature_flag event
-                        if self.user_context:
+                    except Exception as e:
+                        if "ended span" not in str(e).lower():
+                            import logging
+                            logging.warning(f"Failed to set attribute on span: {e}")
+                    
+                    # Operation 2: Add event (can fail if span ends)
+                    if self.user_context:
+                        try:
                             ctx_dict = self.user_context.to_dict() if hasattr(self.user_context, 'to_dict') else {}
                             ctx_id = ctx_dict.get('key') or ctx_dict.get('userKey') or 'anonymous'
                             
@@ -506,20 +511,18 @@ class ModelInvoker:
                                     "feature_flag.result.value": True,
                                 },
                             )
-                        
-                        # Trigger LD variation for correlation
-                        if self.user_context:
-                            try:
-                                _ = ldclient.get().variation(self.config_key, self.user_context, True)
-                            except Exception:
-                                pass
-                                
-                    except Exception as e:
-                        # Silently ignore "ended span" errors (background threads with closed spans)
-                        # But log other errors for debugging
-                        if "ended span" not in str(e).lower():
-                            import logging
-                            logging.warning(f"Failed to annotate span for {self.config_key}: {e}")
+                        except Exception as e:
+                            # Silently ignore "ended span" errors
+                            if "ended span" not in str(e).lower():
+                                import logging
+                                logging.warning(f"Failed to add event to span: {e}")
+                    
+                    # Operation 3: LD variation (independent, shouldn't fail)
+                    if self.user_context:
+                        try:
+                            _ = ldclient.get().variation(self.config_key, self.user_context, True)
+                        except Exception:
+                            pass  # Safe to ignore
                             
             except Exception:
                 pass  # Don't fail model invocation if span annotation fails entirely
