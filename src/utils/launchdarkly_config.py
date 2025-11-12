@@ -491,8 +491,10 @@ class ModelInvoker:
                     # Wrap each operation separately to handle race conditions
                     try:
                         current_span.set_attribute("ld.ai_config.key", self.config_key)
-                    except Exception:
-                        pass  # Span may have ended between is_recording() check and this operation
+                    except Exception as e:
+                        # Only catch specific "ended span" errors, not all exceptions
+                        if "ended span" not in str(e).lower():
+                            raise  # Re-raise if it's not the expected race condition
                     
                     # Add feature_flag event
                     if self.user_context:
@@ -511,15 +513,17 @@ class ModelInvoker:
                                         "feature_flag.result.value": True,
                                     },
                                 )
-                        except Exception:
-                            pass  # Silently ignore if span ended
+                        except Exception as e:
+                            # Only catch specific "ended span" errors
+                            if "ended span" not in str(e).lower():
+                                raise
                     
                     # Trigger LD variation for correlation (independent of span state)
                     if self.user_context:
                         try:
                             _ = ldclient.get().variation(self.config_key, self.user_context, True)
                         except Exception:
-                            pass
+                            pass  # This one is safe to ignore
                             
             except Exception:
                 pass  # Don't fail if span annotation fails
