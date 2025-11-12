@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import Terminal from './Terminal';
 import './App.css';
 
 interface Message {
@@ -247,8 +248,11 @@ function App() {
 
   return (
     <>
+      {/* Terminal on the left */}
+      <Terminal />
+      
       {/* Background Images */}
-      <div className="homepage-background">
+      <div className="homepage-background terminal-offset">
         <img
           src="/health/backgrounds/health-homepage-background-left.svg"
           alt=""
@@ -262,7 +266,7 @@ function App() {
       </div>
 
       {/* Main Page Content */}
-      <div className="homepage-wrapper">
+      <div className="homepage-wrapper terminal-offset">
         {/* Navigation Header */}
         <nav className="health-nav">
           <img

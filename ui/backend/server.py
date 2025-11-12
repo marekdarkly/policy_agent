@@ -12,8 +12,12 @@ from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import uvicorn
+import queue
+import json
+from datetime import datetime
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -28,6 +32,66 @@ logger = logging.getLogger(__name__)
 
 # Global store for evaluation results (populated by evaluation module)
 EVALUATION_RESULTS: Dict[str, Dict[str, Any]] = {}
+
+# Global log broadcaster for SSE
+LOG_QUEUES: list[queue.Queue] = []
+
+def broadcast_log(log_entry: Dict[str, Any]):
+    """Broadcast a log entry to all connected SSE clients."""
+    # Remove disconnected queues
+    disconnected = []
+    for q in LOG_QUEUES:
+        try:
+            q.put_nowait(log_entry)
+        except queue.Full:
+            disconnected.append(q)
+    
+    for q in disconnected:
+        LOG_QUEUES.remove(q)
+
+# Custom logging handler to capture logs for SSE
+class SSELogHandler(logging.Handler):
+    """Custom handler that broadcasts logs to SSE clients."""
+    
+    def emit(self, record):
+        try:
+            log_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "level": record.levelname,
+                "message": self.format(record),
+                "name": record.name
+            }
+            broadcast_log(log_entry)
+        except Exception:
+            pass  # Don't let logging errors break the app
+
+# Add SSE handler to root logger
+sse_handler = SSELogHandler()
+sse_handler.setLevel(logging.INFO)
+sse_handler.setFormatter(logging.Formatter('%(message)s'))
+logging.getLogger().addHandler(sse_handler)
+
+# Intercept print statements to also broadcast them
+_original_print = print
+def custom_print(*args, **kwargs):
+    """Custom print that also broadcasts to SSE clients."""
+    # Call original print
+    _original_print(*args, **kwargs)
+    
+    # Broadcast to SSE
+    message = ' '.join(str(arg) for arg in args)
+    if message.strip():  # Only broadcast non-empty messages
+        log_entry = {
+            "timestamp": datetime.now().isoformat(),
+            "level": "PRINT",
+            "message": message,
+            "name": "system"
+        }
+        broadcast_log(log_entry)
+
+# Replace built-in print
+import builtins
+builtins.print = custom_print
 
 app = FastAPI(title="ToggleHealth Multi-Agent Assistant")
 
@@ -241,6 +305,59 @@ async def get_evaluation(request_id: str):
             "ready": False,
             "message": "Evaluation still processing or not found"
         }
+
+
+@app.get("/api/logs/stream")
+async def stream_logs():
+    """
+    Server-Sent Events endpoint for streaming logs to the frontend.
+    Keeps connection open and sends log entries as they occur.
+    """
+    async def event_generator():
+        # Create a queue for this client
+        log_queue = queue.Queue(maxsize=1000)
+        LOG_QUEUES.append(log_queue)
+        
+        try:
+            # Send initial connection message
+            init_message = {
+                "timestamp": datetime.now().isoformat(),
+                "level": "INFO",
+                "message": "🔌 Connected to log stream",
+                "name": "sse"
+            }
+            yield f"data: {json.dumps(init_message)}\n\n"
+            
+            # Stream logs as they come in
+            while True:
+                try:
+                    # Wait for new log with timeout
+                    log_entry = log_queue.get(timeout=30)
+                    yield f"data: {json.dumps(log_entry)}\n\n"
+                except queue.Empty:
+                    # Send heartbeat to keep connection alive
+                    heartbeat = {
+                        "timestamp": datetime.now().isoformat(),
+                        "level": "HEARTBEAT",
+                        "message": "",
+                        "name": "sse"
+                    }
+                    yield f"data: {json.dumps(heartbeat)}\n\n"
+        except asyncio.CancelledError:
+            # Client disconnected
+            if log_queue in LOG_QUEUES:
+                LOG_QUEUES.remove(log_queue)
+            raise
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"  # Disable nginx buffering
+        }
+    )
 
 
 if __name__ == "__main__":

@@ -18,6 +18,12 @@ body {
   overflow-x: hidden;
 }
 
+/* ====== TERMINAL OFFSET ====== */
+.terminal-offset {
+  margin-left: 400px;
+  transition: margin-left 0.3s ease;
+}
+
 /* ====== HOMEPAGE BACKGROUND ====== */
 .homepage-background {
   position: fixed;
