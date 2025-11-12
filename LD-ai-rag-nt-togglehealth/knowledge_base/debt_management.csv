@@ -1,0 +1,16 @@
+debt_type,interest_rate,priority_level,repayment_strategy,impact_on_credit,notes
+Credit Card,15-25%,Very High,Avalanche method (highest rate first),High,Pay minimum on all, extra on highest rate
+Payday Loan,300-400%,Very High,Pay off immediately,Very High,Avoid at all costs, seek alternatives
+Personal Loan,6-15%,High,Snowball or avalanche method,Medium,Consider consolidation if rates are high
+Auto Loan,3-8%,Medium,Pay as agreed,Medium,Refinance if rates drop significantly
+Student Loan Federal,3-7%,Medium,Income-based repayment,Low,Consider forgiveness programs
+Student Loan Private,5-12%,High,Pay off aggressively,Medium,Refinance if possible
+Home Equity Loan,4-8%,Medium,Pay as agreed,Medium,Use for home improvements only
+HELOC,4-8%,Medium,Pay off variable portion,Medium,Variable rates can increase
+Mortgage,3-6%,Low,Pay as agreed,Low,Consider refinancing if rates drop 1%+
+Medical Debt,0-25%,Medium,Negotiate payment plans,Medium,Many providers offer 0% interest
+Tax Debt,5-25%,High,Payment plan with IRS,High,IRS offers reasonable payment plans
+Business Loan,6-15%,High,Pay as agreed,Medium,Keep business and personal separate
+Margin Loan,8-12%,Very High,Pay off immediately,High,Can force stock sales
+Payday Alternative Loan,28%,Very High,Pay off immediately,High,Better than payday but still expensive
+Title Loan,25-300%,Very High,Pay off immediately,Very High,Can lose your vehicle

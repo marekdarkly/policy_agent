@@ -1,0 +1,9 @@
+How do I set up balance alerts?
+
+1. Save preferences; alerts are sent in real time when the threshold is crossed.
+2. Go to Settings ▸ Alerts ▸ Balance.
+3. Select delivery method: push notification, SMS, or email.
+4. Choose threshold type: fixed dollar amount or percentage of average balance.
+5. Multiple alerts can be set for different thresholds and accounts.
+6. Alerts help prevent overdrafts and monitor unusual account activity.
+If you need further assistance, contact ToggleSupport via chat 24/7 or call 1‑800‑TOGGLE.

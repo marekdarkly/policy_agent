@@ -1,0 +1,36 @@
+dsm5_disorder,criterion_code,diagnostic_criteria,severity_scale,crisis_implication
+major_depressive_disorder,296.21,Depressed mood most of day nearly every day,1_10_scale,suicide_risk_assessment
+major_depressive_disorder,296.22,Markedly diminished interest in activities,1_10_scale,functional_impairment
+major_depressive_disorder,296.23,Sleep disturbance nearly every day,1_10_scale,stability_indicator
+major_depressive_disorder,296.24,Psychomotor agitation or retardation,1_10_scale,behavioral_monitoring
+major_depressive_disorder,296.25,Fatigue or loss of energy nearly every day,1_10_scale,self_care_assessment
+bipolar_disorder,296.41,Manic episode with elevated mood,1_10_scale,psychiatric_evaluation
+bipolar_disorder,296.42,Decreased need for sleep during manic episode,1_10_scale,behavioral_monitoring
+bipolar_disorder,296.43,More talkative than usual during mania,1_10_scale,communication_assessment
+bipolar_disorder,296.44,Racing thoughts during manic episode,1_10_scale,cognitive_functioning
+bipolar_disorder,296.45,Excessive involvement in pleasurable activities,1_10_scale,risk_behavior_assessment
+generalized_anxiety_disorder,300.02,Excessive anxiety and worry,1_10_scale,anxiety_management
+generalized_anxiety_disorder,300.03,Difficulty controlling worry,1_10_scale,coping_skill_assessment
+generalized_anxiety_disorder,300.04,Restlessness or feeling keyed up,1_10_scale,physical_symptoms
+generalized_anxiety_disorder,300.05,Easily fatigued,1_10_scale,functional_impairment
+generalized_anxiety_disorder,300.06,Difficulty concentrating,1_10_scale,cognitive_functioning
+post_traumatic_stress_disorder,309.81,Intrusion symptoms,1_10_scale,trauma_assessment
+post_traumatic_stress_disorder,309.82,Avoidance of trauma reminders,1_10_scale,triggers_identification
+post_traumatic_stress_disorder,309.83,Negative alterations in cognition,1_10_scale,belief_systems
+post_traumatic_stress_disorder,309.84,Arousal and reactivity changes,1_10_scale,hypervigilance_assessment
+post_traumatic_stress_disorder,309.85,Duration more than one month,1_10_scale,chronicity_assessment
+substance_use_disorder,304.10,Impaired control over substance use,1_10_scale,addiction_severity
+substance_use_disorder,304.11,Social impairment due to substance use,1_10_scale,relationship_impact
+substance_use_disorder,304.12,Risky use of substances,1_10_scale,safety_assessment
+substance_use_disorder,304.13,Pharmacological criteria,1_10_scale,withdrawal_risk
+substance_use_disorder,304.14,Tolerance development,1_10_scale,addiction_progression
+borderline_personality_disorder,301.83,Emotional instability,1_10_scale,emotional_regulation
+borderline_personality_disorder,301.84,Unstable relationships,1_10_scale,interpersonal_crisis
+borderline_personality_disorder,301.85,Identity disturbance,1_10_scale,self_concept_assessment
+borderline_personality_disorder,301.86,Impulsivity in damaging areas,1_10_scale,risk_behavior_monitoring
+borderline_personality_disorder,301.87,Recurrent suicidal behavior,1_10_scale,suicide_risk_management
+schizophrenia,295.90,Delusions,1_10_scale,reality_testing_assessment
+schizophrenia,295.91,Hallucinations,1_10_scale,perceptual_disturbance
+schizophrenia,295.92,Disorganized speech,1_10_scale,communication_assessment
+schizophrenia,295.93,Grossly disorganized behavior,1_10_scale,behavioral_monitoring
+schizophrenia,295.94,Negative symptoms,1_10_scale,functional_impairment

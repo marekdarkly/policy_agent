@@ -1,0 +1,11 @@
+risk_level,description,stock_allocation,bond_allocation,cash_allocation,volatility_tolerance,time_horizon
+Conservative,Preserve capital,20,60,20,Low,Short-term
+Moderate Conservative,Balance growth and safety,40,50,10,Low-Medium,Medium-term
+Moderate,Seek growth with some risk,60,35,5,Medium,Medium-long term
+Moderate Aggressive,Growth with moderate risk,75,20,5,Medium-High,Long-term
+Aggressive,Maximum growth potential,90,5,5,High,Long-term
+Very Aggressive,Speculative growth,95,0,5,Very High,Very long-term
+Conservative_Income,Focus on dividend income,30,65,5,Low,Retirement
+Growth_Income,Balance growth and income,50,45,5,Medium,Pre-retirement
+Capital_Preservation,Protect against inflation,25,70,5,Low,Near retirement
+Speculative,High risk for high returns,100,0,0,Very High,Speculative

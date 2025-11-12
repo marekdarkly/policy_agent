@@ -1,0 +1,16 @@
+situation,recommended_amount,time_to_build,where_to_keep,priority_level,notes
+Single, no dependents,3-6 months expenses,6-12 months,High-yield savings,High,Focus on building before investing
+Married, dual income,3-6 months expenses,6-12 months,High-yield savings,High,Consider both incomes
+Single parent,6-12 months expenses,12-24 months,High-yield savings,Very High,More cushion needed
+Self-employed,6-12 months expenses,12-24 months,High-yield savings,Very High,Variable income requires more
+Near retirement,6-12 months expenses,12-24 months,High-yield savings,Very High,Protect retirement savings
+High debt,3 months minimum,3-6 months,High-yield savings,Very High,Pay debt after emergency fund
+Low debt, 3-6 months expenses,6-12 months,High-yield savings,High,Good foundation for investing
+Homeowner,6-12 months expenses,12-24 months,High-yield savings,Very High,Home repairs can be expensive
+Renter,3-6 months expenses,6-12 months,High-yield savings,High,Lower housing costs
+Student,1-3 months expenses,3-6 months,High-yield savings,Medium,Lower expenses, focus on debt
+Recent graduate,3-6 months expenses,6-12 months,High-yield savings,High,Starting career, build foundation
+Job transition,6-12 months expenses,12-24 months,High-yield savings,Very High,Uncertainty requires more cushion
+Health issues,6-12 months expenses,12-24 months,High-yield savings,Very High,Medical expenses can be high
+Business owner,6-12 months expenses,12-24 months,High-yield savings,Very High,Business and personal expenses
+High cost of living,6-12 months expenses,12-24 months,High-yield savings,Very High,More expensive emergencies

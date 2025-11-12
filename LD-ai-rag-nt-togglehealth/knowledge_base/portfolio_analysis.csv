@@ -1,0 +1,16 @@
+metric,description,calculation,good_range,what_it_means
+Sharpe Ratio,Risk-adjusted returns,(Return - Risk Free Rate) / Standard Deviation,1.0+,Higher is better
+Beta,Market sensitivity,Stock volatility / Market volatility,0.5-1.5,1.0 = market average
+Alpha,Excess return vs market,Actual return - Expected return,Positive,Positive = outperformance
+Standard Deviation,Price volatility,Square root of variance,10-25%,Lower = less volatile
+R-Squared,Correlation with market,0-100%,70%+,Higher = more market-driven
+Treynor Ratio,Risk-adjusted return using beta,(Return - Risk Free Rate) / Beta,Positive,Higher is better
+Information Ratio,Active return per unit of risk,Active return / Tracking error,0.5+,Higher is better
+Sortino Ratio,Downside risk-adjusted return,(Return - Risk Free Rate) / Downside deviation,1.0+,Higher is better
+Maximum Drawdown,Largest peak-to-trough decline,Peak value - Trough value,<20%,Lower is better
+Calmar Ratio,Return per unit of drawdown,Annual return / Maximum drawdown,1.0+,Higher is better
+Tracking Error,Deviation from benchmark,Standard deviation of excess returns,2-8%,Lower = closer to benchmark
+Jensen's Alpha,Excess return adjusted for risk,Actual return - CAPM expected return,Positive,Positive = skill
+Modigliani Ratio,Risk-adjusted return in market terms,(Portfolio return - Risk free) * (Market risk / Portfolio risk),Positive,Higher is better
+Upside Capture,Performance in up markets,Portfolio return / Market return when market up,>100%,Higher = better in bull markets
+Downside Capture,Performance in down markets,Portfolio return / Market return when market down,<100%,Lower = better in bear markets
