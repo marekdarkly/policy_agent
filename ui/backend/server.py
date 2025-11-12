@@ -51,8 +51,83 @@ POLLING_LOGGED: set = set()
 # Global log broadcaster for SSE
 LOG_QUEUES: list[queue.Queue] = []
 
+def should_broadcast_log(message: str, level: str) -> bool:
+    """Filter logs to only broadcast important events to the UI terminal.
+    
+    SHOW:
+    - RAG operations (retrieval, results)
+    - Agent lifecycle (starting, completion)
+    - User queries and responses
+    - Errors and warnings
+    - Evaluation results
+    
+    HIDE:
+    - AWS token loading/caching
+    - Model caching
+    - LaunchDarkly config retrieval (routine)
+    - Instrumentation setup
+    - HTTP request logging
+    """
+    # Always show errors and warnings
+    if level in ["ERROR", "WARNING", "CRITICAL"]:
+        return True
+    
+    message_lower = message.lower()
+    
+    # HIDE: Noise we don't want
+    hide_patterns = [
+        "loading cached sso token",
+        "bedrock client cached",
+        "aws credentials valid",
+        "retrieved ai config",
+        "✅ set ld.ai_config.key",
+        "✅ added feature_flag event",
+        "✅ triggered ld variation",
+        "instrumentation",
+        "http request:",
+        "waiting for application",
+        "started server process",
+        "application startup complete",
+    ]
+    
+    for pattern in hide_patterns:
+        if pattern in message_lower:
+            return False
+    
+    # SHOW: Important events
+    show_patterns = [
+        "🔍",  # RAG retrieval
+        "📚",  # RAG documents
+        "📄",  # Document results
+        "retrieved",  # RAG retrieval
+        "rag documents",
+        "retrieving",
+        "chat request:",
+        "response generated:",
+        "policy specialist:",
+        "provider specialist:",
+        "scheduler specialist:",
+        "triage",
+        "brand voice",
+        "evaluation",
+        "accuracy:",
+        "coherence:",
+        "g-eval",
+    ]
+    
+    for pattern in show_patterns:
+        if pattern in message_lower:
+            return True
+    
+    # Default: hide routine INFO logs, show everything else
+    return level != "INFO"
+
 def broadcast_log(log_entry: Dict[str, Any]):
-    """Broadcast a log entry to all connected SSE clients."""
+    """Broadcast a log entry to all connected SSE clients (with filtering)."""
+    # Filter logs before broadcasting
+    if not should_broadcast_log(log_entry.get("message", ""), log_entry.get("level", "")):
+        return
+    
     # Remove disconnected queues
     disconnected = []
     for q in LOG_QUEUES:
