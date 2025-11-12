@@ -78,15 +78,39 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                     rag_documents = rag_docs
                     break
         
-        asyncio.create_task(
-            evaluate_brand_voice_async(
-                original_query=original_query,
-                rag_documents=rag_documents,
-                brand_voice_output=final_response,
-                user_context=user_context,
-                brand_tracker=model_invoker.tracker
+        # Handle both sync and async contexts
+        try:
+            # Try to get the current event loop
+            loop = asyncio.get_running_loop()
+            # If we have a running loop, use create_task
+            asyncio.create_task(
+                evaluate_brand_voice_async(
+                    original_query=original_query,
+                    rag_documents=rag_documents,
+                    brand_voice_output=final_response,
+                    user_context=user_context,
+                    brand_tracker=model_invoker.tracker
+                )
             )
-        )
+        except RuntimeError:
+            # No running loop - we're in a sync context
+            # Run evaluation in a background thread to avoid blocking
+            import threading
+            
+            def run_eval_in_thread():
+                asyncio.run(
+                    evaluate_brand_voice_async(
+                        original_query=original_query,
+                        rag_documents=rag_documents,
+                        brand_voice_output=final_response,
+                        user_context=user_context,
+                        brand_tracker=model_invoker.tracker
+                    )
+                )
+            
+            thread = threading.Thread(target=run_eval_in_thread, daemon=True)
+            thread.start()
+        
         print(f"🔍 Background evaluation started (evaluating against {len(rag_documents)} RAG documents)")
     except Exception as e:
         # Never let evaluation errors affect the main flow
