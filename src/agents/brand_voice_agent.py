@@ -60,6 +60,14 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
 
     response = model_invoker.invoke(langchain_messages)
 
+    # Extract token usage if available
+    tokens = {"input": 0, "output": 0}
+    if hasattr(response, "usage_metadata") and response.usage_metadata:
+        tokens = {
+            "input": response.usage_metadata.get("input_tokens", 0),
+            "output": response.usage_metadata.get("output_tokens", 0)
+        }
+
     # Store the brand-voiced response
     final_response = response.content
     
@@ -121,6 +129,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         "original_specialist_response": specialist_response[:500] + "..." if len(specialist_response) > 500 else specialist_response,
         "final_customer_response": final_response[:500] + "..." if len(final_response) > 500 else final_response,
         "brand_voice_applied": True,
+        "tokens": tokens,
         "personalization": {
             "customer_name": customer_name,
             "query_type": str(query_type),

@@ -53,6 +53,14 @@ def triage_node(state: AgentState) -> dict[str, Any]:
 
     response = model_invoker.invoke(langchain_messages)
 
+    # Extract token usage if available
+    tokens = {"input": 0, "output": 0}
+    if hasattr(response, "usage_metadata") and response.usage_metadata:
+        tokens = {
+            "input": response.usage_metadata.get("input_tokens", 0),
+            "output": response.usage_metadata.get("output_tokens", 0)
+        }
+
     # Parse the JSON response
     try:
         result = json.loads(response.content)
@@ -104,6 +112,14 @@ def triage_node(state: AgentState) -> dict[str, Any]:
                 additional_kwargs={"reasoning": result.get("reasoning", "")},
             )
         ],
+        "agent_data": {
+            **state.get("agent_data", {}),
+            "triage_router": {
+                "tokens": tokens,
+                "confidence": confidence_score,
+                "query_type": str(query_type)
+            }
+        }
     }
 
     # Merge extracted context

@@ -319,14 +319,6 @@ function App() {
 
       {/* Chat Content */}
       <div className="chat-content" ref={chatContentRef}>
-        {/* Initial greeting */}
-        <div className="initial-message">
-          <img src="/assets/ToggleAvatar.png" alt="" className="message-avatar" />
-          <div className="message message-assistant">
-            <ReactMarkdown>Hello! I'm your ToggleHealth assistant. How can I help you today?</ReactMarkdown>
-          </div>
-        </div>
-
         {messages.map((message) => {
           if (message.role === 'user') {
             return (

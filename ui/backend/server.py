@@ -99,15 +99,17 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
         agent_data = result.get("agent_data", {})
         confidence = result.get("confidence_score", 0)
         
-        # Triage - estimate duration
+        # Triage - estimate duration and get tokens
         triage_duration = int(total_duration * 0.1)  # ~10% of time
+        triage_tokens = agent_data.get("triage_router", {}).get("tokens", {"input": 0, "output": 0})
         agent_flow.append({
             "agent": "triage_router",
             "name": "Triage Router",
             "status": "complete",
             "confidence": float(confidence) if confidence else 0.0,
             "icon": "🔍",
-            "duration": triage_duration
+            "duration": triage_duration,
+            "tokens": triage_tokens
         })
         
         # Specialist
@@ -115,24 +117,28 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
         if "policy_specialist" in agent_data:
             policy_data = agent_data["policy_specialist"]
             rag_docs = policy_data.get("rag_documents_retrieved", 0)
+            tokens = policy_data.get("tokens", {"input": 0, "output": 0})
             agent_flow.append({
                 "agent": "policy_specialist",
                 "name": "Policy Specialist",
                 "status": "complete",
                 "rag_docs": rag_docs,
                 "icon": "📋",
-                "duration": specialist_duration
+                "duration": specialist_duration,
+                "tokens": tokens
             })
         elif "provider_specialist" in agent_data:
             provider_data = agent_data["provider_specialist"]
             rag_docs = provider_data.get("rag_documents_retrieved", 0)
+            tokens = provider_data.get("tokens", {"input": 0, "output": 0})
             agent_flow.append({
                 "agent": "provider_specialist",
                 "name": "Provider Specialist",
                 "status": "complete",
                 "rag_docs": rag_docs,
                 "icon": "🏥",
-                "duration": specialist_duration
+                "duration": specialist_duration,
+                "tokens": tokens
             })
         elif "scheduler_specialist" in agent_data:
             agent_flow.append({
@@ -140,18 +146,21 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
                 "name": "Scheduler Specialist",
                 "status": "complete",
                 "icon": "📅",
-                "duration": specialist_duration
+                "duration": specialist_duration,
+                "tokens": {"input": 0, "output": 0}
             })
         
-        # Brand voice - estimate duration
+        # Brand voice - estimate duration and get tokens
         brand_duration = int(total_duration * 0.3)  # ~30% of time
         if "brand_voice" in agent_data:
+            brand_tokens = agent_data["brand_voice"].get("tokens", {"input": 0, "output": 0})
             agent_flow.append({
                 "agent": "brand_voice",
                 "name": "Brand Voice",
                 "status": "complete",
                 "icon": "✨",
-                "duration": brand_duration
+                "duration": brand_duration,
+                "tokens": brand_tokens
             })
         
         # Check for evaluation results from global store
