@@ -18,6 +18,7 @@ LD_SDK_KEY = os.getenv("LAUNCHDARKLY_SDK_KEY")
 obs_config = ObservabilityConfig(
     service_name="minimal-test",
     service_version="1.0.0",
+    environment=os.getenv("LAUNCHDARKLY_ENVIRONMENT", "production"),  # CRITICAL: Must match LD env
 )
 ldclient.set_config(Config(LD_SDK_KEY, plugins=[ObservabilityPlugin(obs_config)]))
 ld = ldclient.get()

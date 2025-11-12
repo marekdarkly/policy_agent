@@ -79,6 +79,7 @@ def initialize_observability(
             obs_config = ObservabilityConfig(
                 service_name=service_name,
                 service_version=service_version,
+                environment=environment,  # CRITICAL: Must match LaunchDarkly environment
             )
             
             config = Config(

@@ -21,7 +21,8 @@ load_dotenv()
 # CRITICAL: Initialize observability BEFORE any LLM imports
 # This must happen before importing workflow, agents, or any LLM-related modules
 from src.utils.observability import initialize_observability
-initialize_observability()
+# Environment must match LaunchDarkly environment for proper correlation
+initialize_observability(environment=os.getenv("LAUNCHDARKLY_ENVIRONMENT", "production"))
 
 # Now safe to import FastAPI and other modules
 from fastapi import FastAPI, HTTPException
