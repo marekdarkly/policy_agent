@@ -1,5 +1,6 @@
 """Brand voice synthesis agent for customer-facing responses."""
 
+import asyncio
 from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -7,6 +8,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from ..graph.state import AgentState
 from ..utils.llm_config import get_model_invoker
 from ..utils.launchdarkly_config import get_ld_client
+from ..evaluation.judge import evaluate_brand_voice_async
 
 
 def brand_voice_node(state: AgentState) -> dict[str, Any]:
@@ -60,6 +62,23 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
 
     # Store the brand-voiced response
     final_response = response.content
+    
+    # Start async evaluation without blocking (fire-and-forget)
+    # This will run in the background and send metrics to LaunchDarkly
+    try:
+        asyncio.create_task(
+            evaluate_brand_voice_async(
+                original_query=original_query,
+                specialist_response=specialist_response,
+                brand_voice_output=final_response,
+                user_context=user_context,
+                brand_tracker=model_invoker.tracker
+            )
+        )
+        print("🔍 Background evaluation started for brand voice output")
+    except Exception as e:
+        # Never let evaluation errors affect the main flow
+        print(f"⚠️  Failed to start background evaluation: {e}")
 
     # Add debug info to agent_data
     brand_data = {
