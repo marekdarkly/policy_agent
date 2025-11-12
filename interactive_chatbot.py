@@ -13,12 +13,18 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
+# Load environment variables FIRST
 from dotenv import load_dotenv
+load_dotenv()
+
+# CRITICAL: Initialize observability BEFORE any LLM imports
+# This must happen before importing workflow, agents, or any LLM-related modules
+from src.utils.observability import initialize_observability
+initialize_observability()
+
+# Now safe to import LLM-related modules
 from src.graph.workflow import run_workflow
 from src.utils.user_profile import create_user_profile, format_profile_summary
-
-# Load environment variables
-load_dotenv()
 
 
 # ANSI color codes for beautiful terminal output

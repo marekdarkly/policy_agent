@@ -10,6 +10,20 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 from uuid import uuid4
 
+# Add project root to path FIRST
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
+
+# CRITICAL: Initialize observability BEFORE any LLM imports
+# This must happen before importing workflow, agents, or any LLM-related modules
+from src.utils.observability import initialize_observability
+initialize_observability()
+
+# Now safe to import FastAPI and other modules
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -19,10 +33,7 @@ import queue
 import json
 from datetime import datetime
 
-# Add project root to path
-project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
-
+# Import LLM-related modules AFTER observability setup
 from src.graph.workflow import run_workflow
 from src.utils.user_profile import create_user_profile
 
