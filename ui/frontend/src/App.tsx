@@ -396,22 +396,6 @@ function App() {
                       {(lastMetrics.confidence * 100).toFixed(1)}%
                     </span>
                   </div>
-                  {lastMetrics.accuracy_score !== undefined && (
-                    <div className="metric-row">
-                      <span className="metric-label">Accuracy:</span>
-                      <span className={`metric-value ${lastMetrics.accuracy_score >= 0.8 ? 'metric-good' : 'metric-bad'}`}>
-                        {(lastMetrics.accuracy_score * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                  )}
-                  {lastMetrics.coherence_score !== undefined && (
-                    <div className="metric-row">
-                      <span className="metric-label">Coherence:</span>
-                      <span className={`metric-value ${lastMetrics.coherence_score >= 0.7 ? 'metric-good' : 'metric-bad'}`}>
-                        {(lastMetrics.coherence_score * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                  )}
                 </div>
 
                 {/* Per-Agent Metrics */}
@@ -455,55 +439,78 @@ function App() {
                   ))}
                 </div>
 
-                {/* Evaluation Reasoning (collapsible) */}
-                {(lastMetrics.accuracy_reasoning || lastMetrics.coherence_reasoning) && (
+                {/* Judge Evaluation */}
+                {(lastMetrics.accuracy_score !== undefined || lastMetrics.coherence_score !== undefined) && (
                   <div className="metrics-section">
-                    <button
-                      className="metrics-subsection-toggle"
-                      onClick={() => setShowEvalReasoning(!showEvalReasoning)}
-                    >
-                      {showEvalReasoning ? '▼' : '▶'} Evaluation Reasoning
-                    </button>
-                    {showEvalReasoning && (
-                      <div className="eval-reasoning-content">
-                        {lastMetrics.accuracy_reasoning && (
-                          <div className="eval-reasoning-item">
-                            <h5>Accuracy</h5>
-                            <p>{lastMetrics.accuracy_reasoning}</p>
-                            {lastMetrics.accuracy_issues && lastMetrics.accuracy_issues.length > 0 && (
-                              <div className="eval-issues">
-                                <strong>Issues:</strong>
-                                <ul>
-                                  {lastMetrics.accuracy_issues.map((issue: string, idx: number) => (
-                                    <li key={idx}>{issue}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        {lastMetrics.coherence_reasoning && (
-                          <div className="eval-reasoning-item">
-                            <h5>Coherence</h5>
-                            <p>{lastMetrics.coherence_reasoning}</p>
-                            {lastMetrics.coherence_issues && lastMetrics.coherence_issues.length > 0 && (
-                              <div className="eval-issues">
-                                <strong>Issues:</strong>
-                                <ul>
-                                  {lastMetrics.coherence_issues.map((issue: string, idx: number) => (
-                                    <li key={idx}>{issue}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        {lastMetrics.judge_model_name && (
-                          <div className="judge-info">
-                            <small>Judge Model: {lastMetrics.judge_model_name} | Tokens: {lastMetrics.judge_input_tokens}/{lastMetrics.judge_output_tokens}</small>
-                          </div>
-                        )}
+                    <h4 className="metrics-section-title">Judge Evaluation</h4>
+                    {lastMetrics.accuracy_score !== undefined && (
+                      <div className="metric-row">
+                        <span className="metric-label">Accuracy:</span>
+                        <span className={`metric-value ${lastMetrics.accuracy_score >= 0.8 ? 'metric-good' : 'metric-bad'}`}>
+                          {(lastMetrics.accuracy_score * 100).toFixed(1)}%
+                        </span>
                       </div>
+                    )}
+                    {lastMetrics.coherence_score !== undefined && (
+                      <div className="metric-row">
+                        <span className="metric-label">Coherence:</span>
+                        <span className={`metric-value ${lastMetrics.coherence_score >= 0.7 ? 'metric-good' : 'metric-bad'}`}>
+                          {(lastMetrics.coherence_score * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Judge Reasoning Dropdown */}
+                    {(lastMetrics.accuracy_reasoning || lastMetrics.coherence_reasoning) && (
+                      <>
+                        <button
+                          className="metrics-subsection-toggle"
+                          onClick={() => setShowEvalReasoning(!showEvalReasoning)}
+                        >
+                          {showEvalReasoning ? '▼' : '▶'} Judge Reasoning
+                        </button>
+                        {showEvalReasoning && (
+                          <div className="eval-reasoning-content">
+                            {lastMetrics.accuracy_reasoning && (
+                              <div className="eval-reasoning-item">
+                                <h5>Accuracy Reasoning</h5>
+                                <p>{lastMetrics.accuracy_reasoning}</p>
+                                {lastMetrics.accuracy_issues && lastMetrics.accuracy_issues.length > 0 && (
+                                  <div className="eval-issues">
+                                    <strong>Issues Found:</strong>
+                                    <ul>
+                                      {lastMetrics.accuracy_issues.map((issue: string, idx: number) => (
+                                        <li key={idx}>{issue}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            {lastMetrics.coherence_reasoning && (
+                              <div className="eval-reasoning-item">
+                                <h5>Coherence Reasoning</h5>
+                                <p>{lastMetrics.coherence_reasoning}</p>
+                                {lastMetrics.coherence_issues && lastMetrics.coherence_issues.length > 0 && (
+                                  <div className="eval-issues">
+                                    <strong>Issues Found:</strong>
+                                    <ul>
+                                      {lastMetrics.coherence_issues.map((issue: string, idx: number) => (
+                                        <li key={idx}>{issue}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            {lastMetrics.judge_model_name && (
+                              <div className="judge-info">
+                                <small>Judge Model: {lastMetrics.judge_model_name} | Tokens: {lastMetrics.judge_input_tokens}/{lastMetrics.judge_output_tokens}</small>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
