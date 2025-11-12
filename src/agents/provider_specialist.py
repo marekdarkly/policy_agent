@@ -92,9 +92,30 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
             f"  3. The KB is not properly configured"
         )
     
-    print(f"  📄 Retrieved {len(rag_documents)} provider documents from Bedrock KB")
+    # CRITICAL: Filter documents to only include providers accepting user's exact plan
+    filtered_documents = []
+    for doc in rag_documents:
+        content = doc.get("content", "")
+        # Check if this document mentions the user's exact plan ID
+        if policy_id and policy_id in content:
+            filtered_documents.append(doc)
+        # OR if it mentions "All ToggleHealth plans"
+        elif "All ToggleHealth plans" in content:
+            filtered_documents.append(doc)
+    
+    # If filtering was too aggressive, fall back to original documents but warn
+    if not filtered_documents:
+        print(f"  ⚠️  WARNING: No documents explicitly mention {policy_id}, using all {len(rag_documents)} documents")
+        filtered_documents = rag_documents
+    else:
+        print(f"  ✅ Filtered to {len(filtered_documents)} documents matching {policy_id} (from {len(rag_documents)} total)")
+    
+    print(f"  📄 Using {len(filtered_documents)} provider documents from Bedrock KB")
     provider_info_str = "\n\n=== PROVIDER NETWORK INFORMATION (from Bedrock Knowledge Base) ===\n"
-    for i, doc in enumerate(rag_documents, 1):
+    provider_info_str += f"\n⚠️ CRITICAL: User's plan is {policy_id}. ONLY return providers explicitly accepting this plan.\n"
+    provider_info_str += f"If a provider's 'Accepted Plans' field does NOT list {policy_id}, DO NOT include them.\n\n"
+    
+    for i, doc in enumerate(filtered_documents, 1):
         score = doc.get("score", 0.0)
         content = doc.get("content", "")
         print(f"    Doc {i}: Score {score:.3f}, Length {len(content)} chars")
