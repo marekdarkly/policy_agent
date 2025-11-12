@@ -1748,5 +1748,59 @@ async def get_chat_metrics_togglehealth(request_id: str):
     
     return {"status": "ready", "metrics": MULTIAGENT_EVAL_RESULTS.pop(request_id)}
 
+# ============================================================================
+# MULTI-AGENT POLICY SYSTEM ENDPOINT
+# ============================================================================
+
+# Add parent directory to path to import from policy_agent
+import sys
+from pathlib import Path
+policy_agent_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(policy_agent_root))
+
+try:
+    from api_wrapper import (
+        MultiAgentChatRequest,
+        MultiAgentChatResponse,
+        handle_multiagent_chat
+    )
+    MULTIAGENT_AVAILABLE = True
+    logger.info("✅ Multi-agent policy system loaded successfully")
+except Exception as e:
+    logger.warning(f"⚠️  Multi-agent policy system not available: {e}")
+    MULTIAGENT_AVAILABLE = False
+
+
+@app.post("/api/chat-multiagent", response_model=MultiAgentChatResponse if MULTIAGENT_AVAILABLE else ChatResponse)
+async def chat_multiagent_endpoint(request: MultiAgentChatRequest if MULTIAGENT_AVAILABLE else ChatRequest):
+    """
+    Multi-agent policy system endpoint.
+    Routes queries through: Triage → Specialist → Brand Voice → Evaluation
+    """
+    if not MULTIAGENT_AVAILABLE:
+        return ChatResponse(
+            response="Multi-agent system is not available. Please check the installation.",
+            modelName="",
+            enabled=False,
+            requestId=str(uuid4()),
+            error="Multi-agent system not loaded"
+        )
+    
+    try:
+        logger.info(f"Multi-agent request: {request.userInput[:100]}...")
+        result = await handle_multiagent_chat(request)
+        logger.info(f"Multi-agent response generated: {len(result.response)} chars")
+        return result
+    except Exception as e:
+        logger.error(f"Multi-agent endpoint error: {e}")
+        return MultiAgentChatResponse(
+            response="An error occurred while processing your request.",
+            modelName="",
+            enabled=False,
+            requestId=str(uuid4()),
+            error=str(e)
+        )
+
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000) 
