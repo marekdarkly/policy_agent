@@ -10,6 +10,29 @@ echo ""
 
 # Get script directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$SCRIPT_DIR/.."
+
+# Check if dependencies are installed
+if [ ! -d "$SCRIPT_DIR/frontend/node_modules" ]; then
+    echo "📦 Installing frontend dependencies..."
+    cd "$SCRIPT_DIR/frontend"
+    npm install
+fi
+
+# Activate venv and check backend dependencies
+cd "$PROJECT_ROOT"
+if [ ! -d "venv" ]; then
+    echo "❌ Virtual environment not found. Please run 'make setup' first."
+    exit 1
+fi
+
+source venv/bin/activate
+
+# Check if FastAPI is installed
+if ! python -c "import fastapi" 2>/dev/null; then
+    echo "📦 Installing backend dependencies..."
+    pip install -r "$SCRIPT_DIR/backend/requirements.txt"
+fi
 
 # Start backend in background
 echo "🚀 Starting FastAPI backend on port 8000..."

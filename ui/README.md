@@ -11,28 +11,56 @@ Frontend (React + Vite)  →  Backend (FastAPI)  →  Multi-Agent Workflow
 
 ## 🚀 Quick Start
 
-### 1. Start the Backend
+### Option 1: Automated Setup (Recommended)
+
+```bash
+cd ui && ./start.sh
+```
+
+The script will:
+- ✅ Auto-install dependencies if missing
+- ✅ Start both backend and frontend
+- ✅ Display URLs to access
+
+### Option 2: Manual Setup
+
+#### 1. Setup (First Time Only)
+
+```bash
+# From project root
+make setup
+
+# Install UI backend dependencies
+cd ui/backend
+source ../../venv/bin/activate
+pip install -r requirements.txt
+
+# Install UI frontend dependencies
+cd ../frontend
+npm install
+```
+
+#### 2. Start the Backend
 
 ```bash
 cd ui/backend
-pip install -r requirements.txt
+source ../../venv/bin/activate
 python server.py
 ```
 
-Backend runs on: `http://localhost:8000`
+Backend runs on: `http://localhost:8000`  
 API Docs: `http://localhost:8000/docs`
 
-### 2. Start the Frontend
+#### 3. Start the Frontend
 
 ```bash
 cd ui/frontend
-npm install
 npm run dev
 ```
 
 Frontend runs on: `http://localhost:3000`
 
-### 3. Open in Browser
+#### 4. Open in Browser
 
 Navigate to `http://localhost:3000`
 
