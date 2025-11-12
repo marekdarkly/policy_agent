@@ -1,489 +1,693 @@
-# ToggleHealth Provider Directory
+# ToggleHealth Provider Directory - Overview
 
-**Document Type:** Provider Network Directory
+**Company:** ToggleHealth Insurance
+**Document Type:** Provider Directory Overview  
 **Last Updated:** January 1, 2024
-**Total Providers:** 19,342 providers across 391 facilities
+**Coverage:** 20 Major US Cities
 
 ---
 
-## Overview
+## Network Information
 
-ToggleHealth operates four distinct provider networks across Washington, Oregon, California, Idaho, and Montana. This directory helps you find doctors, hospitals, and other healthcare providers that accept your ToggleHealth plan.
+ToggleHealth offers four distinct provider networks to match different plan types:
 
----
+### Network Sizes and Coverage
 
-## How to Find a Provider
+| Network | Total Providers | Coverage | Plan Type |
+|---------|----------------|----------|-----------|
+| **TH-PPO-PREMIER** | 19,342 providers | Nationwide | Platinum PPO Plan |
+| **TH-EPO-SELECT** | 16,200 providers | Nationwide (in-network only) | Silver EPO Plan |
+| **TH-HDHP-CORE** | 14,800 providers | Nationwide | Bronze HDHP Plan |
+| **TH-HMO-PRIMARY** | 12,450 providers | Regional (requires referrals) | Gold HMO Plan |
 
-### Online Provider Search
+### Understanding Your Network
 
-**Website:** my.togglehealth.com/find-provider
+**PPO (Preferred Provider Organization) - TH-PPO-PREMIER:**
+- Largest network with 19,342 providers
+- See any provider in-network or out-of-network
+- No PCP selection required
+- No referrals needed for specialists
+- Covered on: Platinum PPO Plan (TH-PPO-PLATINUM-2024)
 
-**Search Options:**
-- Provider name
-- Specialty
-- Location (city, zip code, or address)
-- Hospital affiliation
-- Language spoken
-- Gender
-- Accepting new patients
+**EPO (Exclusive Provider Organization) - TH-EPO-SELECT:**
+- 16,200 in-network providers
+- Must use in-network providers (except emergencies)
+- No PCP selection required
+- No referrals needed for specialists
+- Covered on: Silver EPO Plan (TH-EPO-SILVER-2024)
 
-### Member Services
+**HDHP (High-Deductible Health Plan) - TH-HDHP-CORE:**
+- 14,800 in-network providers
+- HSA-eligible plan
+- No PCP selection required
+- No referrals needed
+- Covered on: Bronze HDHP Plan (TH-HDHP-BRONZE-2024)
 
-**Phone:** 1-800-TOGGLE-1  
-**Hours:** Monday-Friday, 8 AM - 8 PM Pacific
-
-### Mobile App
-
-**ToggleHealth Mobile** (iOS and Android)
-- Real-time provider search
-- GPS-enabled location search
-- Save favorite providers
-- View provider ratings
-
----
-
-## Provider Networks by Plan
-
-### TH-HMO-PRIMARY Network (Gold HMO)
-
-**Plan:** TH-HMO-GOLD-2024
-
-**Network Size:**
-- Primary Care Physicians: 2,847
-- Specialists: 8,934
-- Hospitals: 87
-- Urgent Care Centers: 156
-- Mental Health Providers: 1,243
-
-**Coverage Area:**
-- Washington: All counties
-- Oregon: Multnomah, Clackamas, Washington counties
-- California: San Francisco Bay Area, Sacramento region
-
-### TH-PPO-PREMIER Network (Platinum PPO)
-
-**Plan:** TH-PPO-PLATINUM-2024
-
-**Network Size** (Largest):
-- Primary Care Physicians: 4,521
-- Specialists: 14,789
-- Hospitals: 142
-- Urgent Care Centers: 234
-- Mental Health Providers: 2,156
-
-**Coverage Area:**
-- Washington: All counties
-- Oregon: All counties west of Cascades
-- California: All major metropolitan areas
-- Idaho: Boise metro area
-- Montana: Missoula, Billings metro areas
-
-### TH-EPO-SELECT Network (Silver EPO)
-
-**Plan:** TH-EPO-SILVER-2024
-
-**Network Size** (Curated):
-- Primary Care Physicians: 1,923
-- Specialists: 6,234
-- Hospitals: 64
-- Urgent Care Centers: 98
-- Mental Health Providers: 876
-
-**Coverage Area:**
-- Washington: King, Pierce, Snohomish, Spokane counties
-- Oregon: Multnomah, Clackamas, Washington, Marion counties
-- California: San Francisco Bay Area
-
-### TH-HDHP-CORE Network (Bronze HDHP)
-
-**Plan:** TH-HDHP-BRONZE-2024
-
-**Network Size:**
-- Primary Care Physicians: 3,234
-- Specialists: 9,876
-- Hospitals: 98
-- Urgent Care Centers: 167
-- Mental Health Providers: 1,432
-
-**Coverage Area:**
-- Washington: All counties
-- Oregon: Western Oregon counties
-- California: SF Bay Area, Sacramento, San Diego
+**HMO (Health Maintenance Organization) - TH-HMO-PRIMARY:**
+- 12,450 providers (more restrictive network)
+- Must select a Primary Care Physician (PCP)
+- Requires PCP referrals for specialists
+- In-network only (except emergencies)
+- Covered on: Gold HMO Plan (TH-HMO-GOLD-2024)
 
 ---
 
-## Provider Types
+## Cities With Provider Coverage
 
-### Primary Care Physicians (PCPs)
+ToggleHealth provides comprehensive coverage across 20 major US cities:
 
-**Specialties:**
-- Family Medicine
-- Internal Medicine
-- General Practice
-- Pediatrics (for children)
-
-**Services:**
-- Annual physicals
-- Preventive care
-- Chronic disease management
-- Acute illness treatment
-- Referrals to specialists (HMO plans)
-
-### Specialists
-
-**Medical Specialties Include:**
-- Cardiology (heart)
-- Oncology (cancer)
-- Orthopedics (bones/joints)
-- Neurology (brain/nervous system)
-- Endocrinology (hormones/diabetes)
-- Gastroenterology (digestive system)
-- Pulmonology (lungs)
-- Rheumatology (arthritis/autoimmune)
-- Dermatology (skin)
-- Ophthalmology (eyes)
-- Otolaryngology (ENT)
-- Urology (urinary system)
-- Nephrology (kidneys)
-- And many more...
-
-**Surgical Specialties Include:**
-- General Surgery
-- Orthopedic Surgery
-- Cardiothoracic Surgery
-- Neurosurgery
-- Plastic Surgery
-- Vascular Surgery
-
-**Women's Health:**
-- Obstetrics and Gynecology (OB/GYN)
-- Maternal-Fetal Medicine (high-risk pregnancy)
-- Gynecologic Oncology
-- Reproductive Endocrinology
-
-### Mental Health Providers
-
-**Provider Types:**
-- Psychiatrists (MD - can prescribe medication)
-- Psychologists (PhD/PsyD - therapy and testing)
-- Licensed Clinical Social Workers (LICSW - therapy)
-- Licensed Mental Health Counselors (LMHC - therapy)
-- Licensed Marriage and Family Therapists (LMFT)
-
-**Services:**
-- Individual therapy
-- Group therapy
-- Family therapy
-- Couples therapy
-- Medication management
-- Psychological testing
-
-### Hospitals
-
-**Types:**
-- General Acute Care Hospitals
-- Specialty Hospitals (cardiac, cancer, orthopedic)
-- Psychiatric Hospitals
-- Rehabilitation Hospitals
-- Children's Hospitals
-
-### Other Healthcare Facilities
-
-- Urgent Care Centers
-- Ambulatory Surgery Centers
-- Imaging Centers
-- Physical Therapy Centers
-- Laboratory Services
-- Pharmacies
-- Home Health Agencies
+- Atlanta, GA
+- Austin, TX
+- Boston, MA
+- Charlotte, NC
+- Chicago, IL
+- Dallas, TX
+- Denver, CO
+- Detroit, MI
+- Houston, TX
+- Los Angeles, CA
+- Miami, FL
+- Minneapolis, MN
+- New York, NY
+- Philadelphia, PA
+- Phoenix, AZ
+- Portland, OR
+- San Diego, CA
+- San Francisco, CA
+- Seattle, WA
+- Washington, DC
 
 ---
 
-## Geographic Coverage
+## Hospital Directory by City
 
-### Washington
+### Atlanta, GA
 
-**Major Cities Covered:**
-- Seattle
-- Bellevue
-- Tacoma
-- Spokane
-- Vancouver
-- Everett
-- Kent
-- Renton
-- Olympia
+**Atlanta General Hospital**
+- Provider ID: HOSP-GA-171
+- Address: 1500 Medical Center Drive, Atlanta, GA 30102
+- Phone: 404-555-1290
+- Trauma Level: Level I
+- Beds: 640
+- Networks: TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
 
-**County Coverage:**
-- All networks: King County (Seattle, Bellevue)
-- EPO/HMO: Pierce (Tacoma), Spokane counties
-- PPO/HDHP: All Washington counties
+**Atlanta Regional Hospital**
+- Provider ID: HOSP-GA-172
+- Address: 2000 Medical Center Drive, Atlanta, GA 30103
+- Phone: 404-555-1291
+- Trauma Level: Level II
+- Beds: 740
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 4 stars (CMS)
 
-### Oregon
 
-**Major Cities Covered:**
-- Portland
-- Salem
-- Eugene
-- Beaverton
-- Hillsboro
-- Gresham
+### Austin, TX
 
-**County Coverage:**
-- All plans: Multnomah, Clackamas counties (Portland metro)
-- PPO: All counties west of Cascades
+**Austin General Hospital**
+- Provider ID: HOSP-TX-141
+- Address: 1500 Medical Center Drive, Austin, TX 78102
+- Phone: 512-555-1239
+- Trauma Level: Level I
+- Beds: 580
+- Networks: TH-EPO-SELECT, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
 
-### California
+**Austin Regional Hospital**
+- Provider ID: HOSP-TX-142
+- Address: 2000 Medical Center Drive, Austin, TX 78103
+- Phone: 512-555-1240
+- Trauma Level: Level II
+- Beds: 680
+- Networks: TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 4 stars (CMS)
 
-**Major Areas Covered:**
-- San Francisco Bay Area (all plans)
-- Sacramento (PPO, HDHP, HMO)
-- San Diego (PPO, HDHP)
-- Los Angeles (PPO only)
 
-### Idaho
+### Boston, MA
 
-**Coverage:**
-- Boise metro area (PPO only)
+**Boston General Hospital**
+- Provider ID: HOSP-MA-051
+- Address: 1500 Medical Center Drive, Boston, MA 02102
+- Phone: 617-555-1086
+- Trauma Level: Level I
+- Beds: 400
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
 
-### Montana
+**Boston Regional Hospital**
+- Provider ID: HOSP-MA-052
+- Address: 2000 Medical Center Drive, Boston, MA 02103
+- Phone: 617-555-1087
+- Trauma Level: Level II
+- Beds: 500
+- Networks: TH-EPO-SELECT, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 4 stars (CMS)
 
-**Coverage:**
-- Missoula metro (PPO only)
-- Billings metro (PPO only)
 
----
+### Charlotte, NC
 
-## Hospital Directory
+**Charlotte General Hospital**
+- Provider ID: HOSP-NC-191
+- Address: 1500 Medical Center Drive, Charlotte, NC 28102
+- Phone: 704-555-1324
+- Trauma Level: Level I
+- Beds: 680
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 4 stars (CMS)
 
-### Washington Hospitals
+**Charlotte Regional Hospital**
+- Provider ID: HOSP-NC-192
+- Address: 2000 Medical Center Drive, Charlotte, NC 28103
+- Phone: 704-555-1325
+- Trauma Level: Level II
+- Beds: 780
+- Networks: TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+
+### Chicago, IL
+
+**Chicago General Hospital**
+- Provider ID: HOSP-IL-091
+- Address: 1500 Medical Center Drive, Chicago, IL 60102
+- Phone: 312-555-1154
+- Trauma Level: Level I
+- Beds: 480
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+**Chicago Regional Hospital**
+- Provider ID: HOSP-IL-092
+- Address: 2000 Medical Center Drive, Chicago, IL 60103
+- Phone: 312-555-1155
+- Trauma Level: Level II
+- Beds: 580
+- Networks: TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+
+### Dallas, TX
+
+**Dallas General Hospital**
+- Provider ID: HOSP-TX-121
+- Address: 1500 Medical Center Drive, Dallas, TX 75102
+- Phone: 214-555-1205
+- Trauma Level: Level I
+- Beds: 540
+- Networks: TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+**Dallas Regional Hospital**
+- Provider ID: HOSP-TX-122
+- Address: 2000 Medical Center Drive, Dallas, TX 75103
+- Phone: 214-555-1206
+- Trauma Level: Level II
+- Beds: 640
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+
+### Denver, CO
+
+**Denver General Hospital**
+- Provider ID: HOSP-CO-161
+- Address: 1500 Medical Center Drive, Denver, CO 80102
+- Phone: 303-555-1273
+- Trauma Level: Level I
+- Beds: 620
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 4 stars (CMS)
+
+**Denver Regional Hospital**
+- Provider ID: HOSP-CO-162
+- Address: 2000 Medical Center Drive, Denver, CO 80103
+- Phone: 303-555-1274
+- Trauma Level: Level II
+- Beds: 720
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+
+### Detroit, MI
+
+**Detroit General Hospital**
+- Provider ID: HOSP-MI-101
+- Address: 1500 Medical Center Drive, Detroit, MI 48102
+- Phone: 313-555-1171
+- Trauma Level: Level I
+- Beds: 500
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 4 stars (CMS)
+
+**Detroit Regional Hospital**
+- Provider ID: HOSP-MI-102
+- Address: 2000 Medical Center Drive, Detroit, MI 48103
+- Phone: 313-555-1172
+- Trauma Level: Level II
+- Beds: 600
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+
+### Houston, TX
+
+**Houston General Hospital**
+- Provider ID: HOSP-TX-131
+- Address: 1500 Medical Center Drive, Houston, TX 77102
+- Phone: 713-555-1222
+- Trauma Level: Level I
+- Beds: 560
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 4 stars (CMS)
+
+**Houston Regional Hospital**
+- Provider ID: HOSP-TX-132
+- Address: 2000 Medical Center Drive, Houston, TX 77103
+- Phone: 713-555-1223
+- Trauma Level: Level II
+- Beds: 660
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+
+### Los Angeles, CA
+
+**Los Angeles General Hospital**
+- Provider ID: HOSP-CA-031
+- Address: 1500 Medical Center Drive, Los Angeles, CA 90102
+- Phone: 213-555-1052
+- Trauma Level: Level I
+- Beds: 360
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+**Los Angeles Regional Hospital**
+- Provider ID: HOSP-CA-032
+- Address: 2000 Medical Center Drive, Los Angeles, CA 90103
+- Phone: 213-555-1053
+- Trauma Level: Level II
+- Beds: 460
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+
+### Miami, FL
+
+**Miami General Hospital**
+- Provider ID: HOSP-FL-181
+- Address: 1500 Medical Center Drive, Miami, FL 33102
+- Phone: 305-555-1307
+- Trauma Level: Level I
+- Beds: 660
+- Networks: TH-EPO-SELECT, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+**Miami Regional Hospital**
+- Provider ID: HOSP-FL-182
+- Address: 2000 Medical Center Drive, Miami, FL 33103
+- Phone: 305-555-1308
+- Trauma Level: Level II
+- Beds: 760
+- Networks: TH-EPO-SELECT, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+
+### Minneapolis, MN
+
+**Minneapolis General Hospital**
+- Provider ID: HOSP-MN-111
+- Address: 1500 Medical Center Drive, Minneapolis, MN 55102
+- Phone: 612-555-1188
+- Trauma Level: Level I
+- Beds: 520
+- Networks: TH-EPO-SELECT, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+**Minneapolis Regional Hospital**
+- Provider ID: HOSP-MN-112
+- Address: 2000 Medical Center Drive, Minneapolis, MN 55103
+- Phone: 612-555-1189
+- Trauma Level: Level II
+- Beds: 620
+- Networks: TH-EPO-SELECT, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 4 stars (CMS)
+
+
+### New York, NY
+
+**New York General Hospital**
+- Provider ID: HOSP-NY-061
+- Address: 1500 Medical Center Drive, New York, NY 10102
+- Phone: 212-555-1103
+- Trauma Level: Level I
+- Beds: 420
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+**New York Regional Hospital**
+- Provider ID: HOSP-NY-062
+- Address: 2000 Medical Center Drive, New York, NY 10103
+- Phone: 212-555-1104
+- Trauma Level: Level II
+- Beds: 520
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+
+### Philadelphia, PA
+
+**Philadelphia General Hospital**
+- Provider ID: HOSP-PA-071
+- Address: 1500 Medical Center Drive, Philadelphia, PA 19102
+- Phone: 215-555-1120
+- Trauma Level: Level I
+- Beds: 440
+- Networks: TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 4 stars (CMS)
+
+**Philadelphia Regional Hospital**
+- Provider ID: HOSP-PA-072
+- Address: 2000 Medical Center Drive, Philadelphia, PA 19103
+- Phone: 215-555-1121
+- Trauma Level: Level II
+- Beds: 540
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+
+### Phoenix, AZ
+
+**Phoenix General Hospital**
+- Provider ID: HOSP-AZ-151
+- Address: 1500 Medical Center Drive, Phoenix, AZ 85102
+- Phone: 602-555-1256
+- Trauma Level: Level I
+- Beds: 600
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+**Phoenix Regional Hospital**
+- Provider ID: HOSP-AZ-152
+- Address: 2000 Medical Center Drive, Phoenix, AZ 85103
+- Phone: 602-555-1257
+- Trauma Level: Level II
+- Beds: 700
+- Networks: TH-EPO-SELECT, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+
+### Portland, OR
+
+**Portland General Hospital**
+- Provider ID: HOSP-OR-011
+- Address: 1500 Medical Center Drive, Portland, OR 97102
+- Phone: 503-555-1018
+- Trauma Level: Level I
+- Beds: 320
+- Networks: TH-EPO-SELECT, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 4 stars (CMS)
+
+**Portland Regional Hospital**
+- Provider ID: HOSP-OR-012
+- Address: 2000 Medical Center Drive, Portland, OR 97103
+- Phone: 503-555-1019
+- Trauma Level: Level II
+- Beds: 420
+- Networks: TH-EPO-SELECT, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+
+### San Diego, CA
+
+**San Diego General Hospital**
+- Provider ID: HOSP-CA-041
+- Address: 1500 Medical Center Drive, San Diego, CA 92102
+- Phone: 619-555-1069
+- Trauma Level: Level I
+- Beds: 380
+- Networks: TH-EPO-SELECT, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 4 stars (CMS)
+
+**San Diego Regional Hospital**
+- Provider ID: HOSP-CA-042
+- Address: 2000 Medical Center Drive, San Diego, CA 92103
+- Phone: 619-555-1070
+- Trauma Level: Level II
+- Beds: 480
+- Networks: TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+
+### San Francisco, CA
+
+**San Francisco General Hospital**
+- Provider ID: HOSP-CA-021
+- Address: 1500 Medical Center Drive, San Francisco, CA 94102
+- Phone: 415-555-1035
+- Trauma Level: Level I
+- Beds: 340
+- Networks: TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+**San Francisco Regional Hospital**
+- Provider ID: HOSP-CA-022
+- Address: 2000 Medical Center Drive, San Francisco, CA 94103
+- Phone: 415-555-1036
+- Trauma Level: Level II
+- Beds: 440
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 4 stars (CMS)
+
+
+### Seattle, WA
 
 **Seattle General Hospital**
 - Provider ID: HOSP-WA-001
-- Address: 1500 Medical Center Drive, Seattle, WA 98101
-- Phone: 206-555-0100
+- Address: 1500 Medical Center Drive, Seattle, WA 98102
+- Phone: 206-555-1001
 - Trauma Level: Level I
-- Beds: 487
-- Networks: All networks
-- Specialties: Cardiovascular Surgery, Neurosurgery, Organ Transplant, Burn Center, NICU
-- Rating: 5 stars (CMS), Grade A (Leapfrog)
+- Beds: 300
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
 
-**Northwest Medical Center**
+**Seattle Regional Hospital**
 - Provider ID: HOSP-WA-002
-- Address: 8900 Healthcare Parkway, Bellevue, WA 98004
-- Phone: 425-555-0200
+- Address: 2000 Medical Center Drive, Seattle, WA 98103
+- Phone: 206-555-1002
 - Trauma Level: Level II
-- Beds: 312
-- Networks: HMO, PPO, HDHP
-- Specialties: Orthopedic Surgery, Women's Health, Cancer Care
-- Rating: 4 stars (CMS), Grade A (Leapfrog)
+- Beds: 400
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
 
-**Tacoma Regional Hospital**
-- Provider ID: HOSP-WA-003
-- Address: 2400 Hospital Boulevard, Tacoma, WA 98402
-- Phone: 253-555-0300
+
+### Washington, DC
+
+**Washington General Hospital**
+- Provider ID: HOSP-DC-081
+- Address: 1500 Medical Center Drive, Washington, DC 20102
+- Phone: 202-555-1137
+- Trauma Level: Level I
+- Beds: 460
+- Networks: TH-EPO-SELECT, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Emergency Services: Yes
+- Rating: 5 stars (CMS)
+
+**Washington Regional Hospital**
+- Provider ID: HOSP-DC-082
+- Address: 2000 Medical Center Drive, Washington, DC 20103
+- Phone: 202-555-1138
 - Trauma Level: Level II
-- Beds: 256
-- Networks: HMO, PPO, HDHP
-- Rating: 4 stars (CMS), Grade B (Leapfrog)
-
-**Spokane Valley Hospital**
-- Provider ID: HOSP-WA-004
-- Address: 5600 Medical Park Drive, Spokane, WA 99202
-- Phone: 509-555-0400
-- Trauma Level: Level II
-- Beds: 198
-- Networks: All networks
-- Rating: 4 stars (CMS), Grade B (Leapfrog)
-
-**Evergreen Psychiatric Hospital**
-- Provider ID: HOSP-WA-005
-- Address: 4500 Mental Health Way, Seattle, WA 98115
-- Phone: 206-555-0700
-- Type: Psychiatric Hospital
-- Beds: 124
-- Networks: All networks
-- Specialties: Mood Disorders, Addiction Medicine, Trauma/PTSD
+- Beds: 560
+- Networks: TH-EPO-SELECT, TH-PPO-PREMIER
+- Emergency Services: Yes
 - Rating: 4 stars (CMS)
 
-### Oregon Hospitals
+---
 
-**Portland Medical Center**
-- Provider ID: HOSP-OR-001
-- Address: 3200 Healthcare Avenue, Portland, OR 97201
-- Phone: 503-555-0500
-- Trauma Level: Level I
-- Beds: 423
-- Networks: All networks
-- Specialties: Cardiovascular Surgery, Neurosurgery, Pediatric ICU
-- Rating: 5 stars (CMS), Grade A (Leapfrog)
+## Finding a Provider
 
-### California Hospitals
+### By Plan Type
 
-**San Francisco Bay Hospital**
-- Provider ID: HOSP-CA-001
-- Address: 750 Hospital Drive, San Francisco, CA 94102
-- Phone: 415-555-0600
-- Trauma Level: Level I
-- Beds: 389
-- Networks: All networks
-- Specialties: Transplant Services, Neurosurgery, Advanced Oncology
-- Rating: 5 stars (CMS), Grade A (Leapfrog)
+**If you have the Platinum PPO Plan:**
+- You can see ANY provider in our directory
+- 100% of our providers accept Platinum PPO
+- You can also see out-of-network providers with higher costs
+
+**If you have the Silver EPO Plan:**
+- You can see providers showing "TH-EPO-SELECT" in their network affiliations
+- Approximately 84% of our providers accept Silver EPO
+
+**If you have the Bronze HDHP Plan:**
+- You can see providers showing "TH-HDHP-CORE" in their network affiliations
+- Approximately 70% of our providers accept Bronze HDHP
+
+**If you have the Gold HMO Plan:**
+- You can see providers showing "TH-HMO-PRIMARY" in their network affiliations
+- Approximately 60% of our providers accept Gold HMO
+- You must first select a Primary Care Physician (PCP)
+- You need PCP referrals to see specialists
+
+### Provider Search Tips
+
+1. **Search by Location:** Use the city-specific provider listings below
+2. **Check Network:** Verify the provider shows your network (TH-HMO-PRIMARY, TH-PPO-PREMIER, TH-EPO-SELECT, or TH-HDHP-CORE)
+3. **Check Accepted Plans:** Confirm your specific plan appears in "Accepted Plans"
+4. **Verify Specialty:** Make sure the provider offers the services you need
 
 ---
 
 ## Urgent Care Centers
 
-### ToggleHealth Urgent Care - Downtown Seattle
-- Provider ID: UC-WA-001
-- Address: 600 First Avenue, Seattle, WA 98104
-- Phone: 206-555-4001
-- Hours: Mon-Fri 8AM-8PM, Sat-Sun 9AM-5PM
-- Services: Minor illness/injury, X-rays, lab tests, immunizations
-- Networks: All networks
-- Rating: 4.5 stars
+ToggleHealth Urgent Care centers are available in all major coverage cities:
 
-### ToggleHealth Urgent Care - Bellevue
-- Provider ID: UC-WA-002
-- Address: 12500 NE 10th Place, Bellevue, WA 98005
-- Phone: 425-555-4003
-- Hours: Mon-Fri 8AM-8PM, Sat-Sun 9AM-5PM
-- Services: Minor illness/injury, X-rays, lab tests, sports physicals
-- Networks: HMO, PPO, HDHP
-- Rating: 4.6 stars
+**ToggleHealth Urgent Care - Seattle**
+- Address: 600 Urgent Care Avenue, Seattle, WA 98130
+- Phone: 206-555-9015
+- Networks: TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
 
-### ToggleHealth Urgent Care - Portland
-- Provider ID: UC-OR-001
-- Address: 1800 SW 1st Avenue, Portland, OR 97201
-- Phone: 503-555-4005
-- Hours: Mon-Fri 7AM-9PM, Sat-Sun 8AM-6PM
-- Services: Minor illness/injury, X-rays, lab tests, DOT physicals
-- Networks: All networks
-- Rating: 4.7 stars
+**ToggleHealth Urgent Care - Portland**
+- Address: 700 Urgent Care Avenue, Portland, OR 97130
+- Phone: 503-555-9032
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
 
----
+**ToggleHealth Urgent Care - San Francisco**
+- Address: 800 Urgent Care Avenue, San Francisco, CA 94130
+- Phone: 415-555-9049
+- Networks: TH-EPO-SELECT, TH-PPO-PREMIER
 
-## Specialty Care Centers
+**ToggleHealth Urgent Care - Los Angeles**
+- Address: 900 Urgent Care Avenue, Los Angeles, CA 90130
+- Phone: 213-555-9066
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
 
-### Pacific Northwest Diabetes Center
-- Provider ID: SPEC-CENTER-001
-- Address: 3500 Endocrine Way, Seattle, WA 98109
-- Phone: 206-555-8001
-- Focus: Diabetes and Endocrinology
-- Services: Diabetes education, insulin pump training, CGM, nutrition counseling
-- Program: DMP-2024 (Diabetes Management Program)
-- Networks: All networks
-- Rating: 4.9 stars
+**ToggleHealth Urgent Care - San Diego**
+- Address: 1000 Urgent Care Avenue, San Diego, CA 92130
+- Phone: 619-555-9083
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-PPO-PREMIER
 
-### Heart & Vascular Institute of Seattle
-- Provider ID: SPEC-CENTER-002
-- Address: 1800 Cardiac Plaza, Seattle, WA 98101
-- Phone: 206-555-8003
-- Focus: Cardiovascular Care
-- Services: Cardiac cath, echo, stress testing, cardiac rehab
-- Program: HHP-2024 (Heart Health Program)
-- Networks: All networks
-- Accreditation: ACC Accredited Chest Pain Center
-- Rating: 4.8 stars
+**ToggleHealth Urgent Care - Boston**
+- Address: 1100 Urgent Care Avenue, Boston, MA 02130
+- Phone: 617-555-9100
+- Networks: TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
 
-### Women's Health & Maternity Center
-- Provider ID: SPEC-CENTER-003
-- Address: 2800 Women's Health Drive, Bellevue, WA 98006
-- Phone: 425-555-8005
-- Focus: Women's Health and Maternity
-- Services: Prenatal care, high-risk pregnancy, delivery, lactation
-- Program: MSP-2024 (Maternity Support Program)
-- Delivery Beds: 24
-- NICU: Level II
-- Networks: All networks
-- Rating: 4.9 stars
+**ToggleHealth Urgent Care - New York**
+- Address: 1200 Urgent Care Avenue, New York, NY 10130
+- Phone: 212-555-9117
+- Networks: TH-EPO-SELECT, TH-HMO-PRIMARY, TH-PPO-PREMIER
 
----
+**ToggleHealth Urgent Care - Philadelphia**
+- Address: 1300 Urgent Care Avenue, Philadelphia, PA 19130
+- Phone: 215-555-9134
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-PPO-PREMIER
 
-## Pharmacies
+**ToggleHealth Urgent Care - Washington**
+- Address: 1400 Urgent Care Avenue, Washington, DC 20130
+- Phone: 202-555-9151
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
 
-### ToggleHealth Pharmacy - Downtown Seattle
-- Provider ID: PHARM-WA-001
-- Address: 400 Pine Street, Seattle, WA 98101
-- Phone: 206-555-6001
-- Hours: Mon-Fri 8AM-9PM, Sat 9AM-6PM, Sun 10AM-6PM
-- Services: Prescriptions, immunizations, specialty pharmacy, home delivery
-- Networks: All networks
+**ToggleHealth Urgent Care - Chicago**
+- Address: 1500 Urgent Care Avenue, Chicago, IL 60130
+- Phone: 312-555-9168
+- Networks: TH-EPO-SELECT, TH-PPO-PREMIER
 
-### ToggleHealth Mail Order Pharmacy
-- Provider ID: PHARM-MAIL-001
-- Address: PO Box 55500, Seattle, WA 98155
-- Phone: 1-800-TOGGLE-4
-- Services: 90-day prescriptions, home delivery, specialty pharmacy, 24/7 support
-- Processing: 7-10 business days
-- Shipping: FREE standard shipping
-- Networks: All networks
+**ToggleHealth Urgent Care - Detroit**
+- Address: 1600 Urgent Care Avenue, Detroit, MI 48130
+- Phone: 313-555-9185
+- Networks: TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
 
----
+**ToggleHealth Urgent Care - Minneapolis**
+- Address: 1700 Urgent Care Avenue, Minneapolis, MN 55130
+- Phone: 612-555-9202
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
 
-## Language Access
+**ToggleHealth Urgent Care - Dallas**
+- Address: 1800 Urgent Care Avenue, Dallas, TX 75130
+- Phone: 214-555-9219
+- Networks: TH-EPO-SELECT, TH-PPO-PREMIER
 
-ToggleHealth providers speak multiple languages to serve diverse communities:
+**ToggleHealth Urgent Care - Houston**
+- Address: 1900 Urgent Care Avenue, Houston, TX 77130
+- Phone: 713-555-9236
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
 
-**Languages Available:**
-- English (all providers)
-- Spanish (multiple providers in all areas)
-- Mandarin/Cantonese (Seattle, Bellevue area)
-- Vietnamese (Portland, Seattle)
-- Hindi/Gujarati (Seattle area)
-- Korean (Seattle area)
-- Russian (Seattle area)
-- Tagalog (Seattle area)
+**ToggleHealth Urgent Care - Austin**
+- Address: 2000 Urgent Care Avenue, Austin, TX 78130
+- Phone: 512-555-9253
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-PPO-PREMIER
 
-**Use provider search to filter by language spoken.**
+**ToggleHealth Urgent Care - Phoenix**
+- Address: 2100 Urgent Care Avenue, Phoenix, AZ 85130
+- Phone: 602-555-9270
+- Networks: TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
 
----
+**ToggleHealth Urgent Care - Denver**
+- Address: 2200 Urgent Care Avenue, Denver, CO 80130
+- Phone: 303-555-9287
+- Networks: TH-EPO-SELECT, TH-HMO-PRIMARY, TH-PPO-PREMIER
 
-## Provider Quality Ratings
+**ToggleHealth Urgent Care - Atlanta**
+- Address: 2300 Urgent Care Avenue, Atlanta, GA 30130
+- Phone: 404-555-9304
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-PPO-PREMIER
 
-### How Providers are Rated
+**ToggleHealth Urgent Care - Miami**
+- Address: 2400 Urgent Care Avenue, Miami, FL 33130
+- Phone: 305-555-9321
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
 
-**Patient Satisfaction Scores** (1-5 stars)
-- Based on patient surveys
-- Bedside manner
-- Communication
-- Wait time
-- Office staff
+**ToggleHealth Urgent Care - Charlotte**
+- Address: 2500 Urgent Care Avenue, Charlotte, NC 28130
+- Phone: 704-555-9338
+- Networks: TH-EPO-SELECT, TH-PPO-PREMIER
 
-**Board Certification**
-- Indicates physician has passed specialty board exams
-- Recommitted to continuing education
-
-**Hospital Affiliations**
-- Which hospitals provider has privileges at
-- Important for continuity of care
-
-**Years in Practice**
-- Experience level
-
-### Hospital Quality Ratings
-
-**CMS Star Ratings** (1-5 stars)
-- Centers for Medicare & Medicaid Services ratings
-- Based on quality measures and patient outcomes
-
-**Leapfrog Grade** (A, B, C, D, F)
-- Independent safety and quality ratings
-- Based on infection rates, safety practices, patient outcomes
-
-**Trauma Level Designation**
-- Level I: Highest level trauma care
-- Level II: Comprehensive trauma care
-- Level III: Prompt assessment and stabilization
+**Hours:** Most urgent care centers open 8 AM - 8 PM weekdays, 9 AM - 5 PM weekends
+**Services:** Minor illness/injury treatment, X-rays, lab tests, immunizations
 
 ---
 
-## Contact Information
+## 24/7 Nurse Hotline
 
-**Find a Provider:** my.togglehealth.com/find-provider  
-**Member Services:** 1-800-TOGGLE-1  
-**Provider Relations:** For providers - call 1-800-TOGGLE-5
+**Phone:** 1-800-TOGGLE-NURSE (1-800-864-4536)
+**Available:** 24 hours a day, 7 days a week
+**Services:** Medical advice, symptom assessment, provider referrals
 
 ---
 
-*Provider network information is updated regularly. Always verify a provider is in-network before scheduling an appointment by calling Member Services or checking online at my.togglehealth.com*
