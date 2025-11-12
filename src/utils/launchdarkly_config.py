@@ -478,8 +478,47 @@ class ModelInvoker:
             Model response
         """
         try:
-            # Span correlation happens at the FastAPI endpoint level (see server.py)
-            # Just track the LLM call and token usage here
+            # Set ld.ai_config.key on the CURRENT span for THIS agent
+            # Each agent creates its own span (e.g., triage.task, policy_specialist.task)
+            # We mark THAT span with its specific AI Config key
+            try:
+                from opentelemetry import trace
+                
+                current_span = trace.get_current_span()
+                
+                if current_span and current_span.is_recording() and self.config_key:
+                    # Set the AI Config key for this specific agent
+                    current_span.set_attribute("ld.ai_config.key", self.config_key)
+                    
+                    # Add feature_flag event
+                    if self.user_context:
+                        try:
+                            ctx_dict = self.user_context.to_dict() if hasattr(self.user_context, 'to_dict') else {}
+                            ctx_id = ctx_dict.get('key') or ctx_dict.get('userKey') or 'anonymous'
+                            
+                            current_span.add_event(
+                                "feature_flag",
+                                attributes={
+                                    "feature_flag.key": self.config_key,
+                                    "feature_flag.provider.name": "LaunchDarkly",
+                                    "feature_flag.context.id": ctx_id,
+                                    "feature_flag.result.value": True,
+                                },
+                            )
+                        except Exception:
+                            pass
+                    
+                    # Trigger LD variation for correlation
+                    if self.user_context:
+                        try:
+                            _ = ldclient.get().variation(self.config_key, self.user_context, True)
+                        except Exception:
+                            pass
+                            
+            except Exception:
+                pass  # Don't fail if span annotation fails
+            
+            # Track the LLM call
             result = self.tracker.track_duration_of(lambda: self.model.invoke(messages))
             
             # Track success (no arguments)

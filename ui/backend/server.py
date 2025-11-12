@@ -164,61 +164,9 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
             coverage_type=request.coverageType
         )
         
-        # Correlate parent span with AI Configs (for Monitoring tab)
-        # This must happen BEFORE any LLM calls, at the endpoint level
-        try:
-            from opentelemetry import trace
-            import ldclient
-            from ldclient import Context
-            
-            parent_span = trace.get_current_span()
-            
-            # Convert user_context dict to LaunchDarkly Context first (doesn't require span)
-            user_key = user_context.get("user_key", "anonymous")
-            ld_context = Context.builder(user_key)
-            for key, value in user_context.items():
-                if key != "user_key":
-                    ld_context.set(key, value)
-            ld_context_obj = ld_context.build()
-            
-            # Only set attributes if span is valid and recording
-            if parent_span and parent_span.is_recording():
-                try:
-                    # Set ld.ai_config.key on parent span
-                    parent_span.set_attribute("ld.ai_config.key", "triage_agent")
-                    logger.info(f"✅ Set ld.ai_config.key on parent span")
-                except Exception as span_err:
-                    logger.warning(f"⚠️  Failed to set span attribute: {span_err}")
-                
-                try:
-                    # Add feature_flag event for correlation
-                    ctx_dict = ld_context_obj.to_dict() if hasattr(ld_context_obj, 'to_dict') else {}
-                    ctx_id = ctx_dict.get('key') or ctx_dict.get('userKey') or 'anonymous'
-                    parent_span.add_event(
-                        "feature_flag",
-                        attributes={
-                            "feature_flag.key": "triage_agent",
-                            "feature_flag.provider.name": "LaunchDarkly",
-                            "feature_flag.context.id": ctx_id,
-                            "feature_flag.result.value": True,
-                        },
-                    )
-                    logger.info(f"✅ Added feature_flag event to parent span")
-                except Exception as event_err:
-                    logger.warning(f"⚠️  Failed to add span event: {event_err}")
-            else:
-                logger.warning(f"⚠️  No recording span available (parent_span exists: {parent_span is not None})")
-            
-            # Trigger LD variation for correlation (independent of span)
-            try:
-                _ = ldclient.get().variation("triage_agent", ld_context_obj, True)
-                ldclient.get().flush()
-                logger.info(f"✅ Triggered LD variation for triage_agent")
-            except Exception as ld_err:
-                logger.warning(f"⚠️  Failed to trigger LD variation: {ld_err}")
-                    
-        except Exception as e:
-            logger.warning(f"⚠️  Failed to correlate span with AI Config: {e}")
+        # Span correlation now happens per-agent in ModelInvoker (see launchdarkly_config.py)
+        # Each agent (triage, policy, provider, brand) sets its own ld.ai_config.key
+        # This allows each config's spans to appear in its respective Monitoring tab
         
         # Track agent start times for duration calculation
         agent_timings = {}
