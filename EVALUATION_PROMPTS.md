@@ -8,7 +8,7 @@ You need to create **TWO** separate AI Configs in LaunchDarkly:
 
 ### 1. Accuracy Evaluation Config (GLOBAL SYSTEM ACCURACY)
 
-**Config Key**: `brand_eval_judge_accuracy`
+**Config Key**: `ai-judge-accuracy`
 
 **Config Type**: Agent-based (Goal or task)
 
@@ -82,7 +82,7 @@ Be strict. The threshold for passing is 0.8 - only score above 0.8 if the output
 
 ### 2. Coherence Evaluation Config
 
-**Config Key**: `brand_eval_judge_coherence`
+**Config Key**: `ai-judge-coherence`
 
 **Config Type**: Agent-based (Goal or task)
 

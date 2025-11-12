@@ -120,7 +120,7 @@ class BrandVoiceEvaluator:
         """
         # Get the judge LLM and config (with prompts from LaunchDarkly)
         model_invoker, judge_config = get_model_invoker(
-            config_key="brand_eval_judge_accuracy",
+            config_key="ai-judge-accuracy",
             context=user_context,
             default_temperature=0.0  # Deterministic for evaluation
         )
@@ -157,7 +157,7 @@ class BrandVoiceEvaluator:
         """
         # Get the judge LLM and config (with prompts from LaunchDarkly)
         model_invoker, judge_config = get_model_invoker(
-            config_key="brand_eval_judge_coherence",
+            config_key="ai-judge-coherence",
             context=user_context,
             default_temperature=0.0
         )
