@@ -479,54 +479,50 @@ class ModelInvoker:
         """
         try:
             # Set ld.ai_config.key on the CURRENT span for THIS agent
-            # Each agent creates its own span (e.g., triage.task, policy_specialist.task)
-            # We mark THAT span with its specific AI Config key
+            # Only do this for main request flow - skip for background threads (like evaluation)
             try:
                 from opentelemetry import trace
                 
                 current_span = trace.get_current_span()
                 
+                # Check if we have a valid, recording span
+                # Background threads may get a reference to a closed span - skip annotation in that case
                 if current_span and current_span.is_recording() and self.config_key:
-                    # Set the AI Config key for this specific agent
-                    # Wrap each operation separately to handle race conditions
                     try:
+                        # Set the AI Config key for this specific agent
                         current_span.set_attribute("ld.ai_config.key", self.config_key)
-                    except Exception as e:
-                        # Only catch specific "ended span" errors, not all exceptions
-                        if "ended span" not in str(e).lower():
-                            raise  # Re-raise if it's not the expected race condition
-                    
-                    # Add feature_flag event
-                    if self.user_context:
-                        try:
+                        
+                        # Add feature_flag event
+                        if self.user_context:
                             ctx_dict = self.user_context.to_dict() if hasattr(self.user_context, 'to_dict') else {}
                             ctx_id = ctx_dict.get('key') or ctx_dict.get('userKey') or 'anonymous'
                             
-                            # Check is_recording() again right before add_event
-                            if current_span.is_recording():
-                                current_span.add_event(
-                                    "feature_flag",
-                                    attributes={
-                                        "feature_flag.key": self.config_key,
-                                        "feature_flag.provider.name": "LaunchDarkly",
-                                        "feature_flag.context.id": ctx_id,
-                                        "feature_flag.result.value": True,
-                                    },
-                                )
-                        except Exception as e:
-                            # Only catch specific "ended span" errors
-                            if "ended span" not in str(e).lower():
-                                raise
-                    
-                    # Trigger LD variation for correlation (independent of span state)
-                    if self.user_context:
-                        try:
-                            _ = ldclient.get().variation(self.config_key, self.user_context, True)
-                        except Exception:
-                            pass  # This one is safe to ignore
+                            current_span.add_event(
+                                "feature_flag",
+                                attributes={
+                                    "feature_flag.key": self.config_key,
+                                    "feature_flag.provider.name": "LaunchDarkly",
+                                    "feature_flag.context.id": ctx_id,
+                                    "feature_flag.result.value": True,
+                                },
+                            )
+                        
+                        # Trigger LD variation for correlation
+                        if self.user_context:
+                            try:
+                                _ = ldclient.get().variation(self.config_key, self.user_context, True)
+                            except Exception:
+                                pass
+                                
+                    except Exception as e:
+                        # Silently ignore "ended span" errors (background threads with closed spans)
+                        # But log other errors for debugging
+                        if "ended span" not in str(e).lower():
+                            import logging
+                            logging.warning(f"Failed to annotate span for {self.config_key}: {e}")
                             
             except Exception:
-                pass  # Don't fail if span annotation fails
+                pass  # Don't fail model invocation if span annotation fails entirely
             
             # Track the LLM call
             result = self.tracker.track_duration_of(lambda: self.model.invoke(messages))
