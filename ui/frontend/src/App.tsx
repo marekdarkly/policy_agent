@@ -71,25 +71,38 @@ function App() {
   }, [messages, currentAgent]);
 
   const pollForEvaluation = async (requestId: string) => {
-    // Poll for evaluation results up to 10 times (max 5 seconds)
-    const maxAttempts = 10;
+    // Poll for evaluation results up to 20 times (max 10 seconds)
+    const maxAttempts = 20;
     let attempts = 0;
+
+    console.log(`🔍 Starting evaluation polling for request_id: ${requestId}`);
 
     const poll = async () => {
       if (attempts >= maxAttempts) {
-        console.log('Evaluation polling timed out');
+        console.log('⚠️  Evaluation polling timed out after 10 seconds');
         return;
       }
+
+      attempts++;
+      console.log(`📊 Polling attempt ${attempts}/${maxAttempts} for evaluation...`);
 
       try {
         const response = await fetch(`http://localhost:8000/api/evaluation/${requestId}`);
         const data = await response.json();
 
+        console.log(`📋 Polling response:`, data);
+
         if (data.ready && data.evaluation) {
+          console.log(`✅ Evaluation ready!`, data.evaluation);
+          
           // Update metrics with evaluation results
           setLastMetrics((prev) => {
-            if (!prev) return prev;
-            return {
+            if (!prev) {
+              console.warn('⚠️  No previous metrics to update');
+              return prev;
+            }
+            
+            const updated = {
               ...prev,
               accuracy_score: data.evaluation.accuracy?.score,
               accuracy_reasoning: data.evaluation.accuracy?.reason,
@@ -101,16 +114,19 @@ function App() {
               judge_input_tokens: data.evaluation.judge_input_tokens,
               judge_output_tokens: data.evaluation.judge_output_tokens,
             };
+            
+            console.log('📊 Updated metrics:', updated);
+            return updated;
           });
-          console.log('✅ Evaluation results received and displayed');
+          
+          console.log('✅ Evaluation results received and metrics updated!');
         } else {
           // Not ready yet, try again
-          attempts++;
+          console.log(`⏳ Evaluation not ready yet (attempt ${attempts}/${maxAttempts})`);
           setTimeout(poll, 500); // Poll every 500ms
         }
       } catch (error) {
-        console.error('Error polling for evaluation:', error);
-        attempts++;
+        console.error('❌ Error polling for evaluation:', error);
         if (attempts < maxAttempts) {
           setTimeout(poll, 500);
         }
