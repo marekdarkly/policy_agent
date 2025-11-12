@@ -486,6 +486,7 @@ class ModelInvoker:
                 with tracer.start_as_current_span(
                     f"ai_config.{self.config_key}",
                     attributes={
+                        "ld.ai_config.key": self.config_key,  # LaunchDarkly expects ld. prefix!
                         "ai.config.key": self.config_key,
                         "ai.config.type": "agent" if self._is_agent_config else "completion",
                         "service.name": "togglehealth-policy-agent",
