@@ -228,7 +228,7 @@ def format_profile_summary(user_profile: dict[str, Any]) -> str:
 DEFAULT_PROFILE = create_user_profile(
     name="Marek Poliks",
     location="San Francisco, CA",
-    policy_id="POL-12345",
-    coverage_type="Gold Plan"
+    policy_id="TH-HMO-GOLD-2024",
+    coverage_type="Gold HMO"
 )
 
