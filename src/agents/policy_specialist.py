@@ -105,6 +105,7 @@ def policy_specialist_node(state: AgentState) -> dict[str, Any]:
                 "source": "bedrock_kb_only",
                 "rag_enabled": True,
                 "rag_documents_retrieved": len(rag_documents),
+                "rag_documents": rag_documents,  # Store actual documents for evaluation
                 "query": query,
                 "policy_id": policy_id,
             },
