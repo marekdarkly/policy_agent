@@ -114,8 +114,8 @@ def get_llm_from_config(
     """
     ld_client = get_ld_client()
 
-    # Get AI config from LaunchDarkly
-    config, tracker = ld_client.get_ai_config(config_key, context)
+    # Get AI config from LaunchDarkly (context returned but not used here)
+    config, tracker, _ = ld_client.get_ai_config(config_key, context)
 
     # Extract model configuration
     model_config = config.get("model", {})
@@ -153,8 +153,8 @@ def get_model_invoker(
         Tuple of (ModelInvoker instance with tracking, full config dict including messages)
     """
     ld_client = get_ld_client()
-    # Get config once from LaunchDarkly
-    config, tracker = ld_client.get_ai_config(config_key, context)
+    # Get config once from LaunchDarkly (now returns context too)
+    config, tracker, ld_context = ld_client.get_ai_config(config_key, context)
     
     # Create LLM directly from the config (don't call get_llm_from_config which would retrieve again)
     provider = config.get("provider", "bedrock")
@@ -176,7 +176,8 @@ def get_model_invoker(
     # Determine if this is an agent-based config (has _instructions vs messages)
     is_agent_config = "_instructions" in config or config.get("_enabled", False)
     
-    return ModelInvoker(llm, tracker, config_key=config_key, is_agent_config=is_agent_config), config
+    # Pass ld_context to ModelInvoker for ld.variation() correlation
+    return ModelInvoker(llm, tracker, config_key=config_key, is_agent_config=is_agent_config, user_context=ld_context), config
 
 
 def _create_llm_for_provider(

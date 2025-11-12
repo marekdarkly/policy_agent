@@ -63,7 +63,7 @@ class LaunchDarklyClient:
         config_key: str,
         context: Optional[dict[str, Any]] = None,
         default_config: Optional[dict[str, Any]] = None,
-    ) -> tuple[dict[str, Any], Any]:
+    ) -> tuple[dict[str, Any], Any, Context]:
         """Retrieve AI configuration from LaunchDarkly.
 
         Args:
@@ -72,7 +72,7 @@ class LaunchDarklyClient:
             default_config: Default configuration fallback
 
         Returns:
-            Tuple of (config_value, tracker) for the AI config
+            Tuple of (config_value, tracker, ld_context) for the AI config
             
         Raises:
             RuntimeError: If LaunchDarkly client is not initialized
@@ -146,7 +146,7 @@ class LaunchDarklyClient:
                     
                     tracker = agent.tracker
                     print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly (agent-based with 'Goal or task')")
-                    return config_dict, tracker
+                    return config_dict, tracker, ld_context
                 # If no instructions, this is a completion-based config, fall through
         except Exception as e:
             # Agent-based retrieval failed, will try completion-based
@@ -178,7 +178,7 @@ class LaunchDarklyClient:
                 print(f"❌ {error_msg}")
                 raise RuntimeError(error_msg)
             
-            return config_dict, tracker
+            return config_dict, tracker, ld_context
             
         except Exception as e:
             print(f"❌ CATASTROPHIC: Error retrieving AI config '{config_key}': {e}")
@@ -450,7 +450,7 @@ class ModelInvoker:
     https://github.com/launchdarkly/hello-python-ai/blob/main/examples/langchain_example.py
     """
 
-    def __init__(self, model: BaseChatModel, tracker: Any, config_key: str = "", is_agent_config: bool = False):
+    def __init__(self, model: BaseChatModel, tracker: Any, config_key: str = "", is_agent_config: bool = False, user_context: Optional[Context] = None):
         """Initialize model invoker.
 
         Args:
@@ -458,11 +458,13 @@ class ModelInvoker:
             tracker: LaunchDarkly tracker for metrics
             config_key: The AI Config key (for observability linking)
             is_agent_config: Whether this is an agent-based config
+            user_context: LaunchDarkly user context (for ld.variation() correlation)
         """
         self.model = model
         self.tracker = tracker
         self.config_key = config_key
         self._is_agent_config = is_agent_config
+        self.user_context = user_context
 
     def invoke(self, messages: list[BaseMessage]) -> Any:
         """Invoke the model with tracking.
@@ -485,14 +487,31 @@ class ModelInvoker:
                     parent_span.set_attribute("ld.ai_config.key", self.config_key)
                     parent_span.set_attribute("ai.config.type", "agent" if self._is_agent_config else "completion")
                     
-                    # Add a feature_flag event (like ToggleBank RAG does)
+                    # Extract context ID for correlation
+                    ctx_id = "anonymous"
+                    if self.user_context:
+                        ctx_dict = self.user_context.to_dict() if hasattr(self.user_context, 'to_dict') else {}
+                        ctx_id = ctx_dict.get('key') or ctx_dict.get('userKey') or 'anonymous'
+                    
+                    # Add a feature_flag event (like ToggleBank RAG does) with context ID
                     parent_span.add_event(
                         "feature_flag",
                         attributes={
                             "feature_flag.key": self.config_key,
                             "feature_flag.provider.name": "LaunchDarkly",
+                            "feature_flag.context.id": ctx_id,
+                            "feature_flag.result.value": True,  # Config is enabled
                         },
                     )
+                    
+                    # Trigger an official LD feature_flag evaluation for correlation (like ToggleBank RAG)
+                    try:
+                        if self.user_context:
+                            _ = ldclient.get().variation(self.config_key, self.user_context, True)
+                            ldclient.get().flush()
+                    except Exception as ld_err:
+                        # Don't fail if LD variation call fails
+                        pass
                 
                 # Use track_duration_of to wrap the model call (LaunchDarkly API)
                 result = self.tracker.track_duration_of(lambda: self.model.invoke(messages))
