@@ -417,12 +417,12 @@ async def chat_stream(request: ChatRequest):
             # Send initial status
             yield f"data: {json.dumps({'type': 'status', 'agent': 'system', 'message': 'Starting analysis...'})}\n\n"
             
-            # Create user context with actual user profile from .env
+            # Create user context using the same defaults as non-streaming endpoint
             user_context = create_user_profile(
-                name=os.getenv("USER_NAME", "Marek Urbanowicz"),
-                location=os.getenv("USER_LOCATION", "San Francisco, CA"),
-                policy_id=os.getenv("USER_POLICY_ID", "TH-HMO-GOLD-2024"),
-                coverage_type=os.getenv("USER_COVERAGE_TYPE", "Gold HMO")
+                name=request.userName if hasattr(request, 'userName') else "Marek Poliks",
+                location=request.location if hasattr(request, 'location') else "San Francisco, CA",
+                policy_id=request.policyId if hasattr(request, 'policyId') else "TH-HMO-GOLD-2024",
+                coverage_type=request.coverageType if hasattr(request, 'coverageType') else "Gold HMO"
             )
             
             # Send triage status

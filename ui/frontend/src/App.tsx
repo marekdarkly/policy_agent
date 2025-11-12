@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkBreaks from 'remark-breaks';
+import remarkGfm from 'remark-gfm';
 import Terminal from './Terminal';
 import './App.css';
 
@@ -501,7 +503,11 @@ function App() {
               <div key={message.id} className="message-row">
                 <img src="/assets/ToggleAvatar.png" alt="" className="message-avatar" />
                 <div className="message message-assistant markdown-content">
-                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkBreaks, remarkGfm]}
+                  >
+                    {message.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             );
