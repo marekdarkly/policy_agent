@@ -291,7 +291,8 @@ async def evaluate_brand_voice_async(
     rag_documents: List[Dict[str, Any]],
     brand_voice_output: str,
     user_context: Dict[str, Any],
-    brand_tracker: Any
+    brand_tracker: Any,
+    request_id: Optional[str] = None
 ) -> None:
     """
     Evaluate system output asynchronously without blocking.
@@ -305,18 +306,31 @@ async def evaluate_brand_voice_async(
         brand_voice_output: Final system output to evaluate
         user_context: User context for LaunchDarkly
         brand_tracker: The tracker from brand_agent for sending metrics
+        request_id: Optional request ID to store results for later retrieval
     """
     evaluator = get_evaluator()
     
     try:
-        # Run evaluation without awaiting (fire-and-forget)
-        await evaluator.evaluate_async(
+        # Run evaluation
+        results = await evaluator.evaluate_async(
             original_query,
             rag_documents,
             brand_voice_output,
             user_context,
             brand_tracker
         )
+        
+        # Store results in global store if request_id provided
+        if request_id and results:
+            # Import at runtime to avoid circular dependency
+            try:
+                from ui.backend.server import EVALUATION_RESULTS
+                EVALUATION_RESULTS[request_id] = results
+                print(f"✅ Evaluation complete for request {request_id[:8]}... - stored results")
+            except ImportError:
+                # Server not running or not available - that's okay
+                print(f"✅ Evaluation complete for request {request_id[:8]}... - no server to store in")
+        
     except Exception as e:
         # Never let evaluation errors crash the main flow
         print(f"⚠️  Background evaluation failed: {e}")

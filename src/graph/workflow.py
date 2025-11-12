@@ -77,12 +77,13 @@ def create_workflow() -> StateGraph:
     return workflow.compile()
 
 
-def run_workflow(user_message: str, user_context: dict | None = None) -> dict:
+def run_workflow(user_message: str, user_context: dict | None = None, request_id: str | None = None) -> dict:
     """Run the workflow with a user message.
 
     Args:
         user_message: The user's query
         user_context: Optional user context (policy_id, location, etc.)
+        request_id: Optional request ID for tracking evaluation results
 
     Returns:
         Final state after workflow execution
@@ -90,7 +91,7 @@ def run_workflow(user_message: str, user_context: dict | None = None) -> dict:
     from .state import create_initial_state
 
     # Create initial state
-    initial_state = create_initial_state(user_message, user_context)
+    initial_state = create_initial_state(user_message, user_context, request_id)
 
     # Get workflow
     workflow = create_workflow()

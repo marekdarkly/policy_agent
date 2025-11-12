@@ -42,17 +42,22 @@ class AgentState(TypedDict):
 
     # Final response
     final_response: Annotated[str | None, "The final response to the user"]
+    
+    # Request tracking
+    request_id: Annotated[str | None, "Unique request ID for tracking evaluation results"]
 
 
 def create_initial_state(
     user_message: str,
     user_context: dict[str, Any] | None = None,
+    request_id: str | None = None,
 ) -> dict[str, Any]:
     """Create an initial state for the workflow.
 
     Args:
         user_message: The initial message from the user
         user_context: Optional customer context (policy_id, location, etc.)
+        request_id: Optional unique request ID for tracking
 
     Returns:
         Initial state dictionary
@@ -68,4 +73,5 @@ def create_initial_state(
         "escalation_needed": False,
         "agent_data": {},
         "final_response": None,
+        "request_id": request_id,
     }

@@ -86,6 +86,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                     rag_documents = rag_docs
                     break
         
+        # Get request_id from state for evaluation tracking
+        request_id = state.get("request_id")
+        
         # Handle both sync and async contexts
         try:
             # Try to get the current event loop
@@ -97,7 +100,8 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                     rag_documents=rag_documents,
                     brand_voice_output=final_response,
                     user_context=user_context,
-                    brand_tracker=model_invoker.tracker
+                    brand_tracker=model_invoker.tracker,
+                    request_id=request_id
                 )
             )
         except RuntimeError:
@@ -112,14 +116,15 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                         rag_documents=rag_documents,
                         brand_voice_output=final_response,
                         user_context=user_context,
-                        brand_tracker=model_invoker.tracker
+                        brand_tracker=model_invoker.tracker,
+                        request_id=request_id
                     )
                 )
             
             thread = threading.Thread(target=run_eval_in_thread, daemon=True)
             thread.start()
         
-        print(f"🔍 Background evaluation started (evaluating against {len(rag_documents)} RAG documents)")
+        print(f"🔍 Background evaluation started (evaluating against {len(rag_documents)} RAG documents) - request_id: {request_id[:8] if request_id else 'N/A'}...")
     except Exception as e:
         # Never let evaluation errors affect the main flow
         print(f"⚠️  Failed to start background evaluation: {e}")

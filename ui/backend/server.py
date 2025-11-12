@@ -80,12 +80,14 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
         # Track agent start times for duration calculation
         agent_timings = {}
         current_agent_start = time.time()
+        request_id = str(uuid4())
         
-        # Run workflow
+        # Run workflow with request_id for evaluation tracking
         result = await asyncio.to_thread(
             run_workflow,
             user_message=request.userInput,
-            user_context=user_context
+            user_context=user_context,
+            request_id=request_id
         )
         
         total_duration = int((time.time() - start_time) * 1000)  # ms
@@ -210,6 +212,27 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "service": "ToggleHealth Multi-Agent Assistant"}
+
+
+@app.get("/api/evaluation/{request_id}")
+async def get_evaluation(request_id: str):
+    """
+    Check if evaluation results are ready for a given request_id.
+    Returns evaluation results if available, or status indicating still processing.
+    """
+    if request_id in EVALUATION_RESULTS:
+        eval_data = EVALUATION_RESULTS[request_id]
+        # Clean up old result after retrieval
+        del EVALUATION_RESULTS[request_id]
+        return {
+            "ready": True,
+            "evaluation": eval_data
+        }
+    else:
+        return {
+            "ready": False,
+            "message": "Evaluation still processing or not found"
+        }
 
 
 if __name__ == "__main__":

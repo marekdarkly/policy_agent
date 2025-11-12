@@ -70,6 +70,57 @@ function App() {
     scrollToBottom();
   }, [messages, currentAgent]);
 
+  const pollForEvaluation = async (requestId: string) => {
+    // Poll for evaluation results up to 10 times (max 5 seconds)
+    const maxAttempts = 10;
+    let attempts = 0;
+
+    const poll = async () => {
+      if (attempts >= maxAttempts) {
+        console.log('Evaluation polling timed out');
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:8000/api/evaluation/${requestId}`);
+        const data = await response.json();
+
+        if (data.ready && data.evaluation) {
+          // Update metrics with evaluation results
+          setLastMetrics((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              accuracy_score: data.evaluation.accuracy?.score,
+              accuracy_reasoning: data.evaluation.accuracy?.reason,
+              accuracy_issues: data.evaluation.accuracy?.issues,
+              coherence_score: data.evaluation.coherence?.score,
+              coherence_reasoning: data.evaluation.coherence?.reason,
+              coherence_issues: data.evaluation.coherence?.issues,
+              judge_model_name: data.evaluation.judge_model_name,
+              judge_input_tokens: data.evaluation.judge_input_tokens,
+              judge_output_tokens: data.evaluation.judge_output_tokens,
+            };
+          });
+          console.log('✅ Evaluation results received and displayed');
+        } else {
+          // Not ready yet, try again
+          attempts++;
+          setTimeout(poll, 500); // Poll every 500ms
+        }
+      } catch (error) {
+        console.error('Error polling for evaluation:', error);
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 500);
+        }
+      }
+    };
+
+    // Start polling after a short delay (evaluation needs time to start)
+    setTimeout(poll, 1000);
+  };
+
   const sendMessage = async () => {
     if (!userInput.trim()) return;
 
@@ -153,6 +204,9 @@ function App() {
       // Store metrics and agent flow
       setLastMetrics(data.metrics || null);
       setLastAgentFlow(data.agentFlow);
+
+      // Start polling for evaluation results (async, non-blocking)
+      pollForEvaluation(data.requestId);
 
     } catch (error) {
       console.error('Chat error:', error);
