@@ -8,8 +8,10 @@ echo "║  Starting backend and frontend servers...                    ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 
-# Kill any existing servers
-pkill -f "python.*server.py" 2>/dev/null || true
+# Kill any existing servers on port 8000 and 3000
+echo "🧹 Cleaning up any existing processes..."
+lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+lsof -ti:3000 | xargs kill -9 2>/dev/null || true
 pkill -f "vite" 2>/dev/null || true
 sleep 1
 
