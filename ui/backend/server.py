@@ -33,6 +33,9 @@ logger = logging.getLogger(__name__)
 # Global store for evaluation results (populated by evaluation module)
 EVALUATION_RESULTS: Dict[str, Dict[str, Any]] = {}
 
+# Track which evaluations we've logged polling for (to reduce noise)
+POLLING_LOGGED: set = set()
+
 # Global log broadcaster for SSE
 LOG_QUEUES: list[queue.Queue] = []
 
@@ -286,22 +289,27 @@ async def get_evaluation(request_id: str):
     Check if evaluation results are ready for a given request_id.
     Returns evaluation results if available, or status indicating still processing.
     """
-    logger.info(f"[{request_id}] Polling for evaluation. Available keys: {list(EVALUATION_RESULTS.keys())}")
+    # Only log the first time we start polling for this request
+    if request_id not in POLLING_LOGGED:
+        logger.info(f"[{request_id}] ⏳ Starting to poll for evaluation results...")
+        POLLING_LOGGED.add(request_id)
     
     if request_id in EVALUATION_RESULTS:
         eval_data = EVALUATION_RESULTS[request_id]
-        logger.info(f"[{request_id}] ✅ Evaluation found! Returning results")
-        logger.info(f"[{request_id}] Accuracy: {eval_data.get('accuracy', {}).get('score', 'N/A')}")
-        logger.info(f"[{request_id}] Coherence: {eval_data.get('coherence', {}).get('score', 'N/A')}")
+        logger.info(f"[{request_id}] ✅ Evaluation complete!")
+        logger.info(f"[{request_id}]    Accuracy: {eval_data.get('accuracy', {}).get('score', 'N/A')}")
+        logger.info(f"[{request_id}]    Coherence: {eval_data.get('coherence', {}).get('score', 'N/A')}")
         
-        # Clean up old result after retrieval
+        # Clean up
         del EVALUATION_RESULTS[request_id]
+        POLLING_LOGGED.discard(request_id)
+        
         return {
             "ready": True,
             "evaluation": eval_data
         }
     else:
-        logger.debug(f"[{request_id}] Evaluation not ready yet")
+        # Don't log every poll attempt, only the first one
         return {
             "ready": False,
             "message": "Evaluation still processing or not found"
