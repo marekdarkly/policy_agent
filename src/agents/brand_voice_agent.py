@@ -64,18 +64,30 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     final_response = response.content
     
     # Start async evaluation without blocking (fire-and-forget)
-    # This will run in the background and send metrics to LaunchDarkly
+    # This evaluates GLOBAL SYSTEM ACCURACY against RAG documents
     try:
+        # Get RAG documents from agent_data (stored by specialist)
+        agent_data = state.get("agent_data", {})
+        rag_documents = []
+        
+        # Extract RAG docs from whichever specialist ran
+        for specialist in ["policy_specialist", "provider_specialist"]:
+            if specialist in agent_data:
+                rag_docs = agent_data[specialist].get("rag_documents", [])
+                if rag_docs:
+                    rag_documents = rag_docs
+                    break
+        
         asyncio.create_task(
             evaluate_brand_voice_async(
                 original_query=original_query,
-                specialist_response=specialist_response,
+                rag_documents=rag_documents,
                 brand_voice_output=final_response,
                 user_context=user_context,
                 brand_tracker=model_invoker.tracker
             )
         )
-        print("🔍 Background evaluation started for brand voice output")
+        print(f"🔍 Background evaluation started (evaluating against {len(rag_documents)} RAG documents)")
     except Exception as e:
         # Never let evaluation errors affect the main flow
         print(f"⚠️  Failed to start background evaluation: {e}")

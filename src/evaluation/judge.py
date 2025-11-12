@@ -36,7 +36,7 @@ class BrandVoiceEvaluator:
     async def evaluate_async(
         self,
         original_query: str,
-        specialist_response: str,
+        rag_documents: List[Dict[str, Any]],
         brand_voice_output: str,
         user_context: Dict[str, Any],
         brand_tracker: Any
@@ -46,8 +46,8 @@ class BrandVoiceEvaluator:
         
         Args:
             original_query: The user's original question
-            specialist_response: Response from the specialist agent (policy/provider/scheduler)
-            brand_voice_output: Final output from brand voice agent
+            rag_documents: Retrieved RAG documents (source of truth for accuracy)
+            brand_voice_output: Final output from brand voice agent (full system output)
             user_context: User context for LaunchDarkly targeting
             brand_tracker: The tracker from brand_agent for sending judgment metrics
             
@@ -61,7 +61,7 @@ class BrandVoiceEvaluator:
             # Run accuracy and coherence evaluations in parallel
             accuracy_task = self._evaluate_accuracy(
                 original_query,
-                specialist_response,
+                rag_documents,
                 brand_voice_output,
                 user_context
             )
@@ -108,13 +108,14 @@ class BrandVoiceEvaluator:
     async def _evaluate_accuracy(
         self,
         original_query: str,
-        specialist_response: str,
+        rag_documents: List[Dict[str, Any]],
         brand_voice_output: str,
         user_context: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Evaluate accuracy: Did brand voice preserve factual accuracy?
+        Evaluate global system accuracy: Is the final output factually accurate against RAG documents?
         
+        This evaluates the ENTIRE system (specialist + brand voice) against the source of truth (RAG docs).
         Uses G-Eval methodology with evaluation steps from LaunchDarkly.
         """
         # Get the judge LLM and config (with prompts from LaunchDarkly)
@@ -124,12 +125,15 @@ class BrandVoiceEvaluator:
             default_temperature=0.0  # Deterministic for evaluation
         )
         
+        # Format RAG documents as context
+        rag_context = self._format_rag_context(rag_documents)
+        
         # Build messages from LaunchDarkly config with accuracy evaluation context
         context_vars = {
             **user_context,
             "original_query": original_query,
-            "specialist_response": specialist_response,
-            "brand_voice_output": brand_voice_output,
+            "rag_context": rag_context,
+            "final_output": brand_voice_output,
             "evaluation_type": "accuracy"
         }
         
@@ -173,6 +177,19 @@ class BrandVoiceEvaluator:
         # Parse result
         return self._parse_eval_response(response.content, threshold=0.7)
     
+    
+    def _format_rag_context(self, rag_documents: List[Dict[str, Any]]) -> str:
+        """Format RAG documents into a readable context string."""
+        if not rag_documents:
+            return "No RAG documents available"
+        
+        formatted = "=== RETRIEVED KNOWLEDGE BASE DOCUMENTS (Source of Truth) ===\n\n"
+        for i, doc in enumerate(rag_documents, 1):
+            score = doc.get("score", 0.0)
+            content = doc.get("content", "")
+            formatted += f"[Document {i} - Relevance Score: {score:.2f}]\n{content}\n\n"
+        
+        return formatted
     
     def _parse_eval_response(self, response: str, threshold: float) -> Dict[str, Any]:
         """Parse evaluation response from judge LLM."""
@@ -246,20 +263,21 @@ def get_evaluator() -> BrandVoiceEvaluator:
 
 async def evaluate_brand_voice_async(
     original_query: str,
-    specialist_response: str,
+    rag_documents: List[Dict[str, Any]],
     brand_voice_output: str,
     user_context: Dict[str, Any],
     brand_tracker: Any
 ) -> None:
     """
-    Evaluate brand voice output asynchronously without blocking.
+    Evaluate system output asynchronously without blocking.
     
     This is a fire-and-forget function that runs evaluation in the background.
+    Evaluates GLOBAL SYSTEM ACCURACY against RAG documents (source of truth).
     
     Args:
         original_query: The user's original question
-        specialist_response: Response from specialist (before brand voice)
-        brand_voice_output: Final output after brand voice transformation
+        rag_documents: Retrieved RAG documents (source of truth)
+        brand_voice_output: Final system output to evaluate
         user_context: User context for LaunchDarkly
         brand_tracker: The tracker from brand_agent for sending metrics
     """
@@ -269,7 +287,7 @@ async def evaluate_brand_voice_async(
         # Run evaluation without awaiting (fire-and-forget)
         await evaluator.evaluate_async(
             original_query,
-            specialist_response,
+            rag_documents,
             brand_voice_output,
             user_context,
             brand_tracker
