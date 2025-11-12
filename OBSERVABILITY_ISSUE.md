@@ -3,6 +3,8 @@
 ## Summary
 Spans are appearing in **LaunchDarkly > Traces** but NOT in **AI Configs > [Config] > Monitoring tab**, despite following the documented pattern.
 
+**UPDATE**: We have a **multi-config system** (triage_agent, policy_agent, brand_agent, judges) but were setting `ld.ai_config.key` only once at endpoint level. ToggleBank RAG (working example) uses only ONE config per request, so endpoint-level works for them. We need per-agent correlation.
+
 ## Environment
 - **SDK**: `launchdarkly-server-sdk>=9.12.0`, `launchdarkly-server-sdk-ai>=0.8.0`, `launchdarkly-observability>=0.1.0`
 - **Language**: Python 3.13
