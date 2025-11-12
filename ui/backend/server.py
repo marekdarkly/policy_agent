@@ -330,20 +330,28 @@ async def stream_logs():
             yield f"data: {json.dumps(init_message)}\n\n"
             
             # Stream logs as they come in
+            heartbeat_counter = 0
             while True:
                 try:
-                    # Wait for new log with timeout
-                    log_entry = log_queue.get(timeout=30)
+                    # Non-blocking check for new logs
+                    log_entry = log_queue.get_nowait()
                     yield f"data: {json.dumps(log_entry)}\n\n"
+                    heartbeat_counter = 0  # Reset heartbeat counter
                 except queue.Empty:
-                    # Send heartbeat to keep connection alive
-                    heartbeat = {
-                        "timestamp": datetime.now().isoformat(),
-                        "level": "HEARTBEAT",
-                        "message": "",
-                        "name": "sse"
-                    }
-                    yield f"data: {json.dumps(heartbeat)}\n\n"
+                    # No logs available, sleep briefly
+                    await asyncio.sleep(0.1)
+                    heartbeat_counter += 1
+                    
+                    # Send heartbeat every 30 seconds (300 * 0.1s)
+                    if heartbeat_counter >= 300:
+                        heartbeat = {
+                            "timestamp": datetime.now().isoformat(),
+                            "level": "HEARTBEAT",
+                            "message": "",
+                            "name": "sse"
+                        }
+                        yield f"data: {json.dumps(heartbeat)}\n\n"
+                        heartbeat_counter = 0
         except asyncio.CancelledError:
             # Client disconnected
             if log_queue in LOG_QUEUES:
