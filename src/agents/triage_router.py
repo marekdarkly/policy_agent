@@ -41,6 +41,9 @@ def triage_node(state: AgentState) -> dict[str, Any]:
         default_temperature=0.0,
     )
     
+    # Extract model ID from config for tracking
+    model_id = ld_config.get("model", {}).get("name", "unknown")
+    
     # Build LangChain messages from LaunchDarkly config (supports both agent-based and completion-based)
     ld_client = get_ld_client()
     context_vars = {**user_context, "query": query}
@@ -128,6 +131,7 @@ def triage_node(state: AgentState) -> dict[str, Any]:
         "agent_data": {
             **state.get("agent_data", {}),
             "triage_router": {
+                "model": model_id,  # Track which model was used
                 "tokens": tokens,
                 "ttft_ms": ttft_ms,  # Time to first token from Bedrock streaming
                 "duration_ms": duration_ms,  # Total time to generate response

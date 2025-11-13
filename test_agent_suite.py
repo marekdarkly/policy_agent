@@ -187,6 +187,15 @@ class AgentTestRunner:
             
             brand_data = agent_data.get("brand_voice", {})
             
+            # Extract model information from each agent
+            triage_model = triage_data.get("model", "unknown")
+            specialist_model = specialist_data.get("model", "unknown")
+            brand_model = brand_data.get("model", "unknown")
+            
+            # Extract judge models from evaluation data
+            accuracy_judge_model = eval_data.get("accuracy", {}).get("model", "unknown") if eval_data else "unknown"
+            coherence_judge_model = eval_data.get("coherence", {}).get("model", "unknown") if eval_data else "unknown"
+            
             # Build result record
             test_result = {
                 "iteration": iteration,
@@ -203,18 +212,21 @@ class AgentTestRunner:
                 "total_duration_ms": total_duration,
                 
                 # Agent metrics
+                "triage_model": triage_model,
                 "triage_duration_ms": triage_data.get("duration_ms", 0),
                 "triage_ttft_ms": triage_data.get("ttft_ms", 0),
                 "triage_tokens_input": triage_data.get("tokens", {}).get("input", 0),
                 "triage_tokens_output": triage_data.get("tokens", {}).get("output", 0),
                 
                 "specialist_type": specialist_key or "none",
+                "specialist_model": specialist_model,
                 "specialist_duration_ms": specialist_data.get("duration_ms", 0),
                 "specialist_ttft_ms": specialist_data.get("ttft_ms", 0),
                 "specialist_tokens_input": specialist_data.get("tokens", {}).get("input", 0),
                 "specialist_tokens_output": specialist_data.get("tokens", {}).get("output", 0),
                 "specialist_rag_docs": specialist_data.get("rag_documents_retrieved", 0),
                 
+                "brand_model": brand_model,
                 "brand_duration_ms": brand_data.get("duration_ms", 0),
                 "brand_ttft_ms": brand_data.get("ttft_ms", 0),
                 "brand_tokens_input": brand_data.get("tokens", {}).get("input", 0),
@@ -222,8 +234,10 @@ class AgentTestRunner:
                 
                 # Evaluation metrics
                 "accuracy_score": accuracy_score,
+                "accuracy_judge_model": accuracy_judge_model,
                 "coherence_score": coherence_score,
-                "accuracy_reasoning": eval_data.get("accuracy", {}).get("reasoning", "")[:200],  # Truncate
+                "coherence_judge_model": coherence_judge_model,
+                "accuracy_reasoning": eval_data.get("accuracy", {}).get("reasoning", "")[:200] if eval_data else "",  # Truncate
                 
                 # Status
                 "status": "success",
@@ -235,6 +249,8 @@ class AgentTestRunner:
             print(f"   Route: {query_type} {'✓' if test_result['route_match'] else '✗ Expected: ' + expected_route}")
             print(f"   Confidence: {confidence:.1f}%")
             print(f"   Duration: {total_duration}ms")
+            print(f"   Models: Triage={triage_model}, Specialist={specialist_model}, Brand={brand_model}")
+            print(f"   Judges: Accuracy={accuracy_judge_model}, Coherence={coherence_judge_model}")
             print(f"   Accuracy: {accuracy_score:.1f}%")
             print(f"   Coherence: {coherence_score:.1f}%")
             
@@ -387,11 +403,11 @@ class AgentTestRunner:
             "iteration", "request_id", "timestamp", "question_id", "question",
             "category", "expected_route", "actual_route", "route_match",
             "confidence", "response_length", "total_duration_ms",
-            "triage_duration_ms", "triage_ttft_ms", "triage_tokens_input", "triage_tokens_output",
-            "specialist_type", "specialist_duration_ms", "specialist_ttft_ms",
+            "triage_model", "triage_duration_ms", "triage_ttft_ms", "triage_tokens_input", "triage_tokens_output",
+            "specialist_type", "specialist_model", "specialist_duration_ms", "specialist_ttft_ms",
             "specialist_tokens_input", "specialist_tokens_output", "specialist_rag_docs",
-            "brand_duration_ms", "brand_ttft_ms", "brand_tokens_input", "brand_tokens_output",
-            "accuracy_score", "coherence_score", "accuracy_reasoning",
+            "brand_model", "brand_duration_ms", "brand_ttft_ms", "brand_tokens_input", "brand_tokens_output",
+            "accuracy_score", "accuracy_judge_model", "coherence_score", "coherence_judge_model", "accuracy_reasoning",
             "status", "error"
         ]
         
