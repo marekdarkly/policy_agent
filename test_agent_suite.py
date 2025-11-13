@@ -66,8 +66,11 @@ class AgentTestRunner:
         """Get a random question from the dataset."""
         return random.choice(self.dataset['questions'])
     
-    def create_test_user(self, question_data: Dict) -> Dict:
-        """Create user profile based on question context."""
+    def create_test_user(self, question_data: Dict, iteration: int) -> Dict:
+        """Create user profile based on question context.
+        
+        Randomizes user name/key to ensure varied split test distribution.
+        """
         # Vary user profiles based on question tags
         tags = question_data.get('tags', [])
         
@@ -101,9 +104,16 @@ class AgentTestRunner:
                 location = f"{city}, {state}"
                 break
         
+        # Randomize user name to get varied split test distribution
+        # Each iteration gets a unique user key → distributed across LaunchDarkly variations
+        first_names = ["Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Quinn", "Avery", "Parker", "Cameron"]
+        last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez"]
+        
+        random_name = f"{random.choice(first_names)} {random.choice(last_names)} {iteration}"
+        
         # Default to Gold HMO (can vary if needed)
         return create_user_profile(
-            name="Test User",
+            name=random_name,
             location=location,
             policy_id="TH-HMO-GOLD-2024",
             coverage_type="Gold HMO"
@@ -121,15 +131,18 @@ class AgentTestRunner:
         question_text = question_data['question']
         expected_route = question_data.get('expected_route', 'UNKNOWN')
         
+        # Create user context (same as backend server)
+        # Randomize user key for split test distribution
+        user_context = self.create_test_user(question_data, iteration)
+        
         print(f"\n{'='*80}")
         print(f"🧪 Test {iteration}/{NUM_ITERATIONS} - {question_id}")
         print(f"{'='*80}")
         print(f"❓ Question: {question_text}")
         print(f"🎯 Expected Route: {expected_route}")
+        print(f"👤 User: {user_context.get('name')} (key: {user_context.get('user_key')})")
         
         try:
-            # Create user context (same as backend server)
-            user_context = self.create_test_user(question_data)
             
             # Run workflow (EXACTLY like backend server /api/chat endpoint)
             result = await asyncio.to_thread(
@@ -201,6 +214,8 @@ class AgentTestRunner:
                 "iteration": iteration,
                 "request_id": request_id,
                 "timestamp": datetime.now().isoformat(),
+                "user_key": user_context.get("user_key", "unknown"),  # Track for split test analysis
+                "user_name": user_context.get("name", "unknown"),
                 "question_id": question_id,
                 "question": question_text,
                 "category": question_data.get("category", ""),
@@ -400,7 +415,8 @@ class AgentTestRunner:
         
         # Define CSV columns
         columns = [
-            "iteration", "request_id", "timestamp", "question_id", "question",
+            "iteration", "request_id", "timestamp", "user_key", "user_name",
+            "question_id", "question",
             "category", "expected_route", "actual_route", "route_match",
             "confidence", "response_length", "total_duration_ms",
             "triage_model", "triage_duration_ms", "triage_ttft_ms", "triage_tokens_input", "triage_tokens_output",
