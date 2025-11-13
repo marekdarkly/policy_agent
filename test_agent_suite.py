@@ -149,10 +149,26 @@ class AgentTestRunner:
             agent_data = result.get("agent_data", {})
             confidence = result.get("confidence_score", 0)
             
-            # Extract evaluation results
-            eval_data = agent_data.get("evaluation", {})
-            accuracy_score = eval_data.get("accuracy", {}).get("score", 0.0)
-            coherence_score = eval_data.get("coherence", {}).get("score", 0.0)
+            # Wait for evaluation to complete (background thread)
+            # Poll for up to 30 seconds (same as UI frontend)
+            print(f"   ⏳ Waiting for evaluation to complete...")
+            eval_data = {}
+            for attempt in range(60):  # 60 attempts * 0.5s = 30s max
+                await asyncio.sleep(0.5)
+                
+                # Check if evaluation results are available
+                if request_id in self.evaluation_results_store:
+                    eval_data = self.evaluation_results_store[request_id]
+                    print(f"   ✅ Evaluation complete after {(attempt + 1) * 0.5:.1f}s")
+                    break
+            
+            if not eval_data:
+                print(f"   ⚠️  Evaluation not completed within 30s timeout")
+                eval_data = {}
+            
+            # Extract evaluation scores
+            accuracy_score = eval_data.get("accuracy", {}).get("score", 0.0) if eval_data else 0.0
+            coherence_score = eval_data.get("coherence", {}).get("score", 0.0) if eval_data else 0.0
             
             # Extract agent metrics
             triage_data = agent_data.get("triage_router", {})
