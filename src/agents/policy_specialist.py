@@ -134,6 +134,7 @@ def policy_specialist_node(state: AgentState) -> dict[str, Any]:
                 "rag_documents": rag_documents,  # Store actual documents for evaluation
                 "query": query,
                 "policy_id": policy_id,
+                "response": response_text,  # Store raw specialist output for debugging/testing
                 "tokens": tokens,
                 "ttft_ms": ttft_ms,  # Time to first token from Bedrock streaming
                 "duration_ms": duration_ms,  # Total time to generate response

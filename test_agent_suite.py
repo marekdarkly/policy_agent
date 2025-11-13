@@ -26,11 +26,28 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Suppress noisy logs for test suite
+import logging
+import warnings
+
+# Suppress all botocore, boto3, ldclient, httpx, and observability logs
+logging.getLogger("botocore").setLevel(logging.CRITICAL)
+logging.getLogger("boto3").setLevel(logging.CRITICAL)
+logging.getLogger("ldclient").setLevel(logging.CRITICAL)
+logging.getLogger("httpx").setLevel(logging.CRITICAL)
+logging.getLogger("opentelemetry").setLevel(logging.CRITICAL)
+logging.getLogger("src.utils.observability").setLevel(logging.CRITICAL)
+logging.getLogger("src.utils.launchdarkly_config").setLevel(logging.WARNING)
+
+# Suppress span-related warnings
+warnings.filterwarnings("ignore", message=".*ended span.*")
+warnings.filterwarnings("ignore", message=".*Setting attribute.*")
+
 # Add project root to path
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, project_root)
 
-# Initialize observability BEFORE any LLM imports
+# Initialize observability BEFORE any LLM imports (but suppress its logs)
 from src.utils.observability import initialize_observability
 initialize_observability(environment=os.getenv("LAUNCHDARKLY_ENVIRONMENT", "production"))
 
@@ -193,16 +210,20 @@ class AgentTestRunner:
             triage_data = agent_data.get("triage_router", {})
             specialist_key = None
             specialist_data = {}
+            specialist_response = ""
             
             if "policy_specialist" in agent_data:
                 specialist_key = "policy_specialist"
                 specialist_data = agent_data["policy_specialist"]
+                specialist_response = specialist_data.get("response", "")
             elif "provider_specialist" in agent_data:
                 specialist_key = "provider_specialist"
                 specialist_data = agent_data["provider_specialist"]
+                specialist_response = specialist_data.get("response", "")
             elif "scheduler_specialist" in agent_data:
                 specialist_key = "scheduler_specialist"
                 specialist_data = agent_data["scheduler_specialist"]
+                specialist_response = specialist_data.get("response", "")
             
             brand_data = agent_data.get("brand_voice", {})
             
@@ -246,12 +267,14 @@ class AgentTestRunner:
                 "specialist_tokens_input": specialist_data.get("tokens", {}).get("input", 0),
                 "specialist_tokens_output": specialist_data.get("tokens", {}).get("output", 0),
                 "specialist_rag_docs": specialist_data.get("rag_documents_retrieved", 0),
+                "specialist_response": specialist_response[:1000] if specialist_response else "",  # Truncate for CSV
                 
                 "brand_model": brand_model,
                 "brand_duration_ms": brand_data.get("duration_ms", 0),
                 "brand_ttft_ms": brand_data.get("ttft_ms", 0),
                 "brand_tokens_input": brand_data.get("tokens", {}).get("input", 0),
                 "brand_tokens_output": brand_data.get("tokens", {}).get("output", 0),
+                "final_response": final_response[:1000] if final_response else "",  # Truncate for CSV
                 
                 # Evaluation metrics
                 "accuracy_score": accuracy_score,
@@ -265,7 +288,7 @@ class AgentTestRunner:
                 "error": None
             }
             
-            # Print summary
+            # Print detailed summary including specialist outputs
             print(f"✅ SUCCESS")
             print(f"   Route: {query_type} {'✓' if test_result['route_match'] else '✗ Expected: ' + expected_route}")
             print(f"   Confidence: {confidence:.1f}%")
@@ -274,6 +297,24 @@ class AgentTestRunner:
             print(f"   Judges: Accuracy={accuracy_judge_model}, Coherence={coherence_judge_model}")
             print(f"   Accuracy: {accuracy_score:.1f}%")
             print(f"   Coherence: {coherence_score:.1f}%")
+            
+            # Print specialist agent output for visibility (FULL output, no truncation)
+            if specialist_response:
+                print(f"\n   📋 SPECIALIST OUTPUT ({specialist_key}):")
+                print(f"   {'-' * 76}")
+                # Print FULL specialist output (user needs to see complete RAG-based responses)
+                specialist_lines = specialist_response.split('\n')
+                for line in specialist_lines:
+                    print(f"   {line}")
+                print(f"   {'-' * 76}")
+            
+            # Print final customer-facing response (FULL output, no truncation)
+            print(f"\n   💬 FINAL RESPONSE (Brand Voice):")
+            print(f"   {'-' * 76}")
+            response_lines = final_response.split('\n')
+            for line in response_lines:
+                print(f"   {line}")
+            print(f"   {'-' * 76}")
             
             return test_result
             
@@ -309,6 +350,11 @@ class AgentTestRunner:
         print(f"{'='*80}\n")
         
         for i in range(1, num_iterations + 1):
+            # Progress indicator at the start of each iteration
+            print(f"\n{'='*80}")
+            print(f"⏳ PROGRESS: {i}/{num_iterations} ({100*i/num_iterations:.1f}% complete)")
+            print(f"{'='*80}")
+            
             # Get random question
             question_data = self.get_random_question()
             
@@ -317,6 +363,19 @@ class AgentTestRunner:
             
             # Store result
             self.results.append(result)
+            
+            # Show running statistics every 10 iterations
+            if i % 10 == 0 and i > 0:
+                successful = [r for r in self.results if r['status'] == 'success']
+                if successful:
+                    avg_accuracy = sum(r['accuracy_score'] for r in successful) / len(successful)
+                    avg_coherence = sum(r['coherence_score'] for r in successful) / len(successful)
+                    route_matches = [r for r in successful if r['route_match']]
+                    print(f"\n📊 RUNNING STATS (after {i} tests):")
+                    print(f"   Avg Accuracy: {avg_accuracy:.1%}")
+                    print(f"   Avg Coherence: {avg_coherence:.1%}")
+                    print(f"   Routing Accuracy: {len(route_matches)}/{len(successful)} ({100*len(route_matches)/len(successful):.1f}%)")
+                    print()
             
             # Small delay between iterations
             await asyncio.sleep(0.5)
@@ -427,8 +486,8 @@ class AgentTestRunner:
             "confidence", "response_length", "total_duration_ms",
             "triage_model", "triage_duration_ms", "triage_ttft_ms", "triage_tokens_input", "triage_tokens_output",
             "specialist_type", "specialist_model", "specialist_duration_ms", "specialist_ttft_ms",
-            "specialist_tokens_input", "specialist_tokens_output", "specialist_rag_docs",
-            "brand_model", "brand_duration_ms", "brand_ttft_ms", "brand_tokens_input", "brand_tokens_output",
+            "specialist_tokens_input", "specialist_tokens_output", "specialist_rag_docs", "specialist_response",
+            "brand_model", "brand_duration_ms", "brand_ttft_ms", "brand_tokens_input", "brand_tokens_output", "final_response",
             "accuracy_score", "accuracy_judge_model", "coherence_score", "coherence_judge_model", "accuracy_reasoning",
             "status", "error"
         ]

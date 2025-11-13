@@ -184,6 +184,7 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
                 "specialty": specialty,
                 "location": location,
                 "network": network,
+                "response": response_text,  # Store raw specialist output for debugging/testing
                 "tokens": tokens,
                 "ttft_ms": ttft_ms,  # Time to first token from Bedrock streaming
                 "duration_ms": duration_ms,  # Total time to generate response
