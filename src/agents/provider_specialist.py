@@ -128,6 +128,9 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
         default_temperature=0.7,
     )
     
+    # Extract model ID from config for tracking
+    model_id = ld_config.get("model", {}).get("name", "unknown")
+    
     # Build LangChain messages from LaunchDarkly config (supports both agent-based and completion-based)
     context_vars = {
         **user_context,
@@ -172,14 +175,16 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
         "agent_data": {
             **state.get("agent_data", {}),
             "provider_specialist": {
+                "model": model_id,  # Track which model was used
                 "source": "bedrock_kb_only",
                 "rag_enabled": True,
-                "rag_documents_retrieved": len(rag_documents),
-                "rag_documents": rag_documents,  # Store actual documents for evaluation
+                "rag_documents_retrieved": len(filtered_documents),
+                "rag_documents": filtered_documents,  # Store actual filtered documents for evaluation
                 "query": query,
                 "specialty": specialty,
                 "location": location,
                 "network": network,
+                "response": response_text,  # Store raw specialist output for debugging/testing
                 "tokens": tokens,
                 "ttft_ms": ttft_ms,  # Time to first token from Bedrock streaming
                 "duration_ms": duration_ms,  # Total time to generate response

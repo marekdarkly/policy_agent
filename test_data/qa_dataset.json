@@ -18,7 +18,7 @@
       "id": "Q001",
       "category": "policy_coverage",
       "question": "What's my copay for a primary care visit?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["copay", "primary_care", "gold_hmo"]
     },
     {
@@ -32,7 +32,7 @@
       "id": "Q003",
       "category": "policy_coverage",
       "question": "Does my plan cover mental health therapy?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["mental_health", "coverage", "therapy"]
     },
     {
@@ -46,14 +46,14 @@
       "id": "Q005",
       "category": "pharmacy_benefits",
       "question": "How much is a generic prescription at the pharmacy?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["pharmacy", "generic", "copay"]
     },
     {
       "id": "Q006",
       "category": "special_programs",
       "question": "Do you have a diabetes management program?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["diabetes", "special_program", "disease_management"]
     },
     {
@@ -67,7 +67,7 @@
       "id": "Q008",
       "category": "policy_coverage",
       "question": "What's my deductible for this year?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["deductible", "cost_sharing"]
     },
     {
@@ -81,14 +81,14 @@
       "id": "Q010",
       "category": "claims_preauth",
       "question": "Do I need preauthorization for an MRI?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["preauth", "imaging", "mri"]
     },
     {
       "id": "Q011",
       "category": "policy_coverage",
       "question": "How much will a hospital stay cost me?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["hospital", "inpatient", "cost"]
     },
     {
@@ -102,7 +102,7 @@
       "id": "Q013",
       "category": "pharmacy_benefits",
       "question": "Can I use mail order for my medications?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["pharmacy", "mail_order"]
     },
     {
@@ -116,7 +116,7 @@
       "id": "Q015",
       "category": "policy_coverage",
       "question": "Is preventive care covered at 100%?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["preventive", "coverage"]
     },
     {
@@ -130,7 +130,7 @@
       "id": "Q017",
       "category": "policy_coverage",
       "question": "What's the copay for urgent care?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["copay", "urgent_care"]
     },
     {
@@ -144,14 +144,14 @@
       "id": "Q019",
       "category": "special_programs",
       "question": "What maternity programs do you offer?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["maternity", "special_program"]
     },
     {
       "id": "Q020",
       "category": "policy_coverage",
       "question": "Does my plan cover acupuncture?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["alternative_medicine", "acupuncture"]
     },
     {
@@ -165,14 +165,14 @@
       "id": "Q022",
       "category": "pharmacy_benefits",
       "question": "What's the cost for a specialty medication?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["pharmacy", "specialty", "tier4"]
     },
     {
       "id": "Q023",
       "category": "claims_preauth",
       "question": "How do I submit a claim?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["claims", "submission"]
     },
     {
@@ -186,7 +186,7 @@
       "id": "Q025",
       "category": "policy_coverage",
       "question": "What's my out-of-pocket maximum?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["oop_max", "cost_sharing"]
     },
     {
@@ -200,14 +200,14 @@
       "id": "Q027",
       "category": "special_programs",
       "question": "Do you have a weight management program?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["weight_management", "special_program"]
     },
     {
       "id": "Q028",
       "category": "policy_coverage",
       "question": "How much is an emergency room visit?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["emergency", "copay"]
     },
     {
@@ -221,7 +221,7 @@
       "id": "Q030",
       "category": "pharmacy_benefits",
       "question": "Can I get a 90-day supply of my medication?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["pharmacy", "mail_order", "90day"]
     },
     {
@@ -235,14 +235,14 @@
       "id": "Q032",
       "category": "policy_coverage",
       "question": "Does my plan cover chiropractic care?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["alternative_medicine", "chiropractic"]
     },
     {
       "id": "Q033",
       "category": "claims_preauth",
       "question": "Do I need preauth for surgery?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["preauth", "surgery"]
     },
     {
@@ -256,7 +256,7 @@
       "id": "Q035",
       "category": "policy_coverage",
       "question": "What's covered for maternity care?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["maternity", "prenatal"]
     },
     {
@@ -277,7 +277,7 @@
       "id": "Q038",
       "category": "pharmacy_benefits",
       "question": "Is my insulin covered?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["pharmacy", "diabetes", "insulin"]
     },
     {
@@ -291,7 +291,7 @@
       "id": "Q040",
       "category": "policy_coverage",
       "question": "Do I need a referral to see a specialist?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["referral", "hmo", "specialist"]
     },
     {
@@ -305,14 +305,14 @@
       "id": "Q042",
       "category": "special_programs",
       "question": "What programs do you have for heart disease?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["heart_health", "special_program"]
     },
     {
       "id": "Q043",
       "category": "policy_coverage",
       "question": "How much is a specialist visit?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["copay", "specialist"]
     },
     {
@@ -326,7 +326,7 @@
       "id": "Q045",
       "category": "pharmacy_benefits",
       "question": "What's the difference between generic and brand name cost?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["pharmacy", "generic", "brand"]
     },
     {
@@ -340,7 +340,7 @@
       "id": "Q047",
       "category": "policy_coverage",
       "question": "Is physical therapy covered?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["physical_therapy", "coverage"]
     },
     {
@@ -354,7 +354,7 @@
       "id": "Q049",
       "category": "claims_preauth",
       "question": "What imaging requires preauthorization?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["preauth", "imaging"]
     },
     {
@@ -368,7 +368,7 @@
       "id": "Q051",
       "category": "policy_coverage",
       "question": "What's the copay for an MRI?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["copay", "imaging", "mri"]
     },
     {
@@ -382,7 +382,7 @@
       "id": "Q053",
       "category": "pharmacy_benefits",
       "question": "Do you cover specialty medications?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["pharmacy", "specialty"]
     },
     {
@@ -396,14 +396,14 @@
       "id": "Q055",
       "category": "special_programs",
       "question": "Is there a prenatal care program?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["maternity", "prenatal", "special_program"]
     },
     {
       "id": "Q056",
       "category": "policy_coverage",
       "question": "What's covered for mental health inpatient care?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["mental_health", "inpatient"]
     },
     {
@@ -417,7 +417,7 @@
       "id": "Q058",
       "category": "pharmacy_benefits",
       "question": "How do I refill my prescription?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["pharmacy", "refill"]
     },
     {
@@ -431,7 +431,7 @@
       "id": "Q060",
       "category": "policy_coverage",
       "question": "Does my plan cover ambulance services?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["ambulance", "emergency"]
     },
     {
@@ -445,7 +445,7 @@
       "id": "Q062",
       "category": "claims_preauth",
       "question": "How long does preauthorization take?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["preauth", "timeline"]
     },
     {
@@ -459,14 +459,14 @@
       "id": "Q064",
       "category": "special_programs",
       "question": "Do you have a smoking cessation program?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["smoking_cessation", "wellness"]
     },
     {
       "id": "Q065",
       "category": "policy_coverage",
       "question": "What's my maximum out-of-pocket cost?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["oop_max", "cost_limit"]
     },
     {
@@ -480,7 +480,7 @@
       "id": "Q067",
       "category": "pharmacy_benefits",
       "question": "What tier is my blood pressure medication?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["pharmacy", "tier", "medication"]
     },
     {
@@ -494,7 +494,7 @@
       "id": "Q069",
       "category": "policy_coverage",
       "question": "Is emergency care covered when traveling?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["emergency", "travel"]
     },
     {
@@ -522,7 +522,7 @@
       "id": "Q073",
       "category": "policy_coverage",
       "question": "Are lab tests covered?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["lab", "diagnostic"]
     },
     {
@@ -536,7 +536,7 @@
       "id": "Q075",
       "category": "pharmacy_benefits",
       "question": "Can I split my prescription between retail and mail order?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["pharmacy", "mail_order", "retail"]
     },
     {
@@ -550,7 +550,7 @@
       "id": "Q077",
       "category": "claims_preauth",
       "question": "What happens if I don't get preauthorization?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["preauth", "denial"]
     },
     {
@@ -564,7 +564,7 @@
       "id": "Q079",
       "category": "policy_coverage",
       "question": "Is telehealth covered?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["telehealth", "virtual"]
     },
     {
@@ -578,14 +578,14 @@
       "id": "Q081",
       "category": "special_programs",
       "question": "Do you have a cancer support program?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["oncology", "support_program"]
     },
     {
       "id": "Q082",
       "category": "policy_coverage",
       "question": "What's the copay for X-rays?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["copay", "imaging", "xray"]
     },
     {
@@ -599,7 +599,7 @@
       "id": "Q084",
       "category": "pharmacy_benefits",
       "question": "Do you cover diabetic supplies?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["pharmacy", "diabetes", "supplies"]
     },
     {
@@ -613,7 +613,7 @@
       "id": "Q086",
       "category": "claims_preauth",
       "question": "How do I appeal a denied claim?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["claims", "appeal", "denial"]
     },
     {
@@ -627,7 +627,7 @@
       "id": "Q088",
       "category": "policy_coverage",
       "question": "Does my plan cover vision care?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["vision", "ophthalmology"]
     },
     {
@@ -641,7 +641,7 @@
       "id": "Q090",
       "category": "pharmacy_benefits",
       "question": "What's the copay for a brand name drug?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["pharmacy", "brand", "tier2"]
     },
     {
@@ -655,7 +655,7 @@
       "id": "Q092",
       "category": "policy_coverage",
       "question": "Are immunizations covered at no cost?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["preventive", "immunizations"]
     },
     {
@@ -669,14 +669,14 @@
       "id": "Q094",
       "category": "special_programs",
       "question": "What wellness programs are available?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["wellness", "special_program"]
     },
     {
       "id": "Q095",
       "category": "policy_coverage",
       "question": "Does my plan cover home health care?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["home_health", "coverage"]
     },
     {
@@ -690,7 +690,7 @@
       "id": "Q097",
       "category": "pharmacy_benefits",
       "question": "How do I get prior authorization for a medication?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["pharmacy", "prior_auth"]
     },
     {
@@ -711,7 +711,7 @@
       "id": "Q100",
       "category": "policy_coverage",
       "question": "What's my plan's annual deductible?",
-      "expected_route": "POLICY_LOOKUP",
+      "expected_route": "POLICY_QUESTION",
       "tags": ["deductible", "annual"]
     }
   ]

@@ -47,6 +47,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         default_temperature=0.7,  # Slightly creative for natural language
     )
     
+    # Extract model ID from config for tracking
+    model_id = ld_config.get("model", {}).get("name", "unknown")
+
     # Build LangChain messages from LaunchDarkly config (supports both agent-based and completion-based)
     ld_client = get_ld_client()
     context_vars = {
@@ -153,6 +156,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
 
     # Add debug info to agent_data (store full responses for hallucination debugging)
     brand_data = {
+        "model": model_id,  # Track which model was used
         "original_specialist_response": specialist_response[:500] + "..." if len(specialist_response) > 500 else specialist_response,
         "final_customer_response": final_response[:500] + "..." if len(final_response) > 500 else final_response,
         "brand_voice_applied": True,

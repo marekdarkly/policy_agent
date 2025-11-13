@@ -297,8 +297,8 @@ policy_agent/
 
 ## Documentation
 
+- [AI_CONFIG_PROMPTS.md](AI_CONFIG_PROMPTS.md) - **AI Config prompts (synced from LaunchDarkly)**
 - [LAUNCHDARKLY.md](LAUNCHDARKLY.md) - LaunchDarkly AI Config setup
-- [EVALUATION_PROMPTS.md](EVALUATION_PROMPTS.md) - G-Eval judge prompts
 - [SDD.md](SDD.md) - System Design Document
 
 ## Requirements

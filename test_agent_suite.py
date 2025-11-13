@@ -26,11 +26,28 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Suppress noisy logs for test suite
+import logging
+import warnings
+
+# Suppress all botocore, boto3, ldclient, httpx, and observability logs
+logging.getLogger("botocore").setLevel(logging.CRITICAL)
+logging.getLogger("boto3").setLevel(logging.CRITICAL)
+logging.getLogger("ldclient").setLevel(logging.CRITICAL)
+logging.getLogger("httpx").setLevel(logging.CRITICAL)
+logging.getLogger("opentelemetry").setLevel(logging.CRITICAL)
+logging.getLogger("src.utils.observability").setLevel(logging.CRITICAL)
+logging.getLogger("src.utils.launchdarkly_config").setLevel(logging.WARNING)
+
+# Suppress span-related warnings
+warnings.filterwarnings("ignore", message=".*ended span.*")
+warnings.filterwarnings("ignore", message=".*Setting attribute.*")
+
 # Add project root to path
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, project_root)
 
-# Initialize observability BEFORE any LLM imports
+# Initialize observability BEFORE any LLM imports (but suppress its logs)
 from src.utils.observability import initialize_observability
 initialize_observability(environment=os.getenv("LAUNCHDARKLY_ENVIRONMENT", "production"))
 
@@ -66,8 +83,12 @@ class AgentTestRunner:
         """Get a random question from the dataset."""
         return random.choice(self.dataset['questions'])
     
-    def create_test_user(self, question_data: Dict) -> Dict:
-        """Create user profile based on question context."""
+    def create_test_user(self, question_data: Dict, iteration: int) -> Dict:
+        """Create user profile based on question context.
+        
+        Randomizes user name/key to ensure varied split test distribution.
+        Uses UUID for user_key to maximize entropy for LaunchDarkly bucketing.
+        """
         # Vary user profiles based on question tags
         tags = question_data.get('tags', [])
         
@@ -101,13 +122,25 @@ class AgentTestRunner:
                 location = f"{city}, {state}"
                 break
         
-        # Default to Gold HMO (can vary if needed)
-        return create_user_profile(
-            name="Test User",
+        # Randomize user name to get varied split test distribution
+        first_names = ["Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Quinn", "Avery", "Parker", "Cameron"]
+        last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez"]
+        
+        random_name = f"{random.choice(first_names)} {random.choice(last_names)} {iteration}"
+        
+        # Create profile with random name (will auto-generate user_key from name)
+        profile = create_user_profile(
+            name=random_name,
             location=location,
             policy_id="TH-HMO-GOLD-2024",
             coverage_type="Gold HMO"
         )
+        
+        # OVERRIDE user_key with UUID for maximum entropy in LaunchDarkly bucketing
+        # This ensures truly random distribution across split test variations
+        profile["user_key"] = f"test-user-{uuid4()}"
+        
+        return profile
     
     async def run_single_test(self, iteration: int, question_data: Dict) -> Dict:
         """Run a single test iteration (full circuit).
@@ -121,15 +154,18 @@ class AgentTestRunner:
         question_text = question_data['question']
         expected_route = question_data.get('expected_route', 'UNKNOWN')
         
+        # Create user context (same as backend server)
+        # Randomize user key for split test distribution
+        user_context = self.create_test_user(question_data, iteration)
+        
         print(f"\n{'='*80}")
         print(f"🧪 Test {iteration}/{NUM_ITERATIONS} - {question_id}")
         print(f"{'='*80}")
         print(f"❓ Question: {question_text}")
         print(f"🎯 Expected Route: {expected_route}")
+        print(f"👤 User: {user_context.get('name')} (key: {user_context.get('user_key')})")
         
         try:
-            # Create user context (same as backend server)
-            user_context = self.create_test_user(question_data)
             
             # Run workflow (EXACTLY like backend server /api/chat endpoint)
             result = await asyncio.to_thread(
@@ -174,69 +210,111 @@ class AgentTestRunner:
             triage_data = agent_data.get("triage_router", {})
             specialist_key = None
             specialist_data = {}
+            specialist_response = ""
             
             if "policy_specialist" in agent_data:
                 specialist_key = "policy_specialist"
                 specialist_data = agent_data["policy_specialist"]
+                specialist_response = specialist_data.get("response", "")
             elif "provider_specialist" in agent_data:
                 specialist_key = "provider_specialist"
                 specialist_data = agent_data["provider_specialist"]
+                specialist_response = specialist_data.get("response", "")
             elif "scheduler_specialist" in agent_data:
                 specialist_key = "scheduler_specialist"
                 specialist_data = agent_data["scheduler_specialist"]
+                specialist_response = specialist_data.get("response", "")
             
             brand_data = agent_data.get("brand_voice", {})
+            
+            # Extract model information from each agent
+            triage_model = triage_data.get("model", "unknown")
+            specialist_model = specialist_data.get("model", "unknown")
+            brand_model = brand_data.get("model", "unknown")
+            
+            # Extract judge models from evaluation data
+            accuracy_judge_model = eval_data.get("accuracy", {}).get("model", "unknown") if eval_data else "unknown"
+            coherence_judge_model = eval_data.get("coherence", {}).get("model", "unknown") if eval_data else "unknown"
             
             # Build result record
             test_result = {
                 "iteration": iteration,
                 "request_id": request_id,
                 "timestamp": datetime.now().isoformat(),
+                "user_key": user_context.get("user_key", "unknown"),  # Track for split test analysis
+                "user_name": user_context.get("name", "unknown"),
                 "question_id": question_id,
                 "question": question_text,
                 "category": question_data.get("category", ""),
                 "expected_route": expected_route,
-                "actual_route": str(query_type),
-                "route_match": str(query_type) == expected_route,
+                "actual_route": query_type.value if hasattr(query_type, 'value') else str(query_type),
+                "route_match": (query_type.value if hasattr(query_type, 'value') else str(query_type)).upper() == expected_route.upper(),
                 "confidence": float(confidence),
                 "response_length": len(final_response),
                 "total_duration_ms": total_duration,
                 
                 # Agent metrics
+                "triage_model": triage_model,
                 "triage_duration_ms": triage_data.get("duration_ms", 0),
                 "triage_ttft_ms": triage_data.get("ttft_ms", 0),
                 "triage_tokens_input": triage_data.get("tokens", {}).get("input", 0),
                 "triage_tokens_output": triage_data.get("tokens", {}).get("output", 0),
                 
                 "specialist_type": specialist_key or "none",
+                "specialist_model": specialist_model,
                 "specialist_duration_ms": specialist_data.get("duration_ms", 0),
                 "specialist_ttft_ms": specialist_data.get("ttft_ms", 0),
                 "specialist_tokens_input": specialist_data.get("tokens", {}).get("input", 0),
                 "specialist_tokens_output": specialist_data.get("tokens", {}).get("output", 0),
                 "specialist_rag_docs": specialist_data.get("rag_documents_retrieved", 0),
+                "specialist_response": specialist_response[:1000] if specialist_response else "",  # Truncate for CSV
                 
+                "brand_model": brand_model,
                 "brand_duration_ms": brand_data.get("duration_ms", 0),
                 "brand_ttft_ms": brand_data.get("ttft_ms", 0),
                 "brand_tokens_input": brand_data.get("tokens", {}).get("input", 0),
                 "brand_tokens_output": brand_data.get("tokens", {}).get("output", 0),
+                "final_response": final_response[:1000] if final_response else "",  # Truncate for CSV
                 
                 # Evaluation metrics
                 "accuracy_score": accuracy_score,
+                "accuracy_judge_model": accuracy_judge_model,
                 "coherence_score": coherence_score,
-                "accuracy_reasoning": eval_data.get("accuracy", {}).get("reasoning", "")[:200],  # Truncate
+                "coherence_judge_model": coherence_judge_model,
+                "accuracy_reasoning": eval_data.get("accuracy", {}).get("reasoning", "")[:200] if eval_data else "",  # Truncate
                 
                 # Status
                 "status": "success",
                 "error": None
             }
             
-            # Print summary
+            # Print detailed summary including specialist outputs
             print(f"✅ SUCCESS")
             print(f"   Route: {query_type} {'✓' if test_result['route_match'] else '✗ Expected: ' + expected_route}")
             print(f"   Confidence: {confidence:.1f}%")
             print(f"   Duration: {total_duration}ms")
+            print(f"   Models: Triage={triage_model}, Specialist={specialist_model}, Brand={brand_model}")
+            print(f"   Judges: Accuracy={accuracy_judge_model}, Coherence={coherence_judge_model}")
             print(f"   Accuracy: {accuracy_score:.1f}%")
             print(f"   Coherence: {coherence_score:.1f}%")
+            
+            # Print specialist agent output for visibility (FULL output, no truncation)
+            if specialist_response:
+                print(f"\n   📋 SPECIALIST OUTPUT ({specialist_key}):")
+                print(f"   {'-' * 76}")
+                # Print FULL specialist output (user needs to see complete RAG-based responses)
+                specialist_lines = specialist_response.split('\n')
+                for line in specialist_lines:
+                    print(f"   {line}")
+                print(f"   {'-' * 76}")
+            
+            # Print final customer-facing response (FULL output, no truncation)
+            print(f"\n   💬 FINAL RESPONSE (Brand Voice):")
+            print(f"   {'-' * 76}")
+            response_lines = final_response.split('\n')
+            for line in response_lines:
+                print(f"   {line}")
+            print(f"   {'-' * 76}")
             
             return test_result
             
@@ -272,6 +350,11 @@ class AgentTestRunner:
         print(f"{'='*80}\n")
         
         for i in range(1, num_iterations + 1):
+            # Progress indicator at the start of each iteration
+            print(f"\n{'='*80}")
+            print(f"⏳ PROGRESS: {i}/{num_iterations} ({100*i/num_iterations:.1f}% complete)")
+            print(f"{'='*80}")
+            
             # Get random question
             question_data = self.get_random_question()
             
@@ -280,6 +363,19 @@ class AgentTestRunner:
             
             # Store result
             self.results.append(result)
+            
+            # Show running statistics every 10 iterations
+            if i % 10 == 0 and i > 0:
+                successful = [r for r in self.results if r['status'] == 'success']
+                if successful:
+                    avg_accuracy = sum(r['accuracy_score'] for r in successful) / len(successful)
+                    avg_coherence = sum(r['coherence_score'] for r in successful) / len(successful)
+                    route_matches = [r for r in successful if r['route_match']]
+                    print(f"\n📊 RUNNING STATS (after {i} tests):")
+                    print(f"   Avg Accuracy: {avg_accuracy:.1%}")
+                    print(f"   Avg Coherence: {avg_coherence:.1%}")
+                    print(f"   Routing Accuracy: {len(route_matches)}/{len(successful)} ({100*len(route_matches)/len(successful):.1f}%)")
+                    print()
             
             # Small delay between iterations
             await asyncio.sleep(0.5)
@@ -384,14 +480,15 @@ class AgentTestRunner:
         
         # Define CSV columns
         columns = [
-            "iteration", "request_id", "timestamp", "question_id", "question",
+            "iteration", "request_id", "timestamp", "user_key", "user_name",
+            "question_id", "question",
             "category", "expected_route", "actual_route", "route_match",
             "confidence", "response_length", "total_duration_ms",
-            "triage_duration_ms", "triage_ttft_ms", "triage_tokens_input", "triage_tokens_output",
-            "specialist_type", "specialist_duration_ms", "specialist_ttft_ms",
-            "specialist_tokens_input", "specialist_tokens_output", "specialist_rag_docs",
-            "brand_duration_ms", "brand_ttft_ms", "brand_tokens_input", "brand_tokens_output",
-            "accuracy_score", "coherence_score", "accuracy_reasoning",
+            "triage_model", "triage_duration_ms", "triage_ttft_ms", "triage_tokens_input", "triage_tokens_output",
+            "specialist_type", "specialist_model", "specialist_duration_ms", "specialist_ttft_ms",
+            "specialist_tokens_input", "specialist_tokens_output", "specialist_rag_docs", "specialist_response",
+            "brand_model", "brand_duration_ms", "brand_ttft_ms", "brand_tokens_input", "brand_tokens_output", "final_response",
+            "accuracy_score", "accuracy_judge_model", "coherence_score", "coherence_judge_model", "accuracy_reasoning",
             "status", "error"
         ]
         
