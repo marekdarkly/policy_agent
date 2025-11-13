@@ -1,0 +1,33 @@
+# Dr. Kevin F. Murphy, MD
+
+## Specialty
+Orthopedic Surgery
+
+**Provider ID:** SPEC-TX-125  
+**Specialty:** Orthopedic Surgery  
+**Practice:** Dallas Orthopedic Surgery Center
+
+**Location:**  
+2500 Specialty Drive, Suite 450  
+Dallas, TX 75115
+
+**Contact:**
+- Phone: 214-555-5215
+- Fax: 214-555-6215
+
+**Network Information:**
+- Networks: TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Accepted Plans: TH-HDHP-BRONZE-2024, TH-HMO-GOLD-2024, TH-PPO-PLATINUM-2024
+
+**Provider Details:**
+- Languages: English
+- Gender: Male
+- Years in Practice: 22
+- Board Certified: Yes
+- Accepting New Patients: Yes
+
+**Patient Ratings:**
+- Average Rating: 4.5/5.0
+- Total Reviews: 725
+
+---

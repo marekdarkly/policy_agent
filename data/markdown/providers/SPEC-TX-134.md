@@ -1,0 +1,33 @@
+# Dr. Susan E. Nguyen, MD
+
+## Specialty
+Oncology
+
+**Provider ID:** SPEC-TX-134  
+**Specialty:** Oncology  
+**Practice:** Houston Oncology Center
+
+**Location:**  
+2400 Specialty Drive, Suite 400  
+Houston, TX 77114
+
+**Contact:**
+- Phone: 713-555-5231
+- Fax: 713-555-6231
+
+**Network Information:**
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Accepted Plans: TH-EPO-SILVER-2024, TH-HDHP-BRONZE-2024, TH-HMO-GOLD-2024, TH-PPO-PLATINUM-2024
+
+**Provider Details:**
+- Languages: English
+- Gender: Female
+- Years in Practice: 20
+- Board Certified: Yes
+- Accepting New Patients: Yes
+
+**Patient Ratings:**
+- Average Rating: 4.6/5.0
+- Total Reviews: 773
+
+---
