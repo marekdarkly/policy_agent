@@ -70,6 +70,7 @@ class AgentTestRunner:
         """Create user profile based on question context.
         
         Randomizes user name/key to ensure varied split test distribution.
+        Uses UUID for user_key to maximize entropy for LaunchDarkly bucketing.
         """
         # Vary user profiles based on question tags
         tags = question_data.get('tags', [])
@@ -105,19 +106,24 @@ class AgentTestRunner:
                 break
         
         # Randomize user name to get varied split test distribution
-        # Each iteration gets a unique user key → distributed across LaunchDarkly variations
         first_names = ["Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Quinn", "Avery", "Parker", "Cameron"]
         last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez"]
         
         random_name = f"{random.choice(first_names)} {random.choice(last_names)} {iteration}"
         
-        # Default to Gold HMO (can vary if needed)
-        return create_user_profile(
+        # Create profile with random name (will auto-generate user_key from name)
+        profile = create_user_profile(
             name=random_name,
             location=location,
             policy_id="TH-HMO-GOLD-2024",
             coverage_type="Gold HMO"
         )
+        
+        # OVERRIDE user_key with UUID for maximum entropy in LaunchDarkly bucketing
+        # This ensures truly random distribution across split test variations
+        profile["user_key"] = f"test-user-{uuid4()}"
+        
+        return profile
     
     async def run_single_test(self, iteration: int, question_data: Dict) -> Dict:
         """Run a single test iteration (full circuit).
@@ -220,8 +226,8 @@ class AgentTestRunner:
                 "question": question_text,
                 "category": question_data.get("category", ""),
                 "expected_route": expected_route,
-                "actual_route": str(query_type),
-                "route_match": str(query_type) == expected_route,
+                "actual_route": query_type.value if hasattr(query_type, 'value') else str(query_type),
+                "route_match": (query_type.value if hasattr(query_type, 'value') else str(query_type)).upper() == expected_route.upper(),
                 "confidence": float(confidence),
                 "response_length": len(final_response),
                 "total_duration_ms": total_duration,

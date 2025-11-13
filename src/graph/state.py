@@ -42,7 +42,7 @@ class AgentState(TypedDict):
 
     # Final response
     final_response: Annotated[str | None, "The final response to the user"]
-    
+
     # Request tracking
     request_id: Annotated[str | None, "Unique request ID for tracking evaluation results"]
     evaluation_results_store: Annotated[dict[str, Any] | None, "Shared dict for storing evaluation results"]
