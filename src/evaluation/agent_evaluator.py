@@ -56,11 +56,31 @@ async def evaluate_agent_accuracy(
             # Fallback if no prompt in config
             raise ValueError(f"No prompt found in LaunchDarkly config '{evaluator_config_key}'")
         
+        # Debug: Show template before substitution
+        print(f"🔍 DEBUG: Prompt template (first 300 chars): {prompt_template[:300]}...")
+        print(f"🔍 DEBUG: Variables to substitute:")
+        print(f"   - agent_name: {agent_name}")
+        print(f"   - user_query length: {len(original_query)} chars")
+        print(f"   - agent_output length: {len(agent_output)} chars")
+        print(f"   - rag_documents length: {len(rag_context)} chars")
+        
         # Substitute template variables
-        evaluation_prompt = prompt_template.replace("{{agent_name}}", agent_name)
-        evaluation_prompt = evaluation_prompt.replace("{{user_query}}", original_query)
-        evaluation_prompt = evaluation_prompt.replace("{{agent_output}}", agent_output)
-        evaluation_prompt = evaluation_prompt.replace("{{rag_documents}}", rag_context)
+        # The LaunchDarkly prompt has sections like "**User Query:**\n\n**Agent Output..."
+        # We need to inject content after each header
+        evaluation_prompt = prompt_template.replace(
+            "**User Query:**", 
+            f"**User Query:**\n{original_query}"
+        )
+        evaluation_prompt = evaluation_prompt.replace(
+            "**Agent Output to Evaluate:**",
+            f"**Agent Output to Evaluate:**\n{agent_output}"
+        )
+        evaluation_prompt = evaluation_prompt.replace(
+            "**RAG Documents (Source of Truth):**",
+            f"**RAG Documents (Source of Truth):**\n{rag_context}"
+        )
+        
+        print(f"🔍 DEBUG: After substitution (first 300 chars): {evaluation_prompt[:300]}...")
         
         # Run evaluation with substituted prompt
         from langchain_core.messages import HumanMessage
@@ -68,6 +88,10 @@ async def evaluate_agent_accuracy(
         
         response = model_invoker.model.invoke(messages)
         response_text = response.content
+        
+        # Debug: Print response to help diagnose JSON parsing issues
+        print(f"🔍 DEBUG: Agent evaluator response (first 500 chars):")
+        print(f"{response_text[:500]}...")
         
         # Extract token usage
         tokens = {
