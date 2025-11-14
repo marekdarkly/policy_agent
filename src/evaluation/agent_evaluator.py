@@ -66,7 +66,7 @@ async def evaluate_agent_accuracy(
         from langchain_core.messages import HumanMessage
         messages = [HumanMessage(content=evaluation_prompt)]
         
-        response = model_invoker.llm.invoke(messages)
+        response = model_invoker.model.invoke(messages)
         response_text = response.content
         
         # Extract token usage
