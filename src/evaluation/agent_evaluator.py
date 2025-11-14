@@ -33,50 +33,36 @@ async def evaluate_agent_accuracy(
         Dict with accuracy result
     """
     try:
-        # Get agent-specific evaluator config from LaunchDarkly
-        evaluator_config_key = f"agent-evaluator-{agent_name.replace('_agent', '')}"
+        # Get agent evaluator config from LaunchDarkly
+        evaluator_config_key = "agent-judge-accuracy"
         
-        # Prepare evaluation prompt
-        # Combine RAG documents for evaluation
+        # Format RAG documents for template variable
         rag_context = "\n\n---\n\n".join([
             f"Document {i+1}:\n{doc.get('content', '')}"
             for i, doc in enumerate(rag_documents)
         ])
         
-        # Build evaluation prompt
-        evaluation_prompt = f"""You are evaluating the accuracy of a {agent_name}'s output.
-
-USER QUERY: {original_query}
-
-AGENT OUTPUT TO EVALUATE:
-{agent_output}
-
-RAG DOCUMENTS (Source of Truth):
-{rag_context}
-
-Evaluate the agent's output for factual accuracy against the RAG documents.
-Score from 0.0 to 1.0 where:
-- 1.0 = Perfectly accurate, all facts match RAG documents
-- 0.8-0.9 = Mostly accurate with minor omissions
-- 0.6-0.7 = Some inaccuracies or significant omissions  
-- 0.4-0.5 = Multiple inaccuracies
-- 0.0-0.3 = Major inaccuracies or hallucinations
-
-Return JSON:
-{{
-  "score": <float 0.0-1.0>,
-  "passed": <boolean>,
-  "reason": "<brief explanation>",
-  "issues": ["<issue 1>", "<issue 2>"]
-}}"""
-
         # Get model invoker for evaluation (using LaunchDarkly config)
         model_invoker, eval_config = get_model_invoker(
             config_key=evaluator_config_key,
             user_context=user_context
         )
         
-        # Run evaluation
+        # Get the prompt template from LaunchDarkly config
+        # Agent-based configs have prompt in '_instructions'
+        prompt_template = eval_config.get("_instructions", "")
+        
+        if not prompt_template:
+            # Fallback if no prompt in config
+            raise ValueError(f"No prompt found in LaunchDarkly config '{evaluator_config_key}'")
+        
+        # Substitute template variables
+        evaluation_prompt = prompt_template.replace("{{agent_name}}", agent_name)
+        evaluation_prompt = evaluation_prompt.replace("{{user_query}}", original_query)
+        evaluation_prompt = evaluation_prompt.replace("{{agent_output}}", agent_output)
+        evaluation_prompt = evaluation_prompt.replace("{{rag_documents}}", rag_context)
+        
+        # Run evaluation with substituted prompt
         from langchain_core.messages import HumanMessage
         messages = [HumanMessage(content=evaluation_prompt)]
         
