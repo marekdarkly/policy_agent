@@ -330,21 +330,12 @@ def retrieve_provider_documents(
     # Get retriever - will raise RuntimeError if KB ID not configured
     retriever = get_provider_retriever(ld_config=ld_config)
     
-    # Enhance query with filters
-    filters = []
-    if specialty:
-        filters.append(f"specialty: {specialty}")
-    if location:
-        filters.append(f"location: {location}")
-    if network:
-        filters.append(f"network: {network}")
-    
-    enhanced_query = query
-    if filters:
-        enhanced_query = f"{query} ({', '.join(filters)})"
+    # Use original query without filter enhancement
+    # Post-retrieval filtering in provider_specialist.py handles plan matching
+    # Adding structured filters here reduces semantic similarity scores
     
     try:
-        documents = retriever.retrieve(enhanced_query)
+        documents = retriever.retrieve(query)
         return documents
     except Exception as e:
         print(f"  ⚠️  RAG retrieval failed: {e}, falling back to database")
