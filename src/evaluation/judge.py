@@ -342,7 +342,7 @@ class BrandVoiceEvaluator:
             # 2. Coherence metric
             coherence_score = float(coherence_result["score"])
             ld_client.track(
-                event_name="$ld:ai:coherence",
+                event_name="ld:ai:coherence",
                 context=ld_context,
                 metric_value=coherence_score
             )
