@@ -5,7 +5,7 @@ Runs full agent circuits (initialize → route → answer → evaluate → termi
 for automated testing and performance benchmarking.
 
 This script:
-1. Loads Q&A dataset (100 questions)
+1. Loads Q&A dataset (50 demo-optimized questions by default)
 2. Runs N iterations with random questions
 3. Each iteration is a complete circuit (matching backend server exactly)
 4. Includes all metrics, observability, and evaluation
@@ -58,7 +58,7 @@ import ldclient
 
 # Test configuration
 NUM_ITERATIONS = int(os.getenv("TEST_ITERATIONS", "50"))  # Number of test runs (configurable)
-DATASET_PATH = "test_data/qa_dataset.json"
+DATASET_PATH = os.getenv("DATASET_PATH", "test_data/qa_dataset_demo.json")  # Use demo dataset by default
 RESULTS_DIR = "test_results"
 
 # Ensure results directory exists
