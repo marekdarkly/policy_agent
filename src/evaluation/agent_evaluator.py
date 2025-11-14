@@ -45,7 +45,7 @@ async def evaluate_agent_accuracy(
         # Get model invoker for evaluation (using LaunchDarkly config)
         model_invoker, eval_config = get_model_invoker(
             config_key=evaluator_config_key,
-            user_context=user_context
+            context=user_context
         )
         
         # Get the prompt template from LaunchDarkly config
