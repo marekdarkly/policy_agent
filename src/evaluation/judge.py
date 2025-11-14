@@ -287,15 +287,16 @@ class BrandVoiceEvaluator:
         These metrics will appear in the same tracker stream as the brand_agent.
         """
         try:
-            # Send accuracy judgment
+            # Send accuracy judgment as hallucinations metric (inverted: higher accuracy = fewer hallucinations)
+            # Send coherence judgment
             # The tracker should support custom metric names
             if hasattr(brand_tracker, 'track_metric'):
                 brand_tracker.track_metric(
-                    "$ld:ai:judge:accuracy",
+                    "$ld:ai:hallucinations",
                     accuracy_result["score"]
                 )
                 brand_tracker.track_metric(
-                    "$ld:ai:judge:coherence",
+                    "$ld:ai:coherence",
                     coherence_result["score"]
                 )
             else:
