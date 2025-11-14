@@ -2,6 +2,7 @@
 
 import asyncio
 from typing import Any
+import ldclient
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
@@ -9,6 +10,48 @@ from ..graph.state import AgentState
 from ..utils.llm_config import get_model_invoker
 from ..utils.launchdarkly_config import get_ld_client
 from ..evaluation.judge import evaluate_brand_voice_async
+
+
+def calculate_model_cost(model_id: str, input_tokens: int, output_tokens: int) -> float:
+    """Calculate cost for a model based on token usage.
+    
+    Args:
+        model_id: The model identifier (e.g., 'us.anthropic.claude-haiku-4-5-20251001-v1:0')
+        input_tokens: Number of input tokens
+        output_tokens: Number of output tokens
+    
+    Returns:
+        Total cost in dollars
+    """
+    # Pricing per 1000 tokens
+    pricing = {
+        "haiku": {"input": 0.001, "output": 0.005},
+        "sonnet-4": {"input": 0.003, "output": 0.015},
+        "llama4-maverick": {"input": 0.00024, "output": 0.00097},
+        "nova-pro": {"input": 0.0008, "output": 0.0002},
+    }
+    
+    # Determine model type from model_id
+    model_lower = model_id.lower()
+    if "haiku" in model_lower:
+        rates = pricing["haiku"]
+    elif "sonnet-4" in model_lower or "sonnet4" in model_lower:
+        rates = pricing["sonnet-4"]
+    elif "llama4" in model_lower or "maverick" in model_lower:
+        rates = pricing["llama4-maverick"]
+    elif "nova-pro" in model_lower:
+        rates = pricing["nova-pro"]
+    else:
+        # Unknown model, return 0
+        print(f"⚠️  Unknown model for cost calculation: {model_id}")
+        return 0.0
+    
+    # Calculate cost (pricing is per 1000 tokens)
+    input_cost = (input_tokens / 1000.0) * rates["input"]
+    output_cost = (output_tokens / 1000.0) * rates["output"]
+    total_cost = input_cost + output_cost
+    
+    return total_cost
 
 
 def brand_voice_node(state: AgentState) -> dict[str, Any]:
@@ -112,6 +155,36 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
             trackers_store[request_id] = model_invoker.tracker
             print(f"✅ Stored brand voice tracker for request {request_id[:8]}...")
         
+        # Calculate and send cost metric for brand agent
+        brand_cost = calculate_model_cost(
+            model_id=model_id,
+            input_tokens=tokens["input"],
+            output_tokens=tokens["output"]
+        )
+        
+        # Send cost metric to LaunchDarkly
+        try:
+            from ldclient import Context
+            ld_client = ldclient.get()
+            
+            # Build context from user_context
+            user_key = user_context.get("user_key", "anonymous")
+            context_builder = Context.builder(user_key).kind("user")
+            if user_context.get("name"):
+                context_builder.set("name", user_context["name"])
+            ld_context = context_builder.build()
+            
+            # Send cost metric
+            ld_client.track(
+                event_name="$ld:ai:tokens:costmanual",
+                context=ld_context,
+                metric_value=float(brand_cost)
+            )
+            
+            print(f"💰 Brand agent cost: ${brand_cost:.6f} (model={model_id.split(':')[0].split('.')[-1]}, in={tokens['input']}, out={tokens['output']})")
+        except Exception as e:
+            print(f"⚠️  Failed to send cost metric: {e}")
+        
         # Handle both sync and async contexts
         try:
             # Try to get the current event loop
@@ -161,6 +234,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         "final_customer_response": final_response[:500] + "..." if len(final_response) > 500 else final_response,
         "brand_voice_applied": True,
         "tokens": tokens,
+        "cost_usd": brand_cost,  # Manual cost calculation for this agent
         "ttft_ms": ttft_ms,  # Time to first token from Bedrock streaming
         "duration_ms": duration_ms,  # Total time to generate response
         "personalization": {
