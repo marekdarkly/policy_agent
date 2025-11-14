@@ -393,12 +393,31 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
         )
         
     except Exception as e:
+        error_message = str(e)
         logger.error(f"[{request_id}] Error in chat endpoint: {e}", exc_info=True)
+        
+        # Check for AWS SSO/credential errors
+        if any(pattern in error_message for pattern in [
+            "KeyError:", "JSONDecodeError", "Extra data", 
+            "Refreshing token failed", "Refreshing temporary credentials failed",
+            "get_frozen_credentials", "sso", "token"
+        ]):
+            user_message = (
+                "🔐 **AWS Authentication Required**\n\n"
+                "Your AWS session has expired. Please re-authenticate:\n\n"
+                "1. Run: `aws sso login --profile marek`\n"
+                "2. Or clear cached tokens: `rm -rf ~/.aws/sso/cache/`\n\n"
+                "Then refresh the page and try again."
+            )
+            logger.error(f"[{request_id}] ❌ AWS SSO authentication failure detected")
+        else:
+            user_message = "I'm sorry, an error occurred while processing your request. Please try again."
+        
         return ChatResponse(
-            response="I'm sorry, an error occurred while processing your request. Please try again.",
+            response=user_message,
             requestId=request_id,
             agentFlow=[],
-            error=str(e)
+            error=error_message
         )
 
 
@@ -554,8 +573,26 @@ async def chat_stream(request: ChatRequest):
             })}\n\n"
             
         except Exception as e:
-            logger.error(f"Error in streaming chat: {e}")
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            error_message = str(e)
+            logger.error(f"Error in streaming chat: {e}", exc_info=True)
+            
+            # Check for AWS SSO/credential errors
+            if any(pattern in error_message for pattern in [
+                "KeyError:", "JSONDecodeError", "Extra data", 
+                "Refreshing token failed", "Refreshing temporary credentials failed",
+                "get_frozen_credentials", "sso", "token"
+            ]):
+                user_message = (
+                    "🔐 AWS Authentication Required\n\n"
+                    "Your AWS session has expired. Please re-authenticate:\n"
+                    "1. Run: aws sso login --profile marek\n"
+                    "2. Or clear cached tokens: rm -rf ~/.aws/sso/cache/\n\n"
+                    "Then refresh and try again."
+                )
+            else:
+                user_message = f"Error: {error_message}"
+            
+            yield f"data: {json.dumps({'type': 'error', 'message': user_message, 'details': error_message})}\n\n"
     
     return StreamingResponse(
         event_generator(),

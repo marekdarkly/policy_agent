@@ -83,16 +83,38 @@ class BrandVoiceEvaluator:
             
             # Handle any exceptions and extract data
             if isinstance(accuracy_data, Exception):
-                print(f"⚠️  Accuracy evaluation failed: {accuracy_data}")
-                accuracy_result = {"score": 0.0, "passed": False, "reason": str(accuracy_data)}
+                error_msg = str(accuracy_data)
+                print(f"⚠️  Accuracy evaluation failed: {error_msg}")
+                
+                # Check for AWS credential errors
+                if any(pattern in error_msg for pattern in [
+                    "KeyError", "JSONDecodeError", "Extra data",
+                    "token", "credentials", "sso"
+                ]):
+                    reason = "AWS authentication failed - session expired. Re-run: aws sso login --profile marek"
+                else:
+                    reason = error_msg
+                
+                accuracy_result = {"score": 0.0, "passed": False, "reason": reason}
                 accuracy_model = "unknown"
                 accuracy_tokens = {"input": 0, "output": 0}
             else:
                 accuracy_result, accuracy_model, accuracy_tokens = accuracy_data
             
             if isinstance(coherence_data, Exception):
-                print(f"⚠️  Coherence evaluation failed: {coherence_data}")
-                coherence_result = {"score": 0.0, "passed": False, "reason": str(coherence_data)}
+                error_msg = str(coherence_data)
+                print(f"⚠️  Coherence evaluation failed: {error_msg}")
+                
+                # Check for AWS credential errors
+                if any(pattern in error_msg for pattern in [
+                    "KeyError", "JSONDecodeError", "Extra data",
+                    "token", "credentials", "sso"
+                ]):
+                    reason = "AWS authentication failed - session expired. Re-run: aws sso login --profile marek"
+                else:
+                    reason = error_msg
+                
+                coherence_result = {"score": 0.0, "passed": False, "reason": reason}
                 coherence_model = "unknown"
                 coherence_tokens = {"input": 0, "output": 0}
             else:
