@@ -69,6 +69,25 @@ async def evaluate_agent_accuracy(
         response = model_invoker.llm.invoke(messages)
         response_text = response.content
         
+        # Extract token usage
+        tokens = {
+            "input": response.usage_metadata.get("input_tokens", 0) if hasattr(response, 'usage_metadata') else 0,
+            "output": response.usage_metadata.get("output_tokens", 0) if hasattr(response, 'usage_metadata') else 0
+        }
+        
+        # Calculate cost for this evaluation
+        eval_model_id = eval_config.get("model", {}).get("name", "unknown")
+        
+        # Import cost calculation function from brand_voice_agent
+        from ..agents.brand_voice_agent import calculate_model_cost
+        
+        eval_cost_usd = calculate_model_cost(
+            model_id=eval_model_id,
+            input_tokens=tokens["input"],
+            output_tokens=tokens["output"]
+        )
+        eval_cost_cents = round(eval_cost_usd * 100.0, 2)
+        
         # Parse JSON response
         import json
         import re
@@ -97,6 +116,13 @@ async def evaluate_agent_accuracy(
         if "issues" not in result:
             result["issues"] = []
         
+        # Add cost and token info to result
+        result["eval_tokens_input"] = tokens["input"]
+        result["eval_tokens_output"] = tokens["output"]
+        result["eval_cost_cents"] = eval_cost_cents
+        result["eval_cost_usd"] = eval_cost_usd
+        result["eval_model"] = eval_model_id
+        
         # Send metric to LaunchDarkly
         try:
             ld_client = ldclient.get()
@@ -119,10 +145,18 @@ async def evaluate_agent_accuracy(
                 metric_value=float(result["score"])
             )
             
+            # Send cost metric for this evaluation
+            ld_client.track(
+                event_name=f"$ld:ai:tokens:cost:{agent_short_name}",
+                context=ld_context,
+                metric_value=float(eval_cost_cents)
+            )
+            
             print(f"📊 Sent {agent_name} accuracy metric: {result['score']:.2f}")
+            print(f"💰 Evaluation cost: {eval_cost_cents:.2f}¢ (${eval_cost_usd:.6f}) [in={tokens['input']}, out={tokens['output']}, model={eval_model_id}]")
             
         except Exception as e:
-            print(f"⚠️  Failed to send {agent_name} metric to LaunchDarkly: {e}")
+            print(f"⚠️  Failed to send {agent_name} metrics to LaunchDarkly: {e}")
         
         return result
         
