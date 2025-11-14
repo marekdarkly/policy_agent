@@ -137,17 +137,16 @@ async def evaluate_agent_accuracy(
                 context_builder.set("policy_id", user_context["policy_id"])
             ld_context = context_builder.build()
             
-            # Send agent-specific accuracy metric
-            agent_short_name = agent_name.replace("_agent", "")
+            # Send accuracy metric
             ld_client.track(
-                event_name=f"$ld:ai:hallucinations:{agent_short_name}",
+                event_name="$ld:ai:hallucinations",
                 context=ld_context,
                 metric_value=float(result["score"])
             )
             
             # Send cost metric for this evaluation
             ld_client.track(
-                event_name=f"$ld:ai:tokens:cost:{agent_short_name}",
+                event_name="$ld:ai:tokens:cost",
                 context=ld_context,
                 metric_value=float(eval_cost_cents)
             )
