@@ -285,14 +285,14 @@ class BrandVoiceEvaluator:
         Send judgment metrics to LaunchDarkly as custom numeric events.
         
         Sends two custom events:
-        - "agent-evaluation-hallucinations": Accuracy score (higher = fewer hallucinations)
-        - "agent-evaluation-coherence": Coherence score
+        - "$ld:ai:hallucinations": Accuracy score (higher = fewer hallucinations)
+        - "$ld:ai:coherence": Coherence score
         
         These events can be used to create custom numeric metrics in LaunchDarkly.
         To use these metrics:
         1. In LaunchDarkly UI, go to Metrics → Create metric
         2. Choose "Custom numeric" metric type
-        3. Set Event key to "agent-evaluation-hallucinations" or "agent-evaluation-coherence"
+        3. Set Event key to "$ld:ai:hallucinations" or "$ld:ai:coherence"
         4. Choose aggregation method (e.g., Average)
         5. Set randomization unit to "user"
         6. Connect to your experiments
@@ -332,7 +332,7 @@ class BrandVoiceEvaluator:
             
             # 1. Hallucinations metric (accuracy score: higher = fewer hallucinations)
             ld_client.track(
-                event_name="agent-evaluation-hallucinations",
+                event_name="$ld:ai:hallucinations",
                 context=ld_context,
                 data={
                     "score": accuracy_result["score"],
@@ -344,7 +344,7 @@ class BrandVoiceEvaluator:
             
             # 2. Coherence metric
             ld_client.track(
-                event_name="agent-evaluation-coherence",
+                event_name="$ld:ai:coherence",
                 context=ld_context,
                 data={
                     "score": coherence_result["score"],
