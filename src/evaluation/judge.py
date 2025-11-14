@@ -327,18 +327,13 @@ class BrandVoiceEvaluator:
             # Get LaunchDarkly client
             ld_client = ldclient.get()
             
-            # Send custom numeric events
-            # These can be turned into metrics in LaunchDarkly UI
+            # Send custom numeric events with just the metric value
+            # Simplified to ensure metrics flow to LaunchDarkly
             
             # 1. Hallucinations metric (accuracy score: higher = fewer hallucinations)
             ld_client.track(
                 event_name="$ld:ai:hallucinations",
                 context=ld_context,
-                data={
-                    "score": accuracy_result["score"],
-                    "passed": accuracy_result.get("passed", False),
-                    "reason": accuracy_result.get("reason", "")[:200]  # Truncate for performance
-                },
                 metric_value=accuracy_result["score"]
             )
             
@@ -346,11 +341,6 @@ class BrandVoiceEvaluator:
             ld_client.track(
                 event_name="$ld:ai:coherence",
                 context=ld_context,
-                data={
-                    "score": coherence_result["score"],
-                    "passed": coherence_result.get("passed", False),
-                    "reason": coherence_result.get("reason", "")[:200]  # Truncate for performance
-                },
                 metric_value=coherence_result["score"]
             )
             
