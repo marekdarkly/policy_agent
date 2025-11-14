@@ -1,52 +1,51 @@
 {
   "metadata": {
-    "dataset_name": "ToggleHealth Agent Demo Dataset",
-    "version": "2.0.0",
+    "dataset_name": "ToggleHealth Agent Demo Dataset - User Agnostic",
+    "version": "2.1.0",
     "created": "2024-11-13",
     "total_questions": 50,
-    "description": "Demo-optimized dataset with clear, verifiable answers based on actual RAG data",
+    "description": "Demo-optimized dataset for single user (Marek Poliks, San Francisco, Gold HMO)",
+    "user_profile": {
+      "name": "Marek Poliks",
+      "location": "San Francisco, CA",
+      "policy_id": "TH-HMO-GOLD-2024",
+      "coverage_type": "Gold HMO"
+    },
     "categories": [
       "policy",
       "provider"
-    ],
-    "optimizations": [
-      "Questions use real provider names and locations",
-      "All questions have clear answers in RAG data",
-      "Balanced policy/provider distribution",
-      "Geographic coverage: 20 US cities",
-      "Demo-friendly for consistent results"
     ]
   },
   "questions": [
     {
       "id": 1,
-      "question": "What is the copay for a primary care visit on the Platinum PPO plan?",
+      "question": "What is my copay for a primary care visit?",
       "expected_route": "POLICY_QUESTION",
-      "expected_answer": "The copay for a primary care visit on the Platinum PPO plan is $20.",
+      "expected_answer": "The copay for a primary care visit on Gold HMO is based on the plan documents.",
       "category": "policy",
       "difficulty": "easy"
     },
     {
       "id": 2,
-      "question": "Can you help me find a dermatologist in New York who accepts the Platinum PPO plan?",
+      "question": "Can you help me find a dermatologist in New York?",
       "expected_route": "PROVIDER_SEARCH",
-      "expected_answer": "Provider recommendations including Dr. William B. Cohen at New York Dermatology Center",
+      "expected_answer": "Provider recommendations including dermatologists in New York area",
       "category": "provider",
       "difficulty": "easy"
     },
     {
       "id": 3,
-      "question": "Does the Gold HMO plan require referrals for specialist visits?",
+      "question": "Does my plan require referrals for specialist visits?",
       "expected_route": "POLICY_QUESTION",
-      "expected_answer": "Yes, the Gold HMO plan requires referrals from your primary care physician for specialist visits.",
+      "expected_answer": "Yes, Gold HMO requires referrals from your primary care physician for specialist visits.",
       "category": "policy",
       "difficulty": "easy"
     },
     {
       "id": 4,
-      "question": "What is the copay for generic medications on the Platinum PPO plan?",
+      "question": "What is my copay for generic medications?",
       "expected_route": "POLICY_QUESTION",
-      "expected_answer": "Generic (Tier 1) medications cost $5 for a 30-day retail supply and $10 for a 90-day mail order supply on the Platinum PPO plan.",
+      "expected_answer": "Generic medication copays for Gold HMO plan",
       "category": "policy",
       "difficulty": "easy"
     },
@@ -60,17 +59,17 @@
     },
     {
       "id": 6,
-      "question": "Tell me about the Diabetes Management Program for Platinum PPO members.",
+      "question": "Tell me about the Diabetes Management Program for my plan.",
       "expected_route": "POLICY_QUESTION",
-      "expected_answer": "Platinum PPO members get free glucose monitor, unlimited test strips, and 12 nutritionist sessions per year at no cost, plus quarterly care coordinator check-ins.",
+      "expected_answer": "Gold HMO members get free glucose monitor, unlimited test strips, and 6 nutritionist sessions per year, plus quarterly care coordinator check-ins.",
       "category": "policy",
       "difficulty": "medium"
     },
     {
       "id": 7,
-      "question": "What is the emergency room copay for the Platinum PPO plan?",
+      "question": "What is my emergency room copay?",
       "expected_route": "POLICY_QUESTION",
-      "expected_answer": "The emergency room copay for the Platinum PPO plan is $250.",
+      "expected_answer": "Emergency room copay for Gold HMO plan",
       "category": "policy",
       "difficulty": "easy"
     },
@@ -78,23 +77,23 @@
       "id": 8,
       "question": "Are there any mental health providers in Seattle who accept my plan?",
       "expected_route": "PROVIDER_SEARCH",
-      "expected_answer": "Mental health providers in Seattle including specific provider names and locations",
+      "expected_answer": "Mental health providers in Seattle accepting Gold HMO",
       "category": "provider",
       "difficulty": "easy"
     },
     {
       "id": 9,
-      "question": "Does the Gold HMO plan cover out-of-network providers?",
+      "question": "Does my plan cover out-of-network providers?",
       "expected_route": "POLICY_QUESTION",
-      "expected_answer": "No, the Gold HMO plan only covers in-network providers except for emergency services.",
+      "expected_answer": "No, Gold HMO only covers in-network providers except for emergency services.",
       "category": "policy",
       "difficulty": "easy"
     },
     {
       "id": 10,
-      "question": "What is the specialist visit copay on the Platinum PPO plan?",
+      "question": "What is my specialist visit copay?",
       "expected_route": "POLICY_QUESTION",
-      "expected_answer": "The specialist visit copay on the Platinum PPO plan is $35.",
+      "expected_answer": "Specialist visit copay for Gold HMO plan",
       "category": "policy",
       "difficulty": "easy"
     },
@@ -108,7 +107,7 @@
     },
     {
       "id": 12,
-      "question": "How many nutritionist visits do Gold HMO members get through the Diabetes Management Program?",
+      "question": "How many nutritionist visits do I get through the Diabetes Management Program?",
       "expected_route": "POLICY_QUESTION",
       "expected_answer": "Gold HMO members get 6 nutritionist sessions per year at no cost through the Diabetes Management Program.",
       "category": "policy",
@@ -116,9 +115,9 @@
     },
     {
       "id": 13,
-      "question": "What is the urgent care copay for Platinum PPO?",
+      "question": "What is my urgent care copay?",
       "expected_route": "POLICY_QUESTION",
-      "expected_answer": "The urgent care copay for Platinum PPO is $50.",
+      "expected_answer": "Urgent care copay for Gold HMO plan",
       "category": "policy",
       "difficulty": "easy"
     },
@@ -132,7 +131,7 @@
     },
     {
       "id": 15,
-      "question": "What are the key features of the Gold HMO plan?",
+      "question": "What are the key features of my health plan?",
       "expected_route": "POLICY_QUESTION",
       "expected_answer": "Gold HMO requires a PCP, requires referrals for specialists, in-network only coverage, coordinated care model, and lower out-of-pocket costs.",
       "category": "policy",
@@ -140,9 +139,9 @@
     },
     {
       "id": 16,
-      "question": "What is the mail order copay for preferred brand drugs on Platinum PPO?",
+      "question": "What is the mail order copay for preferred brand drugs on my plan?",
       "expected_route": "POLICY_QUESTION",
-      "expected_answer": "Preferred brand (Tier 2) medications cost $50 for a 90-day mail order supply on Platinum PPO.",
+      "expected_answer": "Mail order copay for preferred brand drugs on Gold HMO",
       "category": "policy",
       "difficulty": "easy"
     },
@@ -150,15 +149,15 @@
       "id": 17,
       "question": "I need to find a specialist in Texas. What's available?",
       "expected_route": "PROVIDER_SEARCH",
-      "expected_answer": "Specialist providers in various Texas cities (Houston, Dallas, Austin)",
+      "expected_answer": "Specialist providers in various Texas cities",
       "category": "provider",
       "difficulty": "easy"
     },
     {
       "id": 18,
-      "question": "Does the Platinum PPO require a primary care physician?",
+      "question": "Do I need to select a primary care physician?",
       "expected_route": "POLICY_QUESTION",
-      "expected_answer": "No, the Platinum PPO does not require selecting a primary care physician, and you don't need referrals for specialists.",
+      "expected_answer": "Yes, Gold HMO requires selecting a primary care physician from the TH-HMO-PRIMARY network.",
       "category": "policy",
       "difficulty": "easy"
     },
@@ -172,9 +171,9 @@
     },
     {
       "id": 20,
-      "question": "What is the specialty drug copay for Platinum PPO at retail?",
+      "question": "What is my specialty drug copay at retail?",
       "expected_route": "POLICY_QUESTION",
-      "expected_answer": "Specialty (Tier 4) medications cost $100 for a 30-day retail supply on Platinum PPO. They are not available by mail order.",
+      "expected_answer": "Specialty medication copay for Gold HMO plan",
       "category": "policy",
       "difficulty": "medium"
     },
@@ -212,17 +211,17 @@
     },
     {
       "id": 25,
-      "question": "Show me dermatologists in California who accept Silver EPO.",
+      "question": "Show me dermatologists in California who accept my plan.",
       "expected_route": "PROVIDER_SEARCH",
-      "expected_answer": "Dermatology specialists in California cities accepting Silver EPO plan",
+      "expected_answer": "Dermatology specialists in California cities accepting Gold HMO",
       "category": "provider",
       "difficulty": "easy"
     },
     {
       "id": 26,
-      "question": "Does the Diabetes Management Program cover glucose monitors for Silver EPO members?",
+      "question": "Does the Diabetes Management Program cover glucose monitors for my plan?",
       "expected_route": "POLICY_QUESTION",
-      "expected_answer": "Yes, Silver EPO members get discounted glucose monitors and test strips through the Diabetes Management Program.",
+      "expected_answer": "Yes, Gold HMO members get free glucose monitors and unlimited test strips through the Diabetes Management Program.",
       "category": "policy",
       "difficulty": "medium"
     },
@@ -268,9 +267,9 @@
     },
     {
       "id": 32,
-      "question": "Do copays apply before the deductible is met on Platinum PPO?",
+      "question": "Do copays apply before my deductible is met?",
       "expected_route": "POLICY_QUESTION",
-      "expected_answer": "Yes, copays apply even before the deductible is met on Platinum PPO. After copay, the plan pays 90% of additional costs after deductible.",
+      "expected_answer": "Copay information for Gold HMO and deductible details",
       "category": "policy",
       "difficulty": "medium"
     },
@@ -292,7 +291,7 @@
     },
     {
       "id": 35,
-      "question": "I'm looking for a doctor in New York who accepts Gold HMO.",
+      "question": "I'm looking for a doctor in New York who accepts my plan.",
       "expected_route": "PROVIDER_SEARCH",
       "expected_answer": "Providers in New York accepting Gold HMO plan",
       "category": "provider",
@@ -300,9 +299,9 @@
     },
     {
       "id": 36,
-      "question": "Are specialty medications available by mail order on Platinum PPO?",
+      "question": "Are specialty medications available by mail order on my plan?",
       "expected_route": "POLICY_QUESTION",
-      "expected_answer": "No, specialty (Tier 4) medications are not available by mail order on Platinum PPO.",
+      "expected_answer": "Mail order availability for specialty medications on Gold HMO",
       "category": "policy",
       "difficulty": "easy"
     },
@@ -340,25 +339,25 @@
     },
     {
       "id": 41,
-      "question": "Can Bronze HDHP members get free glucose monitors through the Diabetes Program?",
+      "question": "Can I get free glucose monitors through the Diabetes Program?",
       "expected_route": "POLICY_QUESTION",
-      "expected_answer": "No, glucose monitors and nutritionist visits are subject to the deductible for Bronze HDHP members in the Diabetes Management Program.",
+      "expected_answer": "Yes, Gold HMO members get free glucose monitors and unlimited test strips through the Diabetes Management Program.",
       "category": "policy",
       "difficulty": "medium"
     },
     {
       "id": 42,
-      "question": "Find me doctors in Florida who accept the Silver EPO plan.",
+      "question": "Find me doctors in Florida who accept my plan.",
       "expected_route": "PROVIDER_SEARCH",
-      "expected_answer": "Providers in Florida accepting Silver EPO plan",
+      "expected_answer": "Providers in Florida accepting Gold HMO plan",
       "category": "provider",
       "difficulty": "easy"
     },
     {
       "id": 43,
-      "question": "What prescription drug tiers does Platinum PPO have?",
+      "question": "What prescription drug tiers does my plan have?",
       "expected_route": "POLICY_QUESTION",
-      "expected_answer": "Platinum PPO has four tiers: Generic (Tier 1), Preferred Brand (Tier 2), Non-Preferred Brand (Tier 3), and Specialty (Tier 4).",
+      "expected_answer": "Prescription drug tier information for Gold HMO plan",
       "category": "policy",
       "difficulty": "medium"
     },
@@ -380,9 +379,9 @@
     },
     {
       "id": 46,
-      "question": "What is the retail copay for non-preferred brand drugs on Platinum PPO?",
+      "question": "What is my copay for non-preferred brand drugs at retail?",
       "expected_route": "POLICY_QUESTION",
-      "expected_answer": "Non-preferred brand (Tier 3) medications cost $50 for a 30-day retail supply on Platinum PPO.",
+      "expected_answer": "Non-preferred brand drug copay for Gold HMO plan",
       "category": "policy",
       "difficulty": "easy"
     },
