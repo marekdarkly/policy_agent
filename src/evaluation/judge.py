@@ -98,8 +98,8 @@ class BrandVoiceEvaluator:
             else:
                 coherence_result, coherence_model, coherence_tokens = coherence_data
             
-            # Send judgment metrics to LaunchDarkly using brand_tracker
-            self._send_judgment_to_ld(brand_tracker, accuracy_result, coherence_result)
+            # Send judgment metrics to LaunchDarkly using user context
+            self._send_judgment_to_ld(user_context, accuracy_result, coherence_result)
             
             print(f"✅ Evaluation completed: Accuracy={accuracy_result['score']:.2f}, Coherence={coherence_result['score']:.2f}")
             
@@ -277,31 +277,84 @@ class BrandVoiceEvaluator:
     
     def _send_judgment_to_ld(
         self,
-        brand_tracker: Any,
+        user_context: Dict[str, Any],
         accuracy_result: Dict[str, Any],
         coherence_result: Dict[str, Any]
     ):
         """
-        Send judgment metrics to LaunchDarkly using special metric keys.
+        Send judgment metrics to LaunchDarkly as custom numeric events.
         
-        These metrics will appear in the same tracker stream as the brand_agent.
+        Sends two custom events:
+        - "agent-evaluation-hallucinations": Accuracy score (higher = fewer hallucinations)
+        - "agent-evaluation-coherence": Coherence score
+        
+        These events can be used to create custom numeric metrics in LaunchDarkly.
+        To use these metrics:
+        1. In LaunchDarkly UI, go to Metrics → Create metric
+        2. Choose "Custom numeric" metric type
+        3. Set Event key to "agent-evaluation-hallucinations" or "agent-evaluation-coherence"
+        4. Choose aggregation method (e.g., Average)
+        5. Set randomization unit to "user"
+        6. Connect to your experiments
+        
+        Args:
+            user_context: User context dict with user_key, name, etc.
+            accuracy_result: Dict with "score" key (0.0-1.0)
+            coherence_result: Dict with "score" key (0.0-1.0)
         """
         try:
-            # Send accuracy judgment as hallucinations metric (inverted: higher accuracy = fewer hallucinations)
-            # Send coherence judgment
-            # The tracker should support custom metric names
-            if hasattr(brand_tracker, 'track_metric'):
-                brand_tracker.track_metric(
-                    "$ld:ai:hallucinations",
-                    accuracy_result["score"]
-                )
-                brand_tracker.track_metric(
-                    "$ld:ai:coherence",
-                    coherence_result["score"]
-                )
-            else:
-                # Fallback: log as metadata if direct metric tracking not available
-                print(f"📊 Judgment Metrics: accuracy={accuracy_result['score']:.2f}, coherence={coherence_result['score']:.2f}")
+            import ldclient
+            from ldclient import Context
+            
+            # Build LaunchDarkly context from user_context
+            user_key = user_context.get("user_key", "anonymous")
+            
+            # Create context with user attributes for proper segmentation in experiments
+            context_builder = Context.builder(user_key).kind("user")
+            
+            # Add user attributes for better experiment targeting
+            if user_context.get("name"):
+                context_builder.set("name", user_context["name"])
+            if user_context.get("location"):
+                context_builder.set("location", user_context["location"])
+            if user_context.get("policy_id"):
+                context_builder.set("policy_id", user_context["policy_id"])
+            if user_context.get("coverage_type"):
+                context_builder.set("coverage_type", user_context["coverage_type"])
+            
+            ld_context = context_builder.build()
+            
+            # Get LaunchDarkly client
+            ld_client = ldclient.get()
+            
+            # Send custom numeric events
+            # These can be turned into metrics in LaunchDarkly UI
+            
+            # 1. Hallucinations metric (accuracy score: higher = fewer hallucinations)
+            ld_client.track(
+                event_name="agent-evaluation-hallucinations",
+                context=ld_context,
+                data={
+                    "score": accuracy_result["score"],
+                    "passed": accuracy_result.get("passed", False),
+                    "reason": accuracy_result.get("reason", "")[:200]  # Truncate for performance
+                },
+                metric_value=accuracy_result["score"]
+            )
+            
+            # 2. Coherence metric
+            ld_client.track(
+                event_name="agent-evaluation-coherence",
+                context=ld_context,
+                data={
+                    "score": coherence_result["score"],
+                    "passed": coherence_result.get("passed", False),
+                    "reason": coherence_result.get("reason", "")[:200]  # Truncate for performance
+                },
+                metric_value=coherence_result["score"]
+            )
+            
+            print(f"📊 Sent judgment metrics to LaunchDarkly: hallucinations={accuracy_result['score']:.2f}, coherence={coherence_result['score']:.2f} (user={user_key})")
             
             # Display evaluation results with reasoning
             print("\n" + "="*80)
