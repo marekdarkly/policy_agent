@@ -329,20 +329,26 @@ class BrandVoiceEvaluator:
             
             # Send custom numeric events with just the metric value
             # Simplified to ensure metrics flow to LaunchDarkly
+            # Explicitly convert to float to ensure numeric type
             
             # 1. Hallucinations metric (accuracy score: higher = fewer hallucinations)
+            hallucinations_score = float(accuracy_result["score"])
             ld_client.track(
                 event_name="$ld:ai:hallucinations",
                 context=ld_context,
-                metric_value=accuracy_result["score"]
+                metric_value=hallucinations_score
             )
             
             # 2. Coherence metric
+            coherence_score = float(coherence_result["score"])
             ld_client.track(
                 event_name="$ld:ai:coherence",
                 context=ld_context,
-                metric_value=coherence_result["score"]
+                metric_value=coherence_score
             )
+            
+            print(f"📊 DEBUG: Sent hallucinations={hallucinations_score} (type={type(hallucinations_score).__name__})")
+            print(f"📊 DEBUG: Sent coherence={coherence_score} (type={type(coherence_score).__name__})")
             
             print(f"📊 Sent judgment metrics to LaunchDarkly: hallucinations={accuracy_result['score']:.2f}, coherence={coherence_result['score']:.2f} (user={user_key})")
             
