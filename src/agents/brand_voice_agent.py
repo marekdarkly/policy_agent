@@ -156,13 +156,16 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
             print(f"✅ Stored brand voice tracker for request {request_id[:8]}...")
         
         # Calculate and send cost metric for brand agent
-        brand_cost = calculate_model_cost(
+        brand_cost_usd = calculate_model_cost(
             model_id=model_id,
             input_tokens=tokens["input"],
             output_tokens=tokens["output"]
         )
         
-        # Send cost metric to LaunchDarkly
+        # Convert to cents for better precision in LaunchDarkly metrics
+        brand_cost_cents = brand_cost_usd * 100.0
+        
+        # Send cost metric to LaunchDarkly (in cents)
         try:
             from ldclient import Context
             ld_client = ldclient.get()
@@ -174,14 +177,14 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                 context_builder.set("name", user_context["name"])
             ld_context = context_builder.build()
             
-            # Send cost metric
+            # Send cost metric in cents
             ld_client.track(
                 event_name="$ld:ai:tokens:costmanual",
                 context=ld_context,
-                metric_value=float(brand_cost)
+                metric_value=float(brand_cost_cents)
             )
             
-            print(f"💰 Brand agent cost: ${brand_cost:.6f} (model={model_id.split(':')[0].split('.')[-1]}, in={tokens['input']}, out={tokens['output']})")
+            print(f"💰 Brand agent cost: {brand_cost_cents:.4f}¢ (model={model_id.split(':')[0].split('.')[-1]}, in={tokens['input']}, out={tokens['output']})")
         except Exception as e:
             print(f"⚠️  Failed to send cost metric: {e}")
         
@@ -234,7 +237,8 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         "final_customer_response": final_response[:500] + "..." if len(final_response) > 500 else final_response,
         "brand_voice_applied": True,
         "tokens": tokens,
-        "cost_usd": brand_cost,  # Manual cost calculation for this agent
+        "cost_usd": brand_cost_usd,  # Manual cost calculation for this agent in USD
+        "cost_cents": brand_cost_cents,  # Cost in cents (sent to LaunchDarkly)
         "ttft_ms": ttft_ms,  # Time to first token from Bedrock streaming
         "duration_ms": duration_ms,  # Total time to generate response
         "personalization": {
