@@ -163,9 +163,10 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         )
         
         # Convert to cents for better precision in LaunchDarkly metrics
-        brand_cost_cents = brand_cost_usd * 100.0
+        # Round to 2 decimal places (LaunchDarkly only accepts 2 decimal places)
+        brand_cost_cents = round(brand_cost_usd * 100.0, 2)
         
-        # Send cost metric to LaunchDarkly (in cents)
+        # Send cost metric to LaunchDarkly (in cents, rounded to 2 decimal places)
         try:
             from ldclient import Context
             ld_client = ldclient.get()
@@ -177,14 +178,14 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                 context_builder.set("name", user_context["name"])
             ld_context = context_builder.build()
             
-            # Send cost metric in cents
+            # Send cost metric in cents (rounded to 2 decimal places)
             ld_client.track(
                 event_name="$ld:ai:tokens:costmanual",
                 context=ld_context,
                 metric_value=float(brand_cost_cents)
             )
             
-            print(f"💰 Brand agent cost: {brand_cost_cents:.4f}¢ (model={model_id.split(':')[0].split('.')[-1]}, in={tokens['input']}, out={tokens['output']})")
+            print(f"💰 Brand agent cost: {brand_cost_cents:.2f}¢ (${brand_cost_usd:.6f}) [in={tokens['input']}, out={tokens['output']}, model={model_id.split(':')[0].split('.')[-1]}]")
         except Exception as e:
             print(f"⚠️  Failed to send cost metric: {e}")
         
