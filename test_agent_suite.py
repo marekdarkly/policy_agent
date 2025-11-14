@@ -5,7 +5,7 @@ Runs full agent circuits (initialize → route → answer → evaluate → termi
 for automated testing and performance benchmarking.
 
 This script:
-1. Loads Q&A dataset (100 questions)
+1. Loads Q&A dataset (50 demo-optimized questions by default)
 2. Runs N iterations with random questions
 3. Each iteration is a complete circuit (matching backend server exactly)
 4. Includes all metrics, observability, and evaluation
@@ -58,7 +58,7 @@ import ldclient
 
 # Test configuration
 NUM_ITERATIONS = int(os.getenv("TEST_ITERATIONS", "50"))  # Number of test runs (configurable)
-DATASET_PATH = "test_data/qa_dataset.json"
+DATASET_PATH = os.getenv("DATASET_PATH", "test_data/qa_dataset_demo.json")  # Use demo dataset by default
 RESULTS_DIR = "test_results"
 
 # Ensure results directory exists
@@ -84,60 +84,22 @@ class AgentTestRunner:
         return random.choice(self.dataset['questions'])
     
     def create_test_user(self, question_data: Dict, iteration: int) -> Dict:
-        """Create user profile based on question context.
+        """Create user profile for testing.
         
-        Randomizes user name/key to ensure varied split test distribution.
-        Uses UUID for user_key to maximize entropy for LaunchDarkly bucketing.
+        Uses ONE consistent user (Marek Poliks, San Francisco, Gold HMO) for all tests.
+        Only randomizes user_key for LaunchDarkly A/B testing distribution.
         """
-        # Vary user profiles based on question tags
-        tags = question_data.get('tags', [])
-        
-        # Determine location based on question tags
-        city_tags = {
-            'san_francisco': ('San Francisco', 'CA'),
-            'boston': ('Boston', 'MA'),
-            'seattle': ('Seattle', 'WA'),
-            'portland': ('Portland', 'OR'),
-            'new_york': ('New York', 'NY'),
-            'los_angeles': ('Los Angeles', 'CA'),
-            'chicago': ('Chicago', 'IL'),
-            'miami': ('Miami', 'FL'),
-            'denver': ('Denver', 'CO'),
-            'atlanta': ('Atlanta', 'GA'),
-            'houston': ('Houston', 'TX'),
-            'dallas': ('Dallas', 'TX'),
-            'austin': ('Austin', 'TX'),
-            'phoenix': ('Phoenix', 'AZ'),
-            'philadelphia': ('Philadelphia', 'PA'),
-            'san_diego': ('San Diego', 'CA'),
-            'detroit': ('Detroit', 'MI'),
-            'minneapolis': ('Minneapolis', 'MN'),
-            'charlotte': ('Charlotte', 'NC'),
-            'washington_dc': ('Washington', 'DC'),
-        }
-        
-        location = "San Francisco, CA"  # Default
-        for tag, (city, state) in city_tags.items():
-            if tag in tags:
-                location = f"{city}, {state}"
-                break
-        
-        # Randomize user name to get varied split test distribution
-        first_names = ["Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Quinn", "Avery", "Parker", "Cameron"]
-        last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez"]
-        
-        random_name = f"{random.choice(first_names)} {random.choice(last_names)} {iteration}"
-        
-        # Create profile with random name (will auto-generate user_key from name)
+        # ONE consistent user profile for all tests: Marek Poliks in San Francisco
+        # Only randomize user_key for LaunchDarkly A/B testing distribution
         profile = create_user_profile(
-            name=random_name,
-            location=location,
+            name="Marek Poliks",
+            location="San Francisco, CA",
             policy_id="TH-HMO-GOLD-2024",
             coverage_type="Gold HMO"
         )
         
-        # OVERRIDE user_key with UUID for maximum entropy in LaunchDarkly bucketing
-        # This ensures truly random distribution across split test variations
+        # OVERRIDE user_key with UUID for LaunchDarkly split test bucketing
+        # This ensures varied distribution across A/B test variations while keeping user profile consistent
         profile["user_key"] = f"test-user-{uuid4()}"
         
         return profile

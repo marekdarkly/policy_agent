@@ -1,0 +1,40 @@
+# Portland Pharmacy
+
+## Specialty
+Unknown
+
+**Provider ID:** PHARM-OR-012  
+**Type:** Retail Pharmacy
+
+**Location:**  
+800 Pharmacy Street  
+Portland, OR 97142
+
+**Contact:**
+- Phone: 503-555-9634
+- Fax: 503-555-9734
+
+**Network Information:**
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-PPO-PREMIER
+- Accepted Plans: TH-EPO-SILVER-2024, TH-HDHP-BRONZE-2024, TH-PPO-PLATINUM-2024
+
+**Services:**
+- Prescription filling
+- Immunizations
+- Medication therapy management
+
+**Features:**
+- Specialty Pharmacy: No
+- Mail Order Available: No
+
+**Hours:**
+- Monday Friday: 8:00 AM - 9:00 PM
+- Saturday: 9:00 AM - 6:00 PM
+- Sunday: Closed
+
+---
+
+
+## San Diego, CA
+
+### Primary Care Physicians in San Diego

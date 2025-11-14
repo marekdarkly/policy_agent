@@ -1,0 +1,40 @@
+# Atlanta Pharmacy
+
+## Specialty
+Unknown
+
+**Provider ID:** PHARM-GA-172  
+**Type:** Retail Pharmacy
+
+**Location:**  
+800 Pharmacy Street  
+Atlanta, GA 30142
+
+**Contact:**
+- Phone: 404-555-9906
+- Fax: 404-555-10006
+
+**Network Information:**
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Accepted Plans: TH-EPO-SILVER-2024, TH-HDHP-BRONZE-2024, TH-HMO-GOLD-2024, TH-PPO-PLATINUM-2024
+
+**Services:**
+- Prescription filling
+- Immunizations
+- Medication therapy management
+
+**Features:**
+- Specialty Pharmacy: No
+- Mail Order Available: No
+
+**Hours:**
+- Monday Friday: 8:00 AM - 9:00 PM
+- Saturday: 9:00 AM - 6:00 PM
+- Sunday: Closed
+
+---
+
+
+## Austin, TX
+
+### Primary Care Physicians in Austin

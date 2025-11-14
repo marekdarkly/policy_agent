@@ -1,0 +1,33 @@
+# Dr. Karen C. White, MD
+
+## Specialty
+Endocrinology
+
+**Provider ID:** SPEC-CA-042  
+**Specialty:** Endocrinology  
+**Practice:** San Diego Endocrinology Center
+
+**Location:**  
+2200 Specialty Drive, Suite 300  
+San Diego, CA 92112
+
+**Contact:**
+- Phone: 619-555-5076
+- Fax: 619-555-6076
+
+**Network Information:**
+- Networks: TH-EPO-SELECT, TH-HDHP-CORE, TH-HMO-PRIMARY, TH-PPO-PREMIER
+- Accepted Plans: TH-EPO-SILVER-2024, TH-HDHP-BRONZE-2024, TH-HMO-GOLD-2024, TH-PPO-PLATINUM-2024
+
+**Provider Details:**
+- Languages: English
+- Gender: Female
+- Years in Practice: 16
+- Board Certified: Yes
+- Accepting New Patients: Yes
+
+**Patient Ratings:**
+- Average Rating: 4.6/5.0
+- Total Reviews: 308
+
+---
