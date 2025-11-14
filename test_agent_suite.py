@@ -10,6 +10,7 @@ This script:
 3. Each iteration is a complete circuit (matching backend server exactly)
 4. Includes all metrics, observability, and evaluation
 5. Outputs results in CSV format for LaunchDarkly analysis
+6. Supports per-agent evaluation (--evaluate policy_agent) for A/B testing
 """
 
 import os
@@ -18,9 +19,10 @@ import json
 import random
 import time
 import asyncio
+import argparse
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 from dotenv import load_dotenv
 
@@ -64,15 +66,25 @@ RESULTS_DIR = "test_results"
 # Ensure results directory exists
 Path(RESULTS_DIR).mkdir(exist_ok=True)
 
+# Global variable for per-agent evaluation mode (set by CLI args)
+EVALUATE_AGENT: Optional[str] = None
+
 class AgentTestRunner:
     """Runs automated agent tests with full metrics and evaluation."""
     
-    def __init__(self, dataset_path: str):
-        """Initialize test runner with Q&A dataset."""
+    def __init__(self, dataset_path: str, evaluate_agent: Optional[str] = None):
+        """Initialize test runner with Q&A dataset.
+        
+        Args:
+            dataset_path: Path to Q&A dataset JSON
+            evaluate_agent: Optional agent to evaluate (policy_agent, provider_agent, scheduler_agent)
+                           If set, will evaluate only that agent and skip end-to-end testing
+        """
         self.dataset = self._load_dataset(dataset_path)
         self.results = []
         self.evaluation_results_store = {}  # Shared store for evaluations
         self.brand_trackers_store = {}  # Shared store for brand trackers
+        self.evaluate_agent = evaluate_agent
         
     def _load_dataset(self, path: str) -> Dict:
         """Load Q&A dataset from JSON file."""
@@ -105,9 +117,10 @@ class AgentTestRunner:
         return profile
     
     async def run_single_test(self, iteration: int, question_data: Dict) -> Dict:
-        """Run a single test iteration (full circuit).
+        """Run a single test iteration (full circuit or per-agent).
         
         This mirrors the backend server's /api/chat endpoint exactly.
+        If self.evaluate_agent is set, will evaluate only that agent.
         """
         request_id = str(uuid4())
         start_time = time.time()
@@ -124,7 +137,10 @@ class AgentTestRunner:
         print(f"🧪 Test {iteration}/{NUM_ITERATIONS} - {question_id}")
         print(f"{'='*80}")
         print(f"❓ Question: {question_text}")
-        print(f"🎯 Expected Route: {expected_route}")
+        if self.evaluate_agent:
+            print(f"🎯 Evaluating: {self.evaluate_agent}")
+        else:
+            print(f"🎯 Expected Route: {expected_route}")
         print(f"👤 User: {user_context.get('name')} (key: {user_context.get('user_key')})")
         
         try:
@@ -147,6 +163,58 @@ class AgentTestRunner:
             agent_data = result.get("agent_data", {})
             confidence = result.get("confidence_score", 0)
             
+            # PER-AGENT EVALUATION MODE
+            if self.evaluate_agent:
+                # Map agent names to keys in agent_data
+                agent_key_map = {
+                    "policy_agent": "policy_specialist",
+                    "provider_agent": "provider_specialist",
+                    "scheduler_agent": "scheduler_specialist"
+                }
+                
+                target_key = agent_key_map.get(self.evaluate_agent)
+                
+                # Check if this agent was used in this test
+                if target_key not in agent_data:
+                    print(f"   ⏭️  SKIPPED - {self.evaluate_agent} not used for this question")
+                    return None  # Skip this test
+                
+                # Agent was used, evaluate it
+                print(f"   ✅ {self.evaluate_agent} was used, evaluating...")
+                
+                target_agent_data = agent_data[target_key]
+                agent_output = target_agent_data.get("response", "")
+                rag_documents = target_agent_data.get("rag_documents", [])
+                
+                # Run per-agent evaluation
+                from src.evaluation.agent_evaluator import evaluate_agent_accuracy
+                
+                eval_result = await evaluate_agent_accuracy(
+                    agent_name=self.evaluate_agent,
+                    original_query=question_text,
+                    rag_documents=rag_documents,
+                    agent_output=agent_output,
+                    user_context=user_context
+                )
+                
+                print(f"   📊 Agent Accuracy: {eval_result['score']:.2f} {'✅ PASS' if eval_result['passed'] else '❌ FAIL'}")
+                print(f"   Reason: {eval_result['reason']}")
+                
+                # Simple result record for per-agent evaluation
+                test_result = {
+                    "iteration": iteration,
+                    "question_id": question_id,
+                    "agent": self.evaluate_agent,
+                    "agent_used": True,
+                    "accuracy_score": eval_result["score"],
+                    "passed": eval_result["passed"],
+                    "reason": eval_result["reason"],
+                }
+                
+                self.results.append(test_result)
+                return test_result
+            
+            # FULL END-TO-END EVALUATION MODE (default)
             # Wait for evaluation to complete (background thread)
             # Poll for up to 30 seconds (same as UI frontend)
             print(f"   ⏳ Waiting for evaluation to complete...")
@@ -320,24 +388,41 @@ class AgentTestRunner:
             # Get random question
             question_data = self.get_random_question()
             
-            # Run single test (full circuit)
+            # Run single test (full circuit or per-agent)
             result = await self.run_single_test(i, question_data)
+            
+            # Skip if result is None (agent not used in per-agent mode)
+            if result is None:
+                continue
             
             # Store result
             self.results.append(result)
             
             # Show running statistics every 10 iterations
             if i % 10 == 0 and i > 0:
-                successful = [r for r in self.results if r['status'] == 'success']
-                if successful:
-                    avg_accuracy = sum(r['accuracy_score'] for r in successful) / len(successful)
-                    avg_coherence = sum(r['coherence_score'] for r in successful) / len(successful)
-                    route_matches = [r for r in successful if r['route_match']]
-                    print(f"\n📊 RUNNING STATS (after {i} tests):")
-                    print(f"   Avg Accuracy: {avg_accuracy:.1%}")
-                    print(f"   Avg Coherence: {avg_coherence:.1%}")
-                    print(f"   Routing Accuracy: {len(route_matches)}/{len(successful)} ({100*len(route_matches)/len(successful):.1f}%)")
-                    print()
+                if self.evaluate_agent:
+                    # Per-agent evaluation stats
+                    evaluated = [r for r in self.results if r.get('agent_used')]
+                    if evaluated:
+                        avg_accuracy = sum(r['accuracy_score'] for r in evaluated) / len(evaluated)
+                        passed = [r for r in evaluated if r['passed']]
+                        print(f"\n📊 RUNNING STATS ({self.evaluate_agent}) - after {i} attempts:")
+                        print(f"   Tests where agent used: {len(evaluated)}/{i}")
+                        print(f"   Avg Accuracy: {avg_accuracy:.1%}")
+                        print(f"   Passed: {len(passed)}/{len(evaluated)} ({100*len(passed)/len(evaluated):.1f}%)")
+                        print()
+                else:
+                    # Full end-to-end stats
+                    successful = [r for r in self.results if r.get('status') == 'success']
+                    if successful:
+                        avg_accuracy = sum(r['accuracy_score'] for r in successful) / len(successful)
+                        avg_coherence = sum(r['coherence_score'] for r in successful) / len(successful)
+                        route_matches = [r for r in successful if r.get('route_match')]
+                        print(f"\n📊 RUNNING STATS (after {i} tests):")
+                        print(f"   Avg Accuracy: {avg_accuracy:.1%}")
+                        print(f"   Avg Coherence: {avg_coherence:.1%}")
+                        print(f"   Routing Accuracy: {len(route_matches)}/{len(successful)} ({100*len(route_matches)/len(successful):.1f}%)")
+                        print()
             
             # Small delay between iterations
             await asyncio.sleep(0.5)
@@ -354,15 +439,33 @@ class AgentTestRunner:
         print(f"📊 TEST SUITE COMPLETE")
         print(f"{'='*80}\n")
         
-        successful = [r for r in self.results if r['status'] == 'success']
-        failed = [r for r in self.results if r['status'] == 'error']
+        if self.evaluate_agent:
+            # Per-agent evaluation summary
+            evaluated = [r for r in self.results if r.get('agent_used')]
+            
+            print(f"Agent: {self.evaluate_agent}")
+            print(f"✅ Tests where agent used: {len(evaluated)}")
+            
+            if evaluated:
+                avg_accuracy = sum(r['accuracy_score'] for r in evaluated) / len(evaluated)
+                passed = [r for r in evaluated if r['passed']]
+                
+                print(f"\n🎯 Avg Accuracy: {avg_accuracy:.1%}")
+                print(f"✅ Passed: {len(passed)}/{len(evaluated)} ({100*len(passed)/len(evaluated):.1f}%)")
+                print(f"❌ Failed: {len(evaluated) - len(passed)}/{len(evaluated)}")
+            
+            return  # Skip full stats for per-agent mode
+        
+        # Full end-to-end summary
+        successful = [r for r in self.results if r.get('status') == 'success']
+        failed = [r for r in self.results if r.get('status') == 'error']
         
         print(f"✅ Successful: {len(successful)}/{len(self.results)}")
         print(f"❌ Failed: {len(failed)}/{len(self.results)}")
         
         if successful:
             # Routing accuracy
-            route_matches = [r for r in successful if r['route_match']]
+            route_matches = [r for r in successful if r.get('route_match')]
             print(f"\n🎯 Routing Accuracy: {len(route_matches)}/{len(successful)} ({100*len(route_matches)/len(successful):.1f}%)")
             
             # Average confidence
@@ -469,7 +572,15 @@ async def main():
     print(f"🧪 ToggleHealth Multi-Agent System - Automated Test Suite")
     print(f"{'='*80}")
     print(f"📅 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"🔬 Mode: Full Circuit (Initialize → Route → Answer → Evaluate → Terminate)")
+    
+    if EVALUATE_AGENT:
+        print(f"🎯 Mode: Per-Agent Evaluation (Agent: {EVALUATE_AGENT})")
+        print(f"   - Will run tests up to {EVALUATE_AGENT}")
+        print(f"   - Will evaluate only that agent's output")
+        print(f"   - Will skip tests where agent is not used")
+    else:
+        print(f"🔬 Mode: Full Circuit (Initialize → Route → Answer → Evaluate → Terminate)")
+    
     print(f"📡 Observability: Enabled (traces → LaunchDarkly)")
     print(f"🎯 Evaluation: Enabled (G-Eval judges)")
     print(f"{'='*80}\n")
@@ -481,8 +592,8 @@ async def main():
         print("⚠️  LaunchDarkly client not fully initialized, waiting...")
         await asyncio.sleep(2)
     
-    # Initialize test runner
-    runner = AgentTestRunner(DATASET_PATH)
+    # Initialize test runner with evaluation mode
+    runner = AgentTestRunner(DATASET_PATH, evaluate_agent=EVALUATE_AGENT)
     
     # Run test suite
     try:
@@ -522,6 +633,36 @@ async def main():
         print("   ✅ Closed LaunchDarkly client")
 
 if __name__ == "__main__":
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(
+        description="ToggleHealth Multi-Agent Test Suite",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Run full end-to-end tests (default)
+  python test_agent_suite.py
+
+  # Evaluate only the policy agent
+  python test_agent_suite.py --evaluate policy_agent
+
+  # Evaluate only the provider agent  
+  python test_agent_suite.py --evaluate provider_agent
+
+  # Evaluate scheduler agent
+  python test_agent_suite.py --evaluate scheduler_agent
+        """
+    )
+    parser.add_argument(
+        "--evaluate",
+        choices=["policy_agent", "provider_agent", "scheduler_agent"],
+        help="Evaluate a specific agent only (stops after that agent executes)"
+    )
+    
+    args = parser.parse_args()
+    
+    # Set global evaluation mode
+    EVALUATE_AGENT = args.evaluate
+    
     # Run async main
     asyncio.run(main())
 
