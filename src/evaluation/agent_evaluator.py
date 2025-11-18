@@ -30,7 +30,7 @@ async def evaluate_agent_accuracy(
         user_context: User context for LaunchDarkly targeting
     
     Returns:
-        Dict with accuracy result
+        Dict with accuracy result (evaluator only sends accuracy metrics)
     """
     try:
         # Get agent evaluator config from LaunchDarkly
@@ -147,35 +147,55 @@ async def evaluate_agent_accuracy(
         result["eval_cost_usd"] = eval_cost_usd
         result["eval_model"] = eval_model_id
         
-        # Send metric to LaunchDarkly
+        # Send accuracy metrics to LaunchDarkly (associated with the agent's config key)
         try:
-            ld_client = ldclient.get()
-            user_key = user_context.get("user_key", "anonymous")
+            from ..utils.launchdarkly_config import get_ld_client
+            ld_full_client = get_ld_client()
             
-            context_builder = Context.builder(user_key).kind("user")
-            if user_context.get("name"):
-                context_builder.set("name", user_context["name"])
-            if user_context.get("location"):
-                context_builder.set("location", user_context["location"])
-            if user_context.get("policy_id"):
-                context_builder.set("policy_id", user_context["policy_id"])
-            ld_context = context_builder.build()
+            # Get the agent's tracker to associate metrics with the correct config
+            # Map agent_name to config_key
+            config_key_map = {
+                "policy_agent": "policy_agent",
+                "provider_agent": "provider_agent",
+                "scheduler_agent": "scheduler_agent"
+            }
+            config_key = config_key_map.get(agent_name, agent_name)
             
-            # Send accuracy metric
-            ld_client.track(
-                event_name="$ld:ai:hallucinations",
-                context=ld_context,
-                metric_value=float(result["score"])
-            )
+            # Get the agent's config and tracker (this ensures metrics go to the right place)
+            _, agent_tracker, ld_context = ld_full_client.get_ai_config(config_key, user_context)
             
-            # Send cost metric for this evaluation
-            ld_client.track(
-                event_name="$ld:ai:tokens:cost",
-                context=ld_context,
-                metric_value=float(eval_cost_cents)
-            )
+            # Send accuracy metric using track method directly on full LaunchDarkly client
+            # This ensures it's associated with the agent's config via context
+            try:
+                # Use the raw ldclient to send events with proper context
+                raw_ld_client = ldclient.get()
+                
+                # Send as generation feedback event tied to the config
+                raw_ld_client.track(
+                    event_name="$ld:ai:generation:feedback",
+                    context=ld_context,
+                    data={
+                        "config_key": config_key,
+                        "accuracy": float(result["score"]),
+                        "passed": result["passed"]
+                    },
+                    metric_value=float(result["score"])
+                )
+            except Exception as track_err:
+                print(f"⚠️  Failed to send accuracy metric: {track_err}")
             
-            print(f"📊 Sent {agent_name} accuracy metric: {result['score']:.2f}")
+            # Also send as hallucination metric with config context
+            try:
+                raw_ld_client.track(
+                    event_name="$ld:ai:hallucinations",
+                    context=ld_context,
+                    data={"config_key": config_key},
+                    metric_value=float(result["score"])
+                )
+            except Exception as track_err:
+                print(f"⚠️  Failed to send hallucination metric: {track_err}")
+            
+            print(f"📊 Sent {agent_name} accuracy metric: {result['score']:.2f} (config: {config_key})")
             print(f"💰 Evaluation cost: {eval_cost_cents:.2f}¢ (${eval_cost_usd:.6f}) [in={tokens['input']}, out={tokens['output']}, model={eval_model_id}]")
             
         except Exception as e:

@@ -145,14 +145,15 @@ class AgentTestRunner:
         
         try:
             
-            # Run workflow (EXACTLY like backend server /api/chat endpoint)
+            # Run workflow (with evaluation mode if set)
             result = await asyncio.to_thread(
                 run_workflow,
                 user_message=question_text,
                 user_context=user_context,
                 request_id=request_id,
                 evaluation_results_store=self.evaluation_results_store,
-                brand_trackers_store=self.brand_trackers_store
+                brand_trackers_store=self.brand_trackers_store,
+                evaluate_agent=self.evaluate_agent  # Pass evaluation mode to workflow
             )
             
             total_duration = int((time.time() - start_time) * 1000)  # ms
@@ -179,12 +180,53 @@ class AgentTestRunner:
                     print(f"   ⏭️  SKIPPED - {self.evaluate_agent} not used for this question")
                     return None  # Skip this test
                 
-                # Agent was used, evaluate it
-                print(f"   ✅ {self.evaluate_agent} was used, evaluating...")
+                # Agent was used
+                print(f"   ✅ {self.evaluate_agent} was used")
                 
                 target_agent_data = agent_data[target_key]
                 agent_output = target_agent_data.get("response", "")
                 rag_documents = target_agent_data.get("rag_documents", [])
+                
+                # Extract cost metrics (no jitter - actual metrics)
+                agent_duration_ms = target_agent_data.get("duration_ms", 0)
+                agent_ttft_ms = target_agent_data.get("ttft_ms", 0)
+                
+                tokens = target_agent_data.get("tokens", {})
+                tokens_input = tokens.get("input", 0)
+                tokens_output = tokens.get("output", 0)
+                total_tokens = tokens_input + tokens_output
+                agent_model = target_agent_data.get("model", "unknown")
+                
+                # For scheduler agent, just terminate without evaluation
+                if self.evaluate_agent == "scheduler_agent":
+                    print(f"   ⏹️  Scheduler agent - terminating without evaluation")
+                    print(f"   💰 Cost Metrics:")
+                    print(f"      Model: {agent_model}")
+                    print(f"      Duration: {agent_duration_ms}ms")
+                    print(f"      TTFT: {agent_ttft_ms}ms")
+                    print(f"      Tokens: {total_tokens} (in: {tokens_input}, out: {tokens_output})")
+                    
+                    test_result = {
+                        "iteration": iteration,
+                        "question_id": question_id,
+                        "agent": self.evaluate_agent,
+                        "agent_used": True,
+                        "accuracy_score": None,  # No evaluation for scheduler
+                        "passed": None,
+                        "reason": "Scheduler agent - no evaluation",
+                        "model": agent_model,
+                        "duration_ms": agent_duration_ms,
+                        "ttft_ms": agent_ttft_ms,
+                        "tokens_input": tokens_input,
+                        "tokens_output": tokens_output,
+                        "total_tokens": total_tokens,
+                    }
+                    
+                    self.results.append(test_result)
+                    return test_result
+                
+                # For policy/provider agents, evaluate
+                print(f"   🧪 Evaluating {self.evaluate_agent}...")
                 
                 # Run per-agent evaluation
                 from src.evaluation.agent_evaluator import evaluate_agent_accuracy
@@ -199,8 +241,65 @@ class AgentTestRunner:
                 
                 print(f"   📊 Agent Accuracy: {eval_result['score']:.2f} {'✅ PASS' if eval_result['passed'] else '❌ FAIL'}")
                 print(f"   Reason: {eval_result['reason']}")
+                print(f"   💰 Cost Metrics:")
+                print(f"      Model: {agent_model}")
+                print(f"      Duration: {agent_duration_ms}ms")
+                print(f"      TTFT: {agent_ttft_ms}ms")
+                print(f"      Tokens: {total_tokens} (in: {tokens_input}, out: {tokens_output})")
                 
-                # Simple result record for per-agent evaluation
+                # Send two additional fabricated metrics to LaunchDarkly
+                # These are for demo purposes and based on accuracy pass/fail
+                resolution_value = 0.0
+                negative_feedback = False
+                
+                try:
+                    import ldclient
+                    from ldclient import Context
+                    
+                    ld_client_raw = ldclient.get()
+                    context_builder = Context.builder(user_context.get("user_key", "test-user"))
+                    context_builder.kind("user")
+                    ld_context = context_builder.build()
+                    
+                    # Calculate resolution metric based on accuracy
+                    # If accuracy passes: 80% chance = 1.0, 20% chance = 0.0
+                    # If accuracy fails: 30% chance = 1.0, 70% chance = 0.0
+                    if eval_result['passed']:
+                        resolution_value = 1.0 if random.random() < 0.80 else 0.0
+                    else:
+                        resolution_value = 1.0 if random.random() < 0.30 else 0.0
+                    
+                    # Calculate negative feedback metric based on accuracy
+                    # If accuracy passes: 3% chance = true
+                    # If accuracy fails: 40% chance = true
+                    if eval_result['passed']:
+                        negative_feedback = random.random() < 0.03
+                    else:
+                        negative_feedback = random.random() < 0.40
+                    
+                    # Send resolution metric
+                    ld_client_raw.track(
+                        event_name="$ld:customer:resolution",
+                        context=ld_context,
+                        metric_value=float(resolution_value)
+                    )
+                    
+                    # Send negative feedback metric (boolean)
+                    if negative_feedback:
+                        ld_client_raw.track(
+                            event_name="$ld:ai:feedback:user:negative",
+                            context=ld_context,
+                            metric_value=1.0  # LaunchDarkly numeric representation of boolean
+                        )
+                    
+                    print(f"   📊 Demo Metrics Sent:")
+                    print(f"      Resolution: {resolution_value}")
+                    print(f"      Negative Feedback: {negative_feedback}")
+                    
+                except Exception as e:
+                    print(f"   ⚠️  Failed to send demo metrics: {e}")
+                
+                # Result record with evaluation + cost metrics + demo metrics
                 test_result = {
                     "iteration": iteration,
                     "question_id": question_id,
@@ -209,6 +308,14 @@ class AgentTestRunner:
                     "accuracy_score": eval_result["score"],
                     "passed": eval_result["passed"],
                     "reason": eval_result["reason"],
+                    "model": agent_model,
+                    "duration_ms": agent_duration_ms,
+                    "ttft_ms": agent_ttft_ms,
+                    "tokens_input": tokens_input,
+                    "tokens_output": tokens_output,
+                    "total_tokens": total_tokens,
+                    "resolution": resolution_value,
+                    "negative_feedback": negative_feedback,
                 }
                 
                 self.results.append(test_result)
@@ -404,12 +511,25 @@ class AgentTestRunner:
                     # Per-agent evaluation stats
                     evaluated = [r for r in self.results if r.get('agent_used')]
                     if evaluated:
-                        avg_accuracy = sum(r['accuracy_score'] for r in evaluated) / len(evaluated)
-                        passed = [r for r in evaluated if r['passed']]
+                        # Accuracy stats (only for policy/provider agents)
+                        evaluated_with_scores = [r for r in evaluated if r.get('accuracy_score') is not None]
+                        if evaluated_with_scores:
+                            avg_accuracy = sum(r['accuracy_score'] for r in evaluated_with_scores) / len(evaluated_with_scores)
+                            passed = [r for r in evaluated_with_scores if r['passed']]
+                            
+                        # Cost stats (for all agents including scheduler)
+                        avg_duration = sum(r.get('duration_ms', 0) for r in evaluated) / len(evaluated)
+                        avg_tokens = sum(r.get('total_tokens', 0) for r in evaluated) / len(evaluated)
+                        
                         print(f"\n📊 RUNNING STATS ({self.evaluate_agent}) - after {i} attempts:")
                         print(f"   Tests where agent used: {len(evaluated)}/{i}")
-                        print(f"   Avg Accuracy: {avg_accuracy:.1%}")
-                        print(f"   Passed: {len(passed)}/{len(evaluated)} ({100*len(passed)/len(evaluated):.1f}%)")
+                        
+                        if evaluated_with_scores:
+                            print(f"   Avg Accuracy: {avg_accuracy:.1%}")
+                            print(f"   Passed: {len(passed)}/{len(evaluated_with_scores)} ({100*len(passed)/len(evaluated_with_scores):.1f}%)")
+                        
+                        print(f"   Avg Duration: {avg_duration:.0f}ms")
+                        print(f"   Avg Tokens: {avg_tokens:.0f}")
                         print()
                 else:
                     # Full end-to-end stats
@@ -447,12 +567,28 @@ class AgentTestRunner:
             print(f"✅ Tests where agent used: {len(evaluated)}")
             
             if evaluated:
-                avg_accuracy = sum(r['accuracy_score'] for r in evaluated) / len(evaluated)
-                passed = [r for r in evaluated if r['passed']]
+                # Accuracy stats (only for policy/provider agents)
+                evaluated_with_scores = [r for r in evaluated if r.get('accuracy_score') is not None]
                 
-                print(f"\n🎯 Avg Accuracy: {avg_accuracy:.1%}")
-                print(f"✅ Passed: {len(passed)}/{len(evaluated)} ({100*len(passed)/len(evaluated):.1f}%)")
-                print(f"❌ Failed: {len(evaluated) - len(passed)}/{len(evaluated)}")
+                if evaluated_with_scores:
+                    avg_accuracy = sum(r['accuracy_score'] for r in evaluated_with_scores) / len(evaluated_with_scores)
+                    passed = [r for r in evaluated_with_scores if r['passed']]
+                    
+                    print(f"\n🎯 Avg Accuracy: {avg_accuracy:.1%}")
+                    print(f"✅ Passed: {len(passed)}/{len(evaluated_with_scores)} ({100*len(passed)/len(evaluated_with_scores):.1f}%)")
+                    print(f"❌ Failed: {len(evaluated_with_scores) - len(passed)}/{len(evaluated_with_scores)}")
+                
+                # Cost metrics (for all agents including scheduler)
+                avg_duration = sum(r.get('duration_ms', 0) for r in evaluated) / len(evaluated)
+                avg_tokens = sum(r.get('total_tokens', 0) for r in evaluated) / len(evaluated)
+                avg_ttft = sum(r.get('ttft_ms', 0) for r in evaluated) / len(evaluated)
+                total_tokens = sum(r.get('total_tokens', 0) for r in evaluated)
+                
+                print(f"\n💰 Cost Metrics:")
+                print(f"   Avg Duration: {avg_duration:.0f}ms")
+                print(f"   Avg TTFT: {avg_ttft:.0f}ms")
+                print(f"   Avg Tokens/Test: {avg_tokens:.0f}")
+                print(f"   Total Tokens: {total_tokens:,}")
             
             return  # Skip full stats for per-agent mode
         
@@ -543,19 +679,30 @@ class AgentTestRunner:
         if not self.results:
             return
         
-        # Define CSV columns
-        columns = [
-            "iteration", "request_id", "timestamp", "user_key", "user_name",
-            "question_id", "question",
-            "category", "expected_route", "actual_route", "route_match",
-            "confidence", "response_length", "total_duration_ms",
-            "triage_model", "triage_duration_ms", "triage_ttft_ms", "triage_tokens_input", "triage_tokens_output",
-            "specialist_type", "specialist_model", "specialist_duration_ms", "specialist_ttft_ms",
-            "specialist_tokens_input", "specialist_tokens_output", "specialist_rag_docs", "specialist_response",
-            "brand_model", "brand_duration_ms", "brand_ttft_ms", "brand_tokens_input", "brand_tokens_output", "final_response",
-            "accuracy_score", "accuracy_judge_model", "coherence_score", "coherence_judge_model", "accuracy_reasoning",
-            "status", "error"
-        ]
+        # Define CSV columns based on mode
+        if self.evaluate_agent:
+            # Per-agent evaluation columns
+            columns = [
+                "iteration", "question_id", "agent", "agent_used",
+                "accuracy_score", "passed", "reason",
+                "model", "duration_ms", "ttft_ms",
+                "tokens_input", "tokens_output", "total_tokens",
+                "resolution", "negative_feedback"
+            ]
+        else:
+            # Full end-to-end columns
+            columns = [
+                "iteration", "request_id", "timestamp", "user_key", "user_name",
+                "question_id", "question",
+                "category", "expected_route", "actual_route", "route_match",
+                "confidence", "response_length", "total_duration_ms",
+                "triage_model", "triage_duration_ms", "triage_ttft_ms", "triage_tokens_input", "triage_tokens_output",
+                "specialist_type", "specialist_model", "specialist_duration_ms", "specialist_ttft_ms",
+                "specialist_tokens_input", "specialist_tokens_output", "specialist_rag_docs", "specialist_response",
+                "brand_model", "brand_duration_ms", "brand_ttft_ms", "brand_tokens_input", "brand_tokens_output", "final_response",
+                "accuracy_score", "accuracy_judge_model", "coherence_score", "coherence_judge_model", "accuracy_reasoning",
+                "status", "error"
+            ]
         
         with open(path, 'w', newline='') as f:
             writer = csv.DictWriter(f, fieldnames=columns)

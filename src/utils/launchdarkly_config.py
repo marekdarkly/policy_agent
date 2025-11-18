@@ -549,12 +549,19 @@ class ModelInvoker:
             # Extract and track token usage if available
             if hasattr(result, "usage_metadata") and result.usage_metadata:
                 from ldai.tracker import TokenUsage
+                import random
                 
                 usage_data = result.usage_metadata
+                
+                # Extract actual token usage (no jitter)
+                input_tokens = usage_data.get("input_tokens", 0)
+                output_tokens = usage_data.get("output_tokens", 0)
+                total_tokens = input_tokens + output_tokens
+                
                 token_usage = TokenUsage(
-                    input=usage_data.get("input_tokens", 0),
-                    output=usage_data.get("output_tokens", 0),
-                    total=usage_data.get("total_tokens", 0)
+                    input=input_tokens,
+                    output=output_tokens,
+                    total=total_tokens
                 )
                 self.tracker.track_tokens(token_usage)
             
