@@ -98,21 +98,42 @@ class AgentTestRunner:
     def create_test_user(self, question_data: Dict, iteration: int) -> Dict:
         """Create user profile for testing.
         
-        Uses ONE consistent user (Marek Poliks, San Francisco, Gold HMO) for all tests.
-        Only randomizes user_key for LaunchDarkly A/B testing distribution.
+        Creates random unique users while maintaining Gold plan attributes for segment matching.
         """
-        # ONE consistent user profile for all tests: Marek Poliks in San Francisco
-        # Only randomize user_key for LaunchDarkly A/B testing distribution
+        # Random names for variety
+        first_names = ["Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Avery", "Quinn", "Dakota", "Sage"]
+        last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez"]
+        
+        # Random locations (keeping US cities)
+        locations = [
+            "San Francisco, CA",
+            "New York, NY", 
+            "Boston, MA",
+            "Austin, TX",
+            "Seattle, WA",
+            "Chicago, IL",
+            "Denver, CO",
+            "Portland, OR"
+        ]
+        
+        # Generate random user
+        random_name = f"{random.choice(first_names)} {random.choice(last_names)}"
+        random_location = random.choice(locations)
+        
         profile = create_user_profile(
-            name="Marek Poliks",
-            location="San Francisco, CA",
+            name=random_name,
+            location=random_location,
             policy_id="TH-HMO-GOLD-2024",
-            coverage_type="Gold HMO"
+            coverage_type="Gold HMO"  # KEEP GOLD for segment matching
         )
         
         # OVERRIDE user_key with UUID for LaunchDarkly split test bucketing
-        # This ensures varied distribution across A/B test variations while keeping user profile consistent
         profile["user_key"] = f"test-user-{uuid4()}"
+        
+        # Ensure Gold plan attributes are set for segment matching
+        profile["plan_tier"] = 3  # Gold = 3
+        profile["customer_tier"] = "gold"
+        profile["customer_segment"] = "gold_member"
         
         return profile
     
