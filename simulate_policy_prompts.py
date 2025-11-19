@@ -72,13 +72,14 @@ PROMPT_SPECS = {
 
 
 def create_unique_user(iteration: int) -> dict:
-    """Create user from a pool of 46 rotating users (enables CUPED with user history)."""
-    # Pool of 46 users that rotate
-    user_id = (iteration % 46) + 1
-    user_key = f"policy-prompt-test-user-{user_id:03d}"
+    """Create a completely unique user for each iteration."""
+    # Generate unique UUID for each user
+    import uuid
+    user_uuid = str(uuid.uuid4())
+    user_key = f"policy-prompt-test-{user_uuid}"
     return {
         "user_key": user_key,
-        "name": f"Test User {user_id}",
+        "name": f"Test User {iteration}",
         "policy_id": "TH-HMO-GOLD-2024",
         "coverage_type": "Gold HMO"
     }
