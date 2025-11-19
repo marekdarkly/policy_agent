@@ -40,20 +40,24 @@ def route_after_specialist(state: AgentState) -> Literal["brand_voice", "__end__
     
     If in evaluation mode (evaluate_agent is set), terminates after specialist.
     - "auto" mode: Always terminate (for auto-evaluation of whatever agent triage chose)
-    - Specific agent name: Terminate after that specific agent
+    - Specific agent name: Terminate after that specific agent (except brand_agent)
+    - "brand_agent": Proceed to brand_voice (to evaluate brand agent)
     - None: Proceed to brand_voice (normal flow)
     
     Args:
         state: Current agent state
         
     Returns:
-        "brand_voice" for normal flow, "__end__" for evaluation mode
+        "brand_voice" for normal flow or brand_agent evaluation, "__end__" for specialist evaluation
     """
     # Check if we're in evaluation mode
     evaluate_agent = state.get("evaluate_agent")
     if evaluate_agent:
-        # "auto" means always terminate after specialist
-        # Or if a specific agent was set, also terminate
+        # If evaluating brand_agent, proceed to brand_voice
+        if evaluate_agent == "brand_agent":
+            return "brand_voice"  # type: ignore
+        
+        # Otherwise, terminate after specialist to evaluate that agent only
         return "__end__"  # type: ignore
     
     return "brand_voice"  # type: ignore

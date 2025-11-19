@@ -83,7 +83,19 @@ class AgentTestRunner:
                            - brand_agent: Evaluates coherence
                            - scheduler_agent: No evaluation (just metrics)
         """
-        self.dataset = self._load_dataset(dataset_path)
+        full_dataset = self._load_dataset(dataset_path)
+        
+        # Filter dataset based on agent being evaluated
+        if evaluate_agent == "brand_agent":
+            # Brand agent only processes policy questions
+            self.dataset = {
+                "metadata": full_dataset["metadata"],
+                "questions": [q for q in full_dataset["questions"] if q.get("expected_route") == "POLICY_QUESTION"]
+            }
+            print(f"🔍 Filtered dataset to {len(self.dataset['questions'])} POLICY_QUESTION questions for brand_agent evaluation")
+        else:
+            self.dataset = full_dataset
+        
         self.results = []
         self.evaluation_results_store = {}  # Shared store for evaluations
         self.brand_trackers_store = {}  # Shared store for brand trackers
