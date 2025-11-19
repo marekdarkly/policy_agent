@@ -91,6 +91,17 @@ class LaunchDarklyClient:
         else:
             default_ai_config = self._get_default_ai_config()
 
+        # Get variation detail first to capture variation key
+        variation_detail = self.client.variation_detail(config_key, ld_context, False)
+        variation_index = variation_detail.variation_index if variation_detail else None
+        
+        # Debug: show what we got from variation_detail
+        print(f"🐛 DEBUG: variation_detail = {variation_detail}")
+        print(f"🐛 DEBUG: variation_index = {variation_index}")
+        if variation_detail and hasattr(variation_detail, 'value'):
+            if isinstance(variation_detail.value, dict):
+                print(f"🐛 DEBUG: variation_detail.value keys = {list(variation_detail.value.keys())}")
+        
         # Try agent-based config first (using .agents() method)
         try:
             from ldai.client import LDAIAgentConfig, LDAIAgentDefaults
@@ -121,19 +132,17 @@ class LaunchDarklyClient:
                     # Use agent.to_dict() to get all data including custom parameters
                     agent_dict = agent.to_dict()
                     
+                    # Debug: print full agent_dict structure
+                    print(f"🐛 DEBUG: Full agent_dict keys = {list(agent_dict.keys())}")
+                    
                     # Extract provider
                     provider_value = ""
                     if agent_dict.get("provider"):
                         provider_dict = agent_dict["provider"]
                         provider_value = provider_dict.get("name", "") if isinstance(provider_dict, dict) else str(provider_dict)
                     
-                    # Extract variation name from _ldMeta
-                    ld_meta = agent_dict.get("_ldMeta", {})
-                    variation_name = ld_meta.get("variationKey", "unknown")
-                    
-                    # Debug: print what we got
-                    print(f"🐛 DEBUG: _ldMeta = {ld_meta}")
-                    print(f"🐛 DEBUG: variationKey = {variation_name}")
+                    # Get variation name from variation_detail 
+                    variation_name = f"variation-{variation_index}" if variation_index is not None else "unknown"
                     
                     config_dict = {
                         "enabled": ld_meta.get("enabled", True),
@@ -172,8 +181,8 @@ class LaunchDarklyClient:
             # Convert AIConfig to dict
             config_dict = self._ai_config_to_dict(config_value)
             
-            # Extract variation name
-            variation_name = config_dict.get("_variation", "unknown")
+            # Use variation from variation_detail we fetched earlier
+            config_dict["_variation"] = f"variation-{variation_index}" if variation_index is not None else "unknown"
             
             # Check if config came from LaunchDarkly
             default_dict = self._ai_config_to_dict(default_ai_config)
@@ -292,16 +301,9 @@ class LaunchDarklyClient:
         # Use to_dict() method which handles all the conversion
         config_dict = ai_config.to_dict()
         
-        # Debug: print what we got
-        ld_meta = config_dict.get("_ldMeta", {})
-        variation_name = ld_meta.get("variationKey", "unknown")
-        print(f"🐛 DEBUG (completion-based): _ldMeta = {ld_meta}")
-        print(f"🐛 DEBUG (completion-based): variationKey = {variation_name}")
-        
         # Extract the structure we need
         result = {
-            "enabled": ld_meta.get("enabled", True),
-            "_variation": variation_name,
+            "enabled": config_dict.get("_ldMeta", {}).get("enabled", True),
         }
         
         # Extract prompts from LaunchDarkly AI Config
