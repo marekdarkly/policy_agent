@@ -83,23 +83,45 @@ class BrandVoiceEvaluator:
             
             # Handle any exceptions and extract data
             if isinstance(accuracy_data, Exception):
-                print(f"⚠️  Accuracy evaluation failed: {accuracy_data}")
-                accuracy_result = {"score": 0.0, "passed": False, "reason": str(accuracy_data)}
+                error_msg = str(accuracy_data)
+                print(f"⚠️  Accuracy evaluation failed: {error_msg}")
+                
+                # Check for AWS credential errors
+                if any(pattern in error_msg for pattern in [
+                    "KeyError", "JSONDecodeError", "Extra data",
+                    "token", "credentials", "sso"
+                ]):
+                    reason = "AWS authentication failed - session expired. Re-run: aws sso login --profile marek"
+                else:
+                    reason = error_msg
+                
+                accuracy_result = {"score": 0.0, "passed": False, "reason": reason}
                 accuracy_model = "unknown"
                 accuracy_tokens = {"input": 0, "output": 0}
             else:
                 accuracy_result, accuracy_model, accuracy_tokens = accuracy_data
             
             if isinstance(coherence_data, Exception):
-                print(f"⚠️  Coherence evaluation failed: {coherence_data}")
-                coherence_result = {"score": 0.0, "passed": False, "reason": str(coherence_data)}
+                error_msg = str(coherence_data)
+                print(f"⚠️  Coherence evaluation failed: {error_msg}")
+                
+                # Check for AWS credential errors
+                if any(pattern in error_msg for pattern in [
+                    "KeyError", "JSONDecodeError", "Extra data",
+                    "token", "credentials", "sso"
+                ]):
+                    reason = "AWS authentication failed - session expired. Re-run: aws sso login --profile marek"
+                else:
+                    reason = error_msg
+                
+                coherence_result = {"score": 0.0, "passed": False, "reason": reason}
                 coherence_model = "unknown"
                 coherence_tokens = {"input": 0, "output": 0}
             else:
                 coherence_result, coherence_model, coherence_tokens = coherence_data
             
-            # Send judgment metrics to LaunchDarkly using brand_tracker
-            self._send_judgment_to_ld(brand_tracker, accuracy_result, coherence_result)
+            # Send judgment metrics to LaunchDarkly using user context
+            self._send_judgment_to_ld(user_context, accuracy_result, coherence_result)
             
             print(f"✅ Evaluation completed: Accuracy={accuracy_result['score']:.2f}, Coherence={coherence_result['score']:.2f}")
             
@@ -277,30 +299,80 @@ class BrandVoiceEvaluator:
     
     def _send_judgment_to_ld(
         self,
-        brand_tracker: Any,
+        user_context: Dict[str, Any],
         accuracy_result: Dict[str, Any],
         coherence_result: Dict[str, Any]
     ):
         """
-        Send judgment metrics to LaunchDarkly using special metric keys.
+        Send judgment metrics to LaunchDarkly as custom numeric events.
         
-        These metrics will appear in the same tracker stream as the brand_agent.
+        Sends two custom events:
+        - "$ld:ai:hallucinations": Accuracy score (higher = fewer hallucinations)
+        - "$ld:ai:coherence": Coherence score
+        
+        These events can be used to create custom numeric metrics in LaunchDarkly.
+        To use these metrics:
+        1. In LaunchDarkly UI, go to Metrics → Create metric
+        2. Choose "Custom numeric" metric type
+        3. Set Event key to "$ld:ai:hallucinations" or "$ld:ai:coherence"
+        4. Choose aggregation method (e.g., Average)
+        5. Set randomization unit to "user"
+        6. Connect to your experiments
+        
+        Args:
+            user_context: User context dict with user_key, name, etc.
+            accuracy_result: Dict with "score" key (0.0-1.0)
+            coherence_result: Dict with "score" key (0.0-1.0)
         """
         try:
-            # Send accuracy judgment
-            # The tracker should support custom metric names
-            if hasattr(brand_tracker, 'track_metric'):
-                brand_tracker.track_metric(
-                    "$ld:ai:judge:accuracy",
-                    accuracy_result["score"]
-                )
-                brand_tracker.track_metric(
-                    "$ld:ai:judge:coherence",
-                    coherence_result["score"]
-                )
-            else:
-                # Fallback: log as metadata if direct metric tracking not available
-                print(f"📊 Judgment Metrics: accuracy={accuracy_result['score']:.2f}, coherence={coherence_result['score']:.2f}")
+            import ldclient
+            from ldclient import Context
+            
+            # Build LaunchDarkly context from user_context
+            user_key = user_context.get("user_key", "anonymous")
+            
+            # Create context with user attributes for proper segmentation in experiments
+            context_builder = Context.builder(user_key).kind("user")
+            
+            # Add user attributes for better experiment targeting
+            if user_context.get("name"):
+                context_builder.set("name", user_context["name"])
+            if user_context.get("location"):
+                context_builder.set("location", user_context["location"])
+            if user_context.get("policy_id"):
+                context_builder.set("policy_id", user_context["policy_id"])
+            if user_context.get("coverage_type"):
+                context_builder.set("coverage_type", user_context["coverage_type"])
+            
+            ld_context = context_builder.build()
+            
+            # Get LaunchDarkly client
+            ld_client = ldclient.get()
+            
+            # Send custom numeric events with just the metric value
+            # Simplified to ensure metrics flow to LaunchDarkly
+            # Explicitly convert to float to ensure numeric type
+            
+            # 1. Hallucinations metric (accuracy score: higher = fewer hallucinations)
+            hallucinations_score = float(accuracy_result["score"])
+            ld_client.track(
+                event_name="$ld:ai:hallucinations",
+                context=ld_context,
+                metric_value=hallucinations_score
+            )
+            
+            # 2. Coherence metric
+            coherence_score = float(coherence_result["score"])
+            ld_client.track(
+                event_name="ld:ai:coherence",
+                context=ld_context,
+                metric_value=coherence_score
+            )
+            
+            print(f"📊 DEBUG: Sent hallucinations={hallucinations_score} (type={type(hallucinations_score).__name__})")
+            print(f"📊 DEBUG: Sent coherence={coherence_score} (type={type(coherence_score).__name__})")
+            
+            print(f"📊 Sent judgment metrics to LaunchDarkly: hallucinations={accuracy_result['score']:.2f}, coherence={coherence_result['score']:.2f} (user={user_key})")
             
             # Display evaluation results with reasoning
             print("\n" + "="*80)

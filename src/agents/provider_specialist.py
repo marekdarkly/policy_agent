@@ -167,6 +167,50 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
     
     response_text = response.content
 
+    # Calculate and send cost metric for provider agent
+    from .brand_voice_agent import calculate_model_cost
+    import ldclient
+    from ldclient import Context
+    import os
+    import random
+    
+    provider_cost_usd = calculate_model_cost(
+        model_id=model_id,
+        input_tokens=tokens["input"],
+        output_tokens=tokens["output"]
+    )
+    provider_cost_cents = round(provider_cost_usd * 100.0, 2)
+    
+    # Send cost and duration metrics to LaunchDarkly
+    try:
+        ld_client_raw = ldclient.get()
+        
+        # Build context from user_context
+        user_key = user_context.get("user_key", "anonymous")
+        context_builder = Context.builder(user_key).kind("user")
+        if user_context.get("name"):
+            context_builder.set("name", user_context["name"])
+        ld_context = context_builder.build()
+        
+        # Send cost metric in cents
+        ld_client_raw.track(
+            event_name="$ld:ai:tokens:costmanual",
+            context=ld_context,
+            metric_value=float(provider_cost_cents)
+        )
+        
+        # Send duration metric in milliseconds (actual duration, no jitter)
+        ld_client_raw.track(
+            event_name="$ld:ai:duration",
+            context=ld_context,
+            metric_value=float(duration_ms)
+        )
+        
+        print(f"💰 Provider agent cost: {provider_cost_cents:.2f}¢ (${provider_cost_usd:.6f}) [in={tokens['input']}, out={tokens['output']}, model={model_id.split(':')[0].split('.')[-1]}]")
+        print(f"⏱️  Provider agent duration: {duration_ms}ms")
+    except Exception as e:
+        print(f"⚠️  Failed to send provider metrics: {e}")
+
     # Update state
     updates: dict[str, Any] = {
         "messages": messages + [AIMessage(content=response_text)],

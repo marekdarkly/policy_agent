@@ -37,6 +37,7 @@ from datetime import datetime
 # Import LLM-related modules AFTER observability setup
 from src.graph.workflow import run_workflow
 from src.utils.user_profile import create_user_profile
+from src.utils.aws_token_monitor import AWSTokenMonitor
 from ldai.tracker import FeedbackKind
 
 # Configure logging
@@ -55,6 +56,9 @@ BRAND_TRACKERS: Dict[str, Any] = {}
 
 # Global log broadcaster for SSE
 LOG_QUEUES: list[queue.Queue] = []
+
+# AWS Token Monitor
+TOKEN_MONITOR = AWSTokenMonitor(profile_name="marek")
 
 def should_broadcast_log(message: str, level: str) -> bool:
     """Filter logs to only broadcast important events to the UI terminal.
@@ -199,6 +203,63 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Background task for token monitoring
+MONITOR_TASK: Optional[asyncio.Task] = None
+
+async def token_monitoring_task():
+    """Background task that monitors AWS token expiration and broadcasts warnings."""
+    logger.info("🔐 Starting AWS token monitoring service...")
+    
+    while True:
+        try:
+            # Check if we should warn
+            if TOKEN_MONITOR.should_warn():
+                status = TOKEN_MONITOR.get_token_status()
+                
+                # Broadcast warning to all connected clients
+                log_entry = {
+                    "timestamp": datetime.now().isoformat(),
+                    "level": status["warning_level"].upper(),
+                    "message": status["message"],
+                    "name": "aws-token-monitor",
+                    "token_status": status
+                }
+                broadcast_log(log_entry)
+                
+                # Also log to server console
+                if status["warning_level"] in ["critical", "expired"]:
+                    logger.error(status["message"])
+                elif status["warning_level"] == "warning":
+                    logger.warning(status["message"])
+                else:
+                    logger.info(status["message"])
+            
+            # Check every 60 seconds
+            await asyncio.sleep(60)
+            
+        except Exception as e:
+            logger.error(f"Error in token monitoring: {e}")
+            await asyncio.sleep(60)
+
+@app.on_event("startup")
+async def startup_event():
+    """Start background tasks on server startup."""
+    global MONITOR_TASK
+    MONITOR_TASK = asyncio.create_task(token_monitoring_task())
+    logger.info("✅ Background tasks started")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Clean up background tasks on shutdown."""
+    global MONITOR_TASK
+    if MONITOR_TASK:
+        MONITOR_TASK.cancel()
+        try:
+            await MONITOR_TASK
+        except asyncio.CancelledError:
+            pass
+    logger.info("👋 Background tasks stopped")
 
 # Instrument FastAPI for observability (CRITICAL: Ensures FastAPI/ASGI request spans exist as parents for LLM spans)
 try:
@@ -393,12 +454,31 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
         )
         
     except Exception as e:
+        error_message = str(e)
         logger.error(f"[{request_id}] Error in chat endpoint: {e}", exc_info=True)
+        
+        # Check for AWS SSO/credential errors
+        if any(pattern in error_message for pattern in [
+            "KeyError:", "JSONDecodeError", "Extra data", 
+            "Refreshing token failed", "Refreshing temporary credentials failed",
+            "get_frozen_credentials", "sso", "token"
+        ]):
+            user_message = (
+                "🔐 **AWS Authentication Required**\n\n"
+                "Your AWS session has expired. Please re-authenticate:\n\n"
+                "1. Run: `aws sso login --profile marek`\n"
+                "2. Or clear cached tokens: `rm -rf ~/.aws/sso/cache/`\n\n"
+                "Then refresh the page and try again."
+            )
+            logger.error(f"[{request_id}] ❌ AWS SSO authentication failure detected")
+        else:
+            user_message = "I'm sorry, an error occurred while processing your request. Please try again."
+        
         return ChatResponse(
-            response="I'm sorry, an error occurred while processing your request. Please try again.",
+            response=user_message,
             requestId=request_id,
             agentFlow=[],
-            error=str(e)
+            error=error_message
         )
 
 
@@ -554,8 +634,26 @@ async def chat_stream(request: ChatRequest):
             })}\n\n"
             
         except Exception as e:
-            logger.error(f"Error in streaming chat: {e}")
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            error_message = str(e)
+            logger.error(f"Error in streaming chat: {e}", exc_info=True)
+            
+            # Check for AWS SSO/credential errors
+            if any(pattern in error_message for pattern in [
+                "KeyError:", "JSONDecodeError", "Extra data", 
+                "Refreshing token failed", "Refreshing temporary credentials failed",
+                "get_frozen_credentials", "sso", "token"
+            ]):
+                user_message = (
+                    "🔐 AWS Authentication Required\n\n"
+                    "Your AWS session has expired. Please re-authenticate:\n"
+                    "1. Run: aws sso login --profile marek\n"
+                    "2. Or clear cached tokens: rm -rf ~/.aws/sso/cache/\n\n"
+                    "Then refresh and try again."
+                )
+            else:
+                user_message = f"Error: {error_message}"
+            
+            yield f"data: {json.dumps({'type': 'error', 'message': user_message, 'details': error_message})}\n\n"
     
     return StreamingResponse(
         event_generator(),
@@ -571,6 +669,16 @@ async def chat_stream(request: ChatRequest):
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "service": "ToggleHealth Multi-Agent Assistant"}
+
+
+@app.get("/api/token-status")
+async def get_token_status():
+    """
+    Get current AWS SSO token status.
+    Returns expiration time and warning level.
+    """
+    status = TOKEN_MONITOR.get_token_status()
+    return status
 
 
 @app.get("/api/evaluation/{request_id}")

@@ -35,6 +35,30 @@ def route_after_triage(state: AgentState) -> Literal["policy_specialist", "provi
     return next_agent  # type: ignore
 
 
+def route_after_specialist(state: AgentState) -> Literal["brand_voice", "__end__"]:
+    """Routing function after specialist agents.
+    
+    If in evaluation mode (evaluate_agent is set), terminates after specialist.
+    - "auto" mode: Always terminate (for auto-evaluation of whatever agent triage chose)
+    - Specific agent name: Terminate after that specific agent
+    - None: Proceed to brand_voice (normal flow)
+    
+    Args:
+        state: Current agent state
+        
+    Returns:
+        "brand_voice" for normal flow, "__end__" for evaluation mode
+    """
+    # Check if we're in evaluation mode
+    evaluate_agent = state.get("evaluate_agent")
+    if evaluate_agent:
+        # "auto" means always terminate after specialist
+        # Or if a specific agent was set, also terminate
+        return "__end__"  # type: ignore
+    
+    return "brand_voice"  # type: ignore
+
+
 def create_workflow() -> StateGraph:
     """Create the LangGraph workflow for the multi-agent system.
 
@@ -65,10 +89,32 @@ def create_workflow() -> StateGraph:
         },
     )
 
-    # Add edges from specialists to brand voice agent (final synthesis)
-    workflow.add_edge("policy_specialist", "brand_voice")
-    workflow.add_edge("provider_specialist", "brand_voice")
-    workflow.add_edge("scheduler_specialist", "brand_voice")
+    # Add conditional edges from specialists (can terminate early for evaluation)
+    # In evaluation mode, stops after specialist. Otherwise goes to brand_voice.
+    workflow.add_conditional_edges(
+        "policy_specialist",
+        route_after_specialist,
+        {
+            "brand_voice": "brand_voice",
+            "__end__": END,
+        },
+    )
+    workflow.add_conditional_edges(
+        "provider_specialist",
+        route_after_specialist,
+        {
+            "brand_voice": "brand_voice",
+            "__end__": END,
+        },
+    )
+    workflow.add_conditional_edges(
+        "scheduler_specialist",
+        route_after_specialist,
+        {
+            "brand_voice": "brand_voice",
+            "__end__": END,
+        },
+    )
     
     # Brand voice agent produces final customer response
     workflow.add_edge("brand_voice", END)
@@ -82,7 +128,8 @@ def run_workflow(
     user_context: dict | None = None,
     request_id: str | None = None,
     evaluation_results_store: dict | None = None,
-    brand_trackers_store: dict | None = None
+    brand_trackers_store: dict | None = None,
+    evaluate_agent: str | None = None
 ) -> dict:
     """Run the workflow with a user message.
 
@@ -92,6 +139,7 @@ def run_workflow(
         request_id: Optional request ID for tracking evaluation results
         evaluation_results_store: Optional shared dict for storing evaluation results
         brand_trackers_store: Optional shared dict for storing brand voice trackers
+        evaluate_agent: Optional agent to evaluate (stops workflow after this agent)
 
     Returns:
         Final state after workflow execution
@@ -104,7 +152,8 @@ def run_workflow(
         user_context,
         request_id,
         evaluation_results_store,
-        brand_trackers_store
+        brand_trackers_store,
+        evaluate_agent
     )
 
     # Get workflow

@@ -47,6 +47,9 @@ class AgentState(TypedDict):
     request_id: Annotated[str | None, "Unique request ID for tracking evaluation results"]
     evaluation_results_store: Annotated[dict[str, Any] | None, "Shared dict for storing evaluation results"]
     brand_trackers_store: Annotated[dict[str, Any] | None, "Shared dict for storing brand voice trackers"]
+    
+    # Evaluation mode
+    evaluate_agent: Annotated[str | None, "If set, terminates after this agent for evaluation (policy_agent, provider_agent, scheduler_agent)"]
 
 
 def create_initial_state(
@@ -55,6 +58,7 @@ def create_initial_state(
     request_id: str | None = None,
     evaluation_results_store: dict[str, Any] | None = None,
     brand_trackers_store: dict[str, Any] | None = None,
+    evaluate_agent: str | None = None,
 ) -> dict[str, Any]:
     """Create an initial state for the workflow.
 
@@ -64,6 +68,7 @@ def create_initial_state(
         request_id: Optional unique request ID for tracking
         evaluation_results_store: Optional shared dict for storing evaluation results
         brand_trackers_store: Optional shared dict for storing brand voice trackers
+        evaluate_agent: Optional agent to evaluate (stops after this agent executes)
 
     Returns:
         Initial state dictionary
@@ -82,4 +87,5 @@ def create_initial_state(
         "request_id": request_id,
         "evaluation_results_store": evaluation_results_store,
         "brand_trackers_store": brand_trackers_store,
+        "evaluate_agent": evaluate_agent,
     }
