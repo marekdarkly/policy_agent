@@ -283,13 +283,19 @@ class AgentTestRunner:
                         rag_documents = agent_data["provider_specialist"].get("rag_documents", [])
                     
                     # Run brand voice evaluation (both accuracy and coherence)
-                    from src.evaluation.judge import evaluate_brand_voice_async
+                    from src.evaluation.judge import BrandVoiceEvaluator
                     
-                    eval_result = await evaluate_brand_voice_async(
+                    # Create evaluator and run evaluation
+                    evaluator = BrandVoiceEvaluator()
+                    
+                    # We don't have a brand_tracker in test mode, pass None
+                    # The evaluator will handle sending metrics directly
+                    eval_result = await evaluator.evaluate_async(
                         original_query=question_text,
                         rag_documents=rag_documents,
                         brand_voice_output=agent_output,
-                        user_context=user_context
+                        user_context=user_context,
+                        brand_tracker=None  # No tracker in test mode
                     )
                     
                     # Extract both metrics
