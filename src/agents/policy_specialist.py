@@ -42,18 +42,14 @@ def policy_specialist_node(state: AgentState) -> dict[str, Any]:
     policy_id = user_context.get("policy_id")
     coverage_type = user_context.get("coverage_type", "Unknown")
 
-    # Retrieve policy information using RAG
+    # Get LaunchDarkly config (including messages and KB ID)
     print(f"\n{'─'*80}")
     print(f"🔍 POLICY SPECIALIST: Retrieving policy information")
-    print(f"{'─'*80}")
-    
-    # Get LaunchDarkly config (including messages and KB ID)
     ld_client = get_ld_client()
     ld_config, _, _ = ld_client.get_ai_config("policy_agent", user_context)
-    
-    # Log the variation being used
     variation_name = ld_config.get("_variation", "unknown")
-    print(f"🎯 Policy Agent using variation: '{variation_name}'")
+    print(f"   📌 Variation: {variation_name}")
+    print(f"{'─'*80}")
     
     # Retrieve from Bedrock Knowledge Base via RAG (ONLY source)
     rag_documents = retrieve_policy_documents(query, policy_id, ld_config=ld_config)

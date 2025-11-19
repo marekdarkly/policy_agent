@@ -35,15 +35,16 @@ def triage_node(state: AgentState) -> dict[str, Any]:
     user_context = state.get("user_context", {})
 
     # Get LLM and LaunchDarkly AI Config (including messages/prompts)
+    print(f"\n{'─'*80}")
+    print(f"🔍 TRIAGE AGENT: Analyzing query")
     model_invoker, ld_config = get_model_invoker(
         config_key="triage_agent",
         context=user_context,
         default_temperature=0.0,
     )
-    
-    # Log the variation being used
     variation_name = ld_config.get("_variation", "unknown")
-    print(f"🎯 Triage Agent using variation: '{variation_name}'")
+    print(f"   📌 Variation: {variation_name}")
+    print(f"{'─'*80}")
     
     # Extract model ID from config for tracking
     model_id = ld_config.get("model", {}).get("name", "unknown")

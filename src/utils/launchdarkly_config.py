@@ -151,7 +151,7 @@ class LaunchDarklyClient:
                     config_dict["_instructions"] = agent_dict.get("instructions", "")
                     
                     tracker = agent.tracker
-                    print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly → Variation: '{variation_name}'")
+                    # Variation logging is now handled by individual agents
                     return config_dict, tracker, ld_context
                 # If no instructions, this is a completion-based config, fall through
         except Exception as e:
@@ -181,7 +181,8 @@ class LaunchDarklyClient:
             )
             
             if is_from_ld:
-                print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly → Variation: '{variation_name}'")
+                # Variation logging is now handled by individual agents
+                pass
             else:
                 error_msg = f"CATASTROPHIC: AI config '{config_key}' not found in LaunchDarkly!"
                 print(f"❌ {error_msg}")

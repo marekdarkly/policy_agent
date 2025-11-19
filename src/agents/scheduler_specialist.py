@@ -53,15 +53,16 @@ def scheduler_specialist_node(state: AgentState) -> dict[str, Any]:
     )
 
     # Get LLM and messages from LaunchDarkly AI Config
+    print(f"\n{'─'*80}")
+    print(f"🔍 SCHEDULER AGENT: Finding appointments")
     model_invoker, ld_config = get_model_invoker(
         config_key="scheduler_agent",
         context=user_context,
         default_temperature=0.7,
     )
-    
-    # Log the variation being used
     variation_name = ld_config.get("_variation", "unknown")
-    print(f"🎯 Scheduler Agent using variation: '{variation_name}'")
+    print(f"   📌 Variation: {variation_name}")
+    print(f"{'─'*80}")
     
     # Extract model ID from config for tracking
     model_id = ld_config.get("model", {}).get("name", "unknown")
