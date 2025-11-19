@@ -127,9 +127,13 @@ class LaunchDarklyClient:
                         provider_dict = agent_dict["provider"]
                         provider_value = provider_dict.get("name", "") if isinstance(provider_dict, dict) else str(provider_dict)
                     
+                    # Extract variation name from _ldMeta
+                    variation_name = agent_dict.get("_ldMeta", {}).get("variationKey", "unknown")
+                    
                     config_dict = {
                         "enabled": agent_dict.get("_ldMeta", {}).get("enabled", True),
                         "provider": provider_value,
+                        "_variation": variation_name,  # Store variation name in config
                     }
                     
                     # Extract model config with custom parameters
@@ -147,7 +151,7 @@ class LaunchDarklyClient:
                     config_dict["_instructions"] = agent_dict.get("instructions", "")
                     
                     tracker = agent.tracker
-                    print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly (agent-based with 'Goal or task')")
+                    print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly → Variation: '{variation_name}'")
                     return config_dict, tracker, ld_context
                 # If no instructions, this is a completion-based config, fall through
         except Exception as e:
@@ -163,6 +167,9 @@ class LaunchDarklyClient:
             # Convert AIConfig to dict
             config_dict = self._ai_config_to_dict(config_value)
             
+            # Extract variation name
+            variation_name = config_dict.get("_variation", "unknown")
+            
             # Check if config came from LaunchDarkly
             default_dict = self._ai_config_to_dict(default_ai_config)
             
@@ -174,7 +181,7 @@ class LaunchDarklyClient:
             )
             
             if is_from_ld:
-                print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly (completion-based)")
+                print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly → Variation: '{variation_name}'")
             else:
                 error_msg = f"CATASTROPHIC: AI config '{config_key}' not found in LaunchDarkly!"
                 print(f"❌ {error_msg}")
@@ -282,6 +289,7 @@ class LaunchDarklyClient:
         # Extract the structure we need
         result = {
             "enabled": config_dict.get("_ldMeta", {}).get("enabled", True),
+            "_variation": config_dict.get("_ldMeta", {}).get("variationKey", "unknown"),
         }
         
         # Extract prompts from LaunchDarkly AI Config

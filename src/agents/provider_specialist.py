@@ -69,6 +69,10 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
     ld_client = get_ld_client()
     ld_config, _, _ = ld_client.get_ai_config("provider_agent", user_context)
     
+    # Log the variation being used
+    variation_name = ld_config.get("_variation", "unknown")
+    print(f"🎯 Provider Agent using variation: '{variation_name}'")
+    
     # Retrieve from Bedrock Knowledge Base via RAG (ONLY source)
     rag_documents = retrieve_provider_documents(
         query,
