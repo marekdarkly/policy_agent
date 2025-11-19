@@ -40,33 +40,26 @@ CONFIG_KEY = "policy_agent"
 # PROMPT VARIATION SPECIFICATIONS
 # Each variation has different performance characteristics
 PROMPT_SPECS = {
-    "llama-4-simple-prompt": {
-        "accuracy": {"center": 0.88, "spread": 0.09},      # Control: Good accuracy, generous curve
-        "duration": {"center": 3010, "spread": 1350},      # Wide curve
-        "cost": {"center": 0.194, "spread": 0.085},        # Cost in cents (19.4 cents)
+    "sonnet-4-simple-prompt": {
+        "accuracy": {"center": 0.8973, "spread": 0.04},    # Sonnet accuracy from experiment
+        "duration": {"center": 4300, "spread": 400},       # Sonnet duration from experiment
+        "cost": {"center": 4.1731, "spread": 1.2},         # Cost in cents (4.17 cents)
         "resolution_rate": 0.68,                           # 68% resolution rate
         "negative_feedback_rate": 0.068,                   # 6.8% negative feedback rate
     },
-    "llama-4-systematic-prompt": {
-        "accuracy": {"center": 0.83, "spread": 0.03},      # Lower accuracy, tight curve
-        "duration": {"center": 4081, "spread": 500},       # Narrower curve
-        "cost": {"center": 0.18, "spread": 0.15},          # More expensive (18 cents), wide curve
-        "resolution_rate": 0.63,                           # 63% resolution rate
-        "negative_feedback_rate": 0.1229,                  # 12.29% negative feedback rate
+    "llama-4-simple-prompt": {
+        "accuracy": {"center": 0.9223, "spread": 0.03},    # Llama accuracy from experiment - WINNER
+        "duration": {"center": 3359, "spread": 320},       # Llama duration from experiment - WINNER
+        "cost": {"center": 3.1844, "spread": 0.9},         # Cost in cents (3.18 cents) - WINNER
+        "resolution_rate": 0.68,                           # 68% resolution rate
+        "negative_feedback_rate": 0.068,                   # 6.8% negative feedback rate
     },
-    "llama-4-concise-prompt": {
-        "accuracy": {"center": 0.92, "spread": 0.02},      # BEST accuracy, very tight curve
-        "duration": {"center": 2852, "spread": 1100},      # FASTEST, tight curve
-        "cost": {"center": 0.14, "spread": 0.02},          # Low cost (14 cents)
-        "resolution_rate": 0.94,                           # BEST resolution (95%)
-        "negative_feedback_rate": 0.001,                   # LOWEST negative feedback (0.1%)
-    },
-    "llama-4-reasoning-prompt": {
-        "accuracy": {"center": 0.92, "spread": 0.08},      # Good accuracy, generous curve
-        "duration": {"center": 5630, "spread": 1640},      # SLOWEST (more reasoning)
-        "cost": {"center": 0.21, "spread": 0.12},          # MOST EXPENSIVE (21 cents), wide curve
-        "resolution_rate": 0.84,                           # 84% resolution rate
-        "negative_feedback_rate": 0.112,                   # 11.2% negative feedback rate
+    "haiku-4-5-simple-prompt": {
+        "accuracy": {"center": 0.8225, "spread": 0.055},   # Haiku accuracy from experiment
+        "duration": {"center": 3566, "spread": 350},       # Haiku duration from experiment
+        "cost": {"center": 3.9739, "spread": 1.0},         # Cost in cents (3.97 cents)
+        "resolution_rate": 0.68,                           # 68% resolution rate
+        "negative_feedback_rate": 0.068,                   # 6.8% negative feedback rate
     },
 }
 
