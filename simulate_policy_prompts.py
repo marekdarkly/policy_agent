@@ -42,7 +42,7 @@ CONFIG_KEY = "policy_agent"
 PROMPT_SPECS = {
     "llama-4-simple-prompt": {
         "accuracy": {"center": 0.88, "spread": 0.09},      # Control: Good accuracy, generous curve
-        "duration": {"center": 3710, "spread": 1350},      # Wide curve
+        "duration": {"center": 3010, "spread": 1350},      # Wide curve
         "cost": {"center": 0.194, "spread": 0.085},        # Cost in cents (19.4 cents)
         "resolution_rate": 0.68,                           # 68% resolution rate
         "negative_feedback_rate": 0.068,                   # 6.8% negative feedback rate
@@ -55,8 +55,8 @@ PROMPT_SPECS = {
         "negative_feedback_rate": 0.1229,                  # 12.29% negative feedback rate
     },
     "llama-4-concise-prompt": {
-        "accuracy": {"center": 0.95, "spread": 0.02},      # BEST accuracy, very tight curve
-        "duration": {"center": 1852, "spread": 1100},      # FASTEST, tight curve
+        "accuracy": {"center": 0.92, "spread": 0.02},      # BEST accuracy, very tight curve
+        "duration": {"center": 2852, "spread": 1100},      # FASTEST, tight curve
         "cost": {"center": 0.14, "spread": 0.02},          # Low cost (14 cents)
         "resolution_rate": 0.94,                           # BEST resolution (95%)
         "negative_feedback_rate": 0.001,                   # LOWEST negative feedback (0.1%)
