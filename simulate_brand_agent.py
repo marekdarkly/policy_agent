@@ -193,8 +193,7 @@ def send_metrics_for_variation(
         ld_client_instance.track("$ld:ai:tokens:total", ld_context, float(tokens))
         ld_client_instance.track("$ld:ai:tokens:costmanual", ld_context, cost)
         
-        # Flush immediately
-        ld_client_instance.flush()
+        # Don't flush immediately - let SDK batch events
         
         return {
             "success": True,
@@ -310,12 +309,23 @@ def main():
             else:
                 print(f"❌ {iteration:4d} | ERROR: {result.get('error', 'Unknown error')}")
             
+            # Flush every 10 iterations to batch events
+            if iteration % 10 == 0:
+                print(f"   🔄 Flushing batch (iteration {iteration})...")
+                raw_ld_client.flush()
+                time.sleep(2)  # Wait for flush to complete
+            
             # Random wait between 1-15 seconds
             wait_time = random.uniform(1, 15)
             time.sleep(wait_time)
     
     except KeyboardInterrupt:
         print("\n\n⏹️  Simulation stopped by user")
+    
+    # Final flush to ensure all metrics are sent
+    print("\n🔄 Final flush...")
+    raw_ld_client.flush()
+    time.sleep(3)  # Wait for final flush
     
     # Final stats
     print("\n" + "=" * 80)
