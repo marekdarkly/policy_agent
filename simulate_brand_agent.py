@@ -25,7 +25,6 @@ load_dotenv()
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, project_root)
 
-from src.utils.launchdarkly_config import get_ld_client
 from src.utils.user_profile import create_user_profile
 import ldclient
 from ldclient import Context
@@ -248,15 +247,29 @@ def main():
     
     print("\n" + "=" * 80)
     
-    # Initialize LaunchDarkly
-    ld_client = get_ld_client()
-    raw_ld_client = ldclient.get()
-    
-    if not raw_ld_client or not raw_ld_client.is_initialized():
-        print("❌ LaunchDarkly client not initialized!")
+    # Initialize LaunchDarkly client directly
+    sdk_key = os.getenv("LAUNCHDARKLY_SDK_KEY")
+    if not sdk_key:
+        print("❌ LAUNCHDARKLY_SDK_KEY not found in environment!")
         return
     
-    print("✅ LaunchDarkly client initialized")
+    config = ldclient.Config(sdk_key)
+    ldclient.set_config(config)
+    raw_ld_client = ldclient.get()
+    
+    # Wait for initialization
+    if raw_ld_client.is_initialized():
+        print("✅ LaunchDarkly client initialized")
+    else:
+        print("⏳ Waiting for LaunchDarkly client to initialize...")
+        timeout = 10
+        start = time.time()
+        while not raw_ld_client.is_initialized():
+            if time.time() - start > timeout:
+                print("❌ LaunchDarkly client failed to initialize!")
+                return
+            time.sleep(0.1)
+        print("✅ LaunchDarkly client initialized")
     
     # Pre-generate distributions
     max_iterations = args.iterations if args.iterations else 10000  # Large number for infinite mode
