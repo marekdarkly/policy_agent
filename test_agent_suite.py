@@ -77,8 +77,11 @@ class AgentTestRunner:
         
         Args:
             dataset_path: Path to Q&A dataset JSON
-            evaluate_agent: Optional agent to evaluate (policy_agent, provider_agent, scheduler_agent)
+            evaluate_agent: Optional agent to evaluate (policy_agent, provider_agent, scheduler_agent, brand_agent)
                            If set, will evaluate only that agent and skip end-to-end testing
+                           - policy_agent/provider_agent: Evaluates accuracy
+                           - brand_agent: Evaluates coherence
+                           - scheduler_agent: No evaluation (just metrics)
         """
         self.dataset = self._load_dataset(dataset_path)
         self.results = []
@@ -191,7 +194,8 @@ class AgentTestRunner:
                 agent_key_map = {
                     "policy_agent": "policy_specialist",
                     "provider_agent": "provider_specialist",
-                    "scheduler_agent": "scheduler_specialist"
+                    "scheduler_agent": "scheduler_specialist",
+                    "brand_agent": "brand_voice"
                 }
                 
                 target_key = agent_key_map.get(self.evaluate_agent)
@@ -246,7 +250,102 @@ class AgentTestRunner:
                     self.results.append(test_result)
                     return test_result
                 
-                # For policy/provider agents, evaluate
+                # For brand agent, evaluate both accuracy and coherence
+                if self.evaluate_agent == "brand_agent":
+                    print(f"   🧪 Evaluating brand_agent (accuracy + coherence)...")
+                    
+                    # Get specialist response for context
+                    specialist_response = ""
+                    if "policy_specialist" in agent_data:
+                        specialist_response = agent_data["policy_specialist"].get("response", "")
+                    elif "provider_specialist" in agent_data:
+                        specialist_response = agent_data["provider_specialist"].get("response", "")
+                    elif "scheduler_specialist" in agent_data:
+                        specialist_response = agent_data["scheduler_specialist"].get("response", "")
+                    
+                    # Get RAG documents from specialist for accuracy evaluation
+                    rag_documents = []
+                    if "policy_specialist" in agent_data:
+                        rag_documents = agent_data["policy_specialist"].get("rag_documents", [])
+                    elif "provider_specialist" in agent_data:
+                        rag_documents = agent_data["provider_specialist"].get("rag_documents", [])
+                    
+                    # Run brand voice evaluation (both accuracy and coherence)
+                    from src.evaluation.judge import evaluate_brand_voice_async
+                    
+                    eval_result = await evaluate_brand_voice_async(
+                        original_query=question_text,
+                        rag_documents=rag_documents,
+                        brand_voice_output=agent_output,
+                        user_context=user_context
+                    )
+                    
+                    # Extract both metrics
+                    accuracy_score = eval_result.get("accuracy", 0.0)
+                    accuracy_passed = eval_result.get("accuracy_passed", False)
+                    coherence_score = eval_result.get("coherence", 0.0)
+                    coherence_passed = coherence_score >= 0.7  # 70% threshold
+                    
+                    print(f"   📊 Brand Accuracy: {accuracy_score:.2f} {'✅ PASS' if accuracy_passed else '❌ FAIL'}")
+                    print(f"   Reason: {eval_result.get('accuracy_reasoning', 'N/A')}")
+                    print(f"   📊 Brand Coherence: {coherence_score:.2f} {'✅ PASS' if coherence_passed else '❌ FAIL'}")
+                    print(f"   Reason: {eval_result.get('coherence_reasoning', 'N/A')}")
+                    print(f"   💰 Cost Metrics:")
+                    print(f"      Model: {agent_model}")
+                    print(f"      Duration: {agent_duration_ms}ms")
+                    print(f"      TTFT: {agent_ttft_ms}ms")
+                    print(f"      Tokens: {total_tokens} (in: {tokens_input}, out: {tokens_output})")
+                    
+                    # Send metrics to LaunchDarkly
+                    try:
+                        import ldclient
+                        ld_client = ldclient.get()
+                        
+                        if ld_client and ld_client.is_initialized():
+                            # Create LD context
+                            from ldclient import Context
+                            ld_context = Context.builder(user_context.get("user_key", "test-user")).build()
+                            
+                            # Track accuracy to TWO places (same value)
+                            ld_client.track("$ld:ai:hallucinations", ld_context, accuracy_score)
+                            ld_client.track("$ld:ai:judge:accuracy", ld_context, accuracy_score)
+                            
+                            # Track coherence
+                            ld_client.track("$ld:ai:coherence", ld_context, coherence_score)
+                            
+                            ld_client.flush()
+                            
+                            print(f"   📊 Sent to LaunchDarkly:")
+                            print(f"      $ld:ai:hallucinations: {accuracy_score:.2f}")
+                            print(f"      $ld:ai:judge:accuracy: {accuracy_score:.2f}")
+                            print(f"      $ld:ai:coherence: {coherence_score:.2f}")
+                    except Exception as e:
+                        print(f"   ⚠️  Failed to send metrics to LaunchDarkly: {e}")
+                    
+                    test_result = {
+                        "iteration": iteration,
+                        "question_id": question_id,
+                        "agent": self.evaluate_agent,
+                        "agent_used": True,
+                        "accuracy_score": accuracy_score,
+                        "accuracy_passed": accuracy_passed,
+                        "accuracy_reason": eval_result.get('accuracy_reasoning', 'N/A'),
+                        "coherence_score": coherence_score,
+                        "coherence_passed": coherence_passed,
+                        "coherence_reason": eval_result.get('coherence_reasoning', 'N/A'),
+                        "passed": accuracy_passed and coherence_passed,  # Both must pass
+                        "model": agent_model,
+                        "duration_ms": agent_duration_ms,
+                        "ttft_ms": agent_ttft_ms,
+                        "tokens_input": tokens_input,
+                        "tokens_output": tokens_output,
+                        "total_tokens": total_tokens,
+                    }
+                    
+                    self.results.append(test_result)
+                    return test_result
+                
+                # For policy/provider agents, evaluate accuracy
                 print(f"   🧪 Evaluating {self.evaluate_agent}...")
                 
                 # Run per-agent evaluation
@@ -703,13 +802,25 @@ class AgentTestRunner:
         # Define CSV columns based on mode
         if self.evaluate_agent:
             # Per-agent evaluation columns
-            columns = [
-                "iteration", "question_id", "agent", "agent_used",
-                "accuracy_score", "passed", "reason",
-                "model", "duration_ms", "ttft_ms",
-                "tokens_input", "tokens_output", "total_tokens",
-                "resolution", "negative_feedback"
-            ]
+            if self.evaluate_agent == "brand_agent":
+                # Brand agent uses both accuracy and coherence
+                columns = [
+                    "iteration", "question_id", "agent", "agent_used",
+                    "accuracy_score", "accuracy_passed", "accuracy_reason",
+                    "coherence_score", "coherence_passed", "coherence_reason",
+                    "passed",
+                    "model", "duration_ms", "ttft_ms",
+                    "tokens_input", "tokens_output", "total_tokens"
+                ]
+            else:
+                # Policy/Provider agents use accuracy
+                columns = [
+                    "iteration", "question_id", "agent", "agent_used",
+                    "accuracy_score", "passed", "reason",
+                    "model", "duration_ms", "ttft_ms",
+                    "tokens_input", "tokens_output", "total_tokens",
+                    "resolution", "negative_feedback"
+                ]
         else:
             # Full end-to-end columns
             columns = [
