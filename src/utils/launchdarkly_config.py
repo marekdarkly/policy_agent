@@ -128,10 +128,15 @@ class LaunchDarklyClient:
                         provider_value = provider_dict.get("name", "") if isinstance(provider_dict, dict) else str(provider_dict)
                     
                     # Extract variation name from _ldMeta
-                    variation_name = agent_dict.get("_ldMeta", {}).get("variationKey", "unknown")
+                    ld_meta = agent_dict.get("_ldMeta", {})
+                    variation_name = ld_meta.get("variationKey", "unknown")
+                    
+                    # Debug: print what we got
+                    print(f"🐛 DEBUG: _ldMeta = {ld_meta}")
+                    print(f"🐛 DEBUG: variationKey = {variation_name}")
                     
                     config_dict = {
-                        "enabled": agent_dict.get("_ldMeta", {}).get("enabled", True),
+                        "enabled": ld_meta.get("enabled", True),
                         "provider": provider_value,
                         "_variation": variation_name,  # Store variation name in config
                     }
@@ -287,10 +292,16 @@ class LaunchDarklyClient:
         # Use to_dict() method which handles all the conversion
         config_dict = ai_config.to_dict()
         
+        # Debug: print what we got
+        ld_meta = config_dict.get("_ldMeta", {})
+        variation_name = ld_meta.get("variationKey", "unknown")
+        print(f"🐛 DEBUG (completion-based): _ldMeta = {ld_meta}")
+        print(f"🐛 DEBUG (completion-based): variationKey = {variation_name}")
+        
         # Extract the structure we need
         result = {
-            "enabled": config_dict.get("_ldMeta", {}).get("enabled", True),
-            "_variation": config_dict.get("_ldMeta", {}).get("variationKey", "unknown"),
+            "enabled": ld_meta.get("enabled", True),
+            "_variation": variation_name,
         }
         
         # Extract prompts from LaunchDarkly AI Config
