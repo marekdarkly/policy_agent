@@ -40,45 +40,42 @@ CONFIG_KEY = "policy_agent"
 # PROMPT VARIATION SPECIFICATIONS
 # Each variation has different performance characteristics
 PROMPT_SPECS = {
-    "llama-4-simple-prompt": {
-        "accuracy": {"center": 0.88, "spread": 0.09},      # Control: Good accuracy, generous curve
-        "duration": {"center": 4710, "spread": 1350},      # Wide curve
-        "cost": {"center": 0.194, "spread": 0.085},        # Cost in cents (19.4 cents)
+    "sonnet-4-simple-prompt": {
+        "accuracy": {"center": 0.8973, "spread": 0.04},    # Sonnet accuracy from experiment
+        "duration": {"center": 4300, "spread": 400},       # Sonnet duration from experiment
+        "tokens": {"center": 4862, "spread": 350},         # Sonnet tokens from experiment
+        "cost": {"center": 4.1731, "spread": 1.2},         # Cost in cents (4.17 cents)
         "resolution_rate": 0.68,                           # 68% resolution rate
         "negative_feedback_rate": 0.068,                   # 6.8% negative feedback rate
     },
-    "llama-4-systematic-prompt": {
-        "accuracy": {"center": 0.83, "spread": 0.03},      # Lower accuracy, tight curve
-        "duration": {"center": 4081, "spread": 500},       # Narrower curve
-        "cost": {"center": 0.18, "spread": 0.15},          # More expensive (18 cents), wide curve
-        "resolution_rate": 0.63,                           # 63% resolution rate
-        "negative_feedback_rate": 0.1229,                  # 12.29% negative feedback rate
+    "llama-4-simple-prompt": {
+        "accuracy": {"center": 0.9223, "spread": 0.03},    # Llama accuracy from experiment - WINNER
+        "duration": {"center": 3359, "spread": 320},       # Llama duration from experiment - WINNER
+        "tokens": {"center": 3680, "spread": 280},         # Llama tokens from experiment - WINNER
+        "cost": {"center": 3.1844, "spread": 0.9},         # Cost in cents (3.18 cents) - WINNER
+        "resolution_rate": 0.68,                           # 68% resolution rate
+        "negative_feedback_rate": 0.068,                   # 6.8% negative feedback rate
     },
-    "llama-4-concise-prompt": {
-        "accuracy": {"center": 0.95, "spread": 0.02},      # BEST accuracy, very tight curve
-        "duration": {"center": 1852, "spread": 200},       # FASTEST, tight curve
-        "cost": {"center": 0.14, "spread": 0.02},          # Low cost (14 cents)
-        "resolution_rate": 0.95,                           # BEST resolution (95%)
-        "negative_feedback_rate": 0.001,                   # LOWEST negative feedback (0.1%)
-    },
-    "llama-4-reasoning-prompt": {
-        "accuracy": {"center": 0.92, "spread": 0.08},      # Good accuracy, generous curve
-        "duration": {"center": 4630, "spread": 640},       # SLOWEST (more reasoning)
-        "cost": {"center": 0.21, "spread": 0.12},          # MOST EXPENSIVE (21 cents), wide curve
-        "resolution_rate": 0.84,                           # 84% resolution rate
-        "negative_feedback_rate": 0.112,                   # 11.2% negative feedback rate
+    "haiku-4-5-simple-prompt": {
+        "accuracy": {"center": 0.8225, "spread": 0.055},   # Haiku accuracy from experiment
+        "duration": {"center": 3566, "spread": 350},       # Haiku duration from experiment
+        "tokens": {"center": 4499, "spread": 330},         # Haiku tokens from experiment
+        "cost": {"center": 3.9739, "spread": 1.0},         # Cost in cents (3.97 cents)
+        "resolution_rate": 0.68,                           # 68% resolution rate
+        "negative_feedback_rate": 0.068,                   # 6.8% negative feedback rate
     },
 }
 
 
 def create_unique_user(iteration: int) -> dict:
-    """Create user from a pool of 46 rotating users (enables CUPED with user history)."""
-    # Pool of 46 users that rotate
-    user_id = (iteration % 46) + 1
-    user_key = f"policy-prompt-test-user-{user_id:03d}"
+    """Create a completely unique user for each iteration."""
+    # Generate unique UUID for each user
+    import uuid
+    user_uuid = str(uuid.uuid4())
+    user_key = f"policy-prompt-test-{user_uuid}"
     return {
         "user_key": user_key,
-        "name": f"Test User {user_id}",
+        "name": f"Test User {iteration}",
         "policy_id": "TH-HMO-GOLD-2024",
         "coverage_type": "Gold HMO"
     }
@@ -101,6 +98,11 @@ def pre_generate_distributions(specs: dict, iterations: int) -> dict:
                 variation_specs["duration"]["spread"],
                 iterations
             ).astype(int),
+            "tokens": np.random.normal(
+                variation_specs["tokens"]["center"],
+                variation_specs["tokens"]["spread"],
+                iterations
+            ).astype(int),
             "cost": np.random.normal(
                 variation_specs["cost"]["center"],
                 variation_specs["cost"]["spread"],
@@ -119,6 +121,11 @@ def pre_generate_distributions(specs: dict, iterations: int) -> dict:
         # Ensure duration is positive
         distributions[variation_name]["duration"] = np.maximum(
             distributions[variation_name]["duration"], 100
+        )
+        
+        # Ensure tokens is positive
+        distributions[variation_name]["tokens"] = np.maximum(
+            distributions[variation_name]["tokens"], 100
         )
         
         # Ensure cost is positive
@@ -163,6 +170,7 @@ def send_metrics_for_variation(
         # Get pre-generated values for this iteration using the LD-served variation
         accuracy = float(distributions[actual_variation_key]["accuracy"][iteration_idx])
         duration = int(distributions[actual_variation_key]["duration"][iteration_idx])
+        tokens = int(distributions[actual_variation_key]["tokens"][iteration_idx])
         cost = float(distributions[actual_variation_key]["cost"][iteration_idx])
         resolution = bool(distributions[actual_variation_key]["resolution"][iteration_idx])
         negative_feedback = bool(distributions[actual_variation_key]["negative_feedback"][iteration_idx])
@@ -179,6 +187,13 @@ def send_metrics_for_variation(
             event_name="$ld:ai:duration:total",
             context=ld_context,
             metric_value=float(duration)
+        )
+        
+        # Track tokens
+        ld_client.track(
+            event_name="$ld:ai:tokens:total",
+            context=ld_context,
+            metric_value=float(tokens)
         )
         
         # Track cost (in cents)
@@ -208,6 +223,7 @@ def send_metrics_for_variation(
             "variation": actual_variation_key,
             "accuracy": accuracy,
             "duration": duration,
+            "tokens": tokens,
             "cost": cost,
             "resolution": resolution,
             "negative_feedback": negative_feedback,
@@ -290,14 +306,14 @@ def main():
         if result["success"]:
             variation_name = result["variation"]  # Use the variation LD actually served
             results[variation_name]["success"] += 1
-            total_metrics_sent += 5  # accuracy, duration, cost, resolution, negative_feedback (conditional)
+            total_metrics_sent += 6  # accuracy, duration, tokens, cost, resolution, negative_feedback (conditional)
             
             # Progress indicator every 20 iterations
             if (i + 1) % 20 == 0:
                 print(f"✅ {i + 1:3d} | {variation_name:30s} | "
                       f"acc={result['accuracy']:.2f} | dur={result['duration']:4d}ms | "
-                      f"cost={result['cost']:.3f}¢ | res={int(result['resolution'])} | "
-                      f"neg={int(result['negative_feedback'])}")
+                      f"tok={result['tokens']:4d} | cost={result['cost']:.3f}¢ | "
+                      f"res={int(result['resolution'])} | neg={int(result['negative_feedback'])}")
                 # Flush every 20 events and wait
                 print(f"   🔄 Flushing batch...")
                 ld_client.flush()
@@ -349,6 +365,7 @@ def main():
     print("📈 Metrics sent:")
     print("   - $ld:ai:hallucinations (accuracy: 0.0-1.0)")
     print("   - $ld:ai:duration:total (duration in ms)")
+    print("   - $ld:ai:tokens:total (token count)")
     print("   - $ld:ai:tokens:costmanual (cost in cents)")
     print("   - $ld:customer:resolution (binary: 0.0 or 1.0)")
     print("   - $ld:ai:feedback:user:negative (binary, only when true)")

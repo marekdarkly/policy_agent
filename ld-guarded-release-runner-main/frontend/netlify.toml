@@ -1,0 +1,18 @@
+# Netlify configuration file
+
+[build]
+  base = "frontend/"
+  publish = "build/"
+  command = "npm run build"
+
+# Redirect all requests to index.html for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = true
+
+# Configure environment variables
+[build.environment]
+  REACT_APP_API_URL = "https://your-backend-api.herokuapp.com"
+  REACT_APP_WS_URL = "wss://your-backend-api.herokuapp.com/ws"
