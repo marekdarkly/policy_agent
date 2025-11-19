@@ -90,6 +90,10 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         default_temperature=0.7,  # Slightly creative for natural language
     )
     
+    # Log the variation being used
+    variation_name = ld_config.get("_variation", "unknown")
+    print(f"🎯 Brand Voice Agent using variation: '{variation_name}'")
+    
     # Extract model ID from config for tracking
     model_id = ld_config.get("model", {}).get("name", "unknown")
 

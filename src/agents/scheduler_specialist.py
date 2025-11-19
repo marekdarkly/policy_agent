@@ -59,6 +59,10 @@ def scheduler_specialist_node(state: AgentState) -> dict[str, Any]:
         default_temperature=0.7,
     )
     
+    # Log the variation being used
+    variation_name = ld_config.get("_variation", "unknown")
+    print(f"🎯 Scheduler Agent using variation: '{variation_name}'")
+    
     # Extract model ID from config for tracking
     model_id = ld_config.get("model", {}).get("name", "unknown")
     
