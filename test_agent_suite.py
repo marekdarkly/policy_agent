@@ -10,7 +10,7 @@ This script:
 3. Each iteration is a complete circuit (matching backend server exactly)
 4. Includes all metrics, observability, and evaluation
 5. Outputs results in CSV format for LaunchDarkly analysis
-6. Supports per-agent evaluation (--evaluate policy_agent) for A/B testing
+6. Supports per-agent evaluation (--evaluate policy_agent|provider_agent|brand_agent) for A/B testing
 """
 
 import os
@@ -929,11 +929,14 @@ Examples:
 
   # Evaluate scheduler agent
   python test_agent_suite.py --evaluate scheduler_agent
+  
+  # Evaluate brand voice agent (accuracy + coherence)
+  python test_agent_suite.py --evaluate brand_agent
         """
     )
     parser.add_argument(
         "--evaluate",
-        choices=["policy_agent", "provider_agent", "scheduler_agent"],
+        choices=["policy_agent", "provider_agent", "scheduler_agent", "brand_agent"],
         help="Evaluate a specific agent only (stops after that agent executes)"
     )
     
