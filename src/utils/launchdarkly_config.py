@@ -138,7 +138,7 @@ class LaunchDarklyClient:
                         provider_value = provider_dict.get("name", "") if isinstance(provider_dict, dict) else str(provider_dict)
                     
                     config_dict = {
-                        "enabled": ld_meta.get("enabled", True),
+                        "enabled": agent_dict.get("_ldMeta", {}).get("enabled", True),
                         "provider": provider_value,
                         "_variation": variation_name,  # Store variation name in config
                     }
