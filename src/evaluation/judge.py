@@ -306,15 +306,16 @@ class BrandVoiceEvaluator:
         """
         Send judgment metrics to LaunchDarkly as custom numeric events.
         
-        Sends two custom events:
+        Sends three custom events:
         - "$ld:ai:hallucinations": Accuracy score (higher = fewer hallucinations)
+        - "$ld:ai:judge:accuracy": Accuracy score (duplicate for judge-specific tracking)
         - "$ld:ai:coherence": Coherence score
         
         These events can be used to create custom numeric metrics in LaunchDarkly.
         To use these metrics:
         1. In LaunchDarkly UI, go to Metrics → Create metric
         2. Choose "Custom numeric" metric type
-        3. Set Event key to "$ld:ai:hallucinations" or "$ld:ai:coherence"
+        3. Set Event key to "$ld:ai:hallucinations", "$ld:ai:judge:accuracy", or "$ld:ai:coherence"
         4. Choose aggregation method (e.g., Average)
         5. Set randomization unit to "user"
         6. Connect to your experiments
@@ -361,6 +362,13 @@ class BrandVoiceEvaluator:
                 metric_value=hallucinations_score
             )
             
+            # 1b. Also send to judge-specific accuracy metric (duplicate)
+            ld_client.track(
+                event_name="$ld:ai:judge:accuracy",
+                context=ld_context,
+                metric_value=hallucinations_score
+            )
+            
             # 2. Coherence metric
             coherence_score = float(coherence_result["score"])
             ld_client.track(
@@ -370,9 +378,14 @@ class BrandVoiceEvaluator:
             )
             
             print(f"📊 DEBUG: Sent hallucinations={hallucinations_score} (type={type(hallucinations_score).__name__})")
+            print(f"📊 DEBUG: Sent judge:accuracy={hallucinations_score} (type={type(hallucinations_score).__name__})")
             print(f"📊 DEBUG: Sent coherence={coherence_score} (type={type(coherence_score).__name__})")
             
-            print(f"📊 Sent judgment metrics to LaunchDarkly: hallucinations={accuracy_result['score']:.2f}, coherence={coherence_result['score']:.2f} (user={user_key})")
+            print(f"📊 Sent judgment metrics to LaunchDarkly:")
+            print(f"   - $ld:ai:hallucinations: {accuracy_result['score']:.2f}")
+            print(f"   - $ld:ai:judge:accuracy: {accuracy_result['score']:.2f}")
+            print(f"   - $ld:ai:coherence: {coherence_result['score']:.2f}")
+            print(f"   (user={user_key})")
             
             # Display evaluation results with reasoning
             print("\n" + "="*80)
