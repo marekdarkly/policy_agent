@@ -1,4 +1,4 @@
-.PHONY: help install setup run test verify clean aws-login aws-check format lint test-suite test-quick test-chunks
+.PHONY: help install setup run test verify clean aws-login aws-check format lint test-suite test-quick test-chunks upload-tools
 
 # Configuration
 PYTHON := python3
@@ -333,6 +333,12 @@ test-quick: aws-check ## Run quick test (5 iterations)
 test-chunks: aws-check ## Diagnose RAG chunk sizes
 	@echo "$(COLOR_CYAN)$(COLOR_BOLD)🔍 Diagnosing RAG Chunk Sizes...$(COLOR_RESET)"
 	@. venv/bin/activate && python test_chunk_sizes.py
+
+##@ LaunchDarkly Tools
+
+upload-tools: ## Upload all 20 tools to LaunchDarkly Tool Library
+	@echo "$(COLOR_CYAN)$(COLOR_BOLD)🚀 Uploading Tools to LaunchDarkly...$(COLOR_RESET)"
+	@$(PYTHON_VENV) upload_tools_to_launchdarkly.py
 
 ##@ Default
 

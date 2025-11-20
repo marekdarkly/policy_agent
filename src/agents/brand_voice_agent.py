@@ -84,11 +84,16 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
             break
 
     # Get LLM and messages from LaunchDarkly AI Config
+    print(f"\n{'─'*80}")
+    print(f"🔍 BRAND VOICE AGENT: Crafting response")
     model_invoker, ld_config = get_model_invoker(
         config_key="brand_agent",
         context=user_context,
         default_temperature=0.7,  # Slightly creative for natural language
     )
+    variation_name = ld_config.get("_variation", "unknown")
+    print(f"   📌 Variation: {variation_name}")
+    print(f"{'─'*80}")
     
     # Extract model ID from config for tracking
     model_id = ld_config.get("model", {}).get("name", "unknown")

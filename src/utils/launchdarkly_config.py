@@ -121,6 +121,16 @@ class LaunchDarklyClient:
                     # Use agent.to_dict() to get all data including custom parameters
                     agent_dict = agent.to_dict()
                     
+                    # Get variation key by calling variation_detail (agents() API doesn't expose it)
+                    try:
+                        vd = self.client.variation_detail(config_key, ld_context, {})
+                        if vd and isinstance(vd.value, dict):
+                            variation_name = vd.value.get("_ldMeta", {}).get("variationKey", "unknown")
+                        else:
+                            variation_name = "unknown"
+                    except:
+                        variation_name = "unknown"
+                    
                     # Extract provider
                     provider_value = ""
                     if agent_dict.get("provider"):
@@ -130,6 +140,7 @@ class LaunchDarklyClient:
                     config_dict = {
                         "enabled": agent_dict.get("_ldMeta", {}).get("enabled", True),
                         "provider": provider_value,
+                        "_variation": variation_name,  # Store variation name in config
                     }
                     
                     # Extract model config with custom parameters
@@ -147,7 +158,7 @@ class LaunchDarklyClient:
                     config_dict["_instructions"] = agent_dict.get("instructions", "")
                     
                     tracker = agent.tracker
-                    print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly (agent-based with 'Goal or task')")
+                    # Variation logging is now handled by individual agents
                     return config_dict, tracker, ld_context
                 # If no instructions, this is a completion-based config, fall through
         except Exception as e:
@@ -163,6 +174,18 @@ class LaunchDarklyClient:
             # Convert AIConfig to dict
             config_dict = self._ai_config_to_dict(config_value)
             
+            # Get variation key by calling variation_detail
+            try:
+                vd = self.client.variation_detail(config_key, ld_context, {})
+                if vd and isinstance(vd.value, dict):
+                    variation_name = vd.value.get("_ldMeta", {}).get("variationKey", "unknown")
+                else:
+                    variation_name = "unknown"
+            except:
+                variation_name = "unknown"
+            
+            config_dict["_variation"] = variation_name
+            
             # Check if config came from LaunchDarkly
             default_dict = self._ai_config_to_dict(default_ai_config)
             
@@ -174,7 +197,8 @@ class LaunchDarklyClient:
             )
             
             if is_from_ld:
-                print(f"✅ Retrieved AI config '{config_key}' from LaunchDarkly (completion-based)")
+                # Variation logging is now handled by individual agents
+                pass
             else:
                 error_msg = f"CATASTROPHIC: AI config '{config_key}' not found in LaunchDarkly!"
                 print(f"❌ {error_msg}")
