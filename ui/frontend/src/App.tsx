@@ -64,6 +64,7 @@ function App() {
   const [feedbackGiven, setFeedbackGiven] = useState<'positive' | 'negative' | null>(null);
   const [showMetrics, setShowMetrics] = useState(false);
   const [showEvalReasoning, setShowEvalReasoning] = useState(false);
+  const [guardrailEnabled, setGuardrailEnabled] = useState(true);  // Toggle for guardrail
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContentRef = useRef<HTMLDivElement>(null);
 
@@ -213,6 +214,7 @@ function App() {
         },
         body: JSON.stringify({
           userInput: currentInput,
+          guardrailEnabled: guardrailEnabled,
         }),
       });
 
@@ -431,6 +433,14 @@ function App() {
           </div>
         </div>
         <div className="header-actions">
+          <button 
+            className={`guardrail-toggle ${guardrailEnabled ? 'enabled' : 'disabled'}`}
+            title={guardrailEnabled ? "Guardrail Enabled (click to disable)" : "Guardrail Disabled (click to enable)"}
+            onClick={() => setGuardrailEnabled(!guardrailEnabled)}
+            disabled={isLoading}
+          >
+            🛡️ {guardrailEnabled ? 'ON' : 'OFF'}
+          </button>
           <button 
             className={`feedback-btn feedback-good ${feedbackGiven === 'positive' ? 'active' : ''}`}
             title="Good service"

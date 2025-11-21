@@ -444,6 +444,43 @@ body {
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
+/* Guardrail Toggle */
+.guardrail-toggle {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: white;
+  gap: 0.25rem;
+}
+
+.guardrail-toggle:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.guardrail-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.guardrail-toggle.enabled {
+  border-color: #10B981;
+  background: rgba(16, 185, 129, 0.2);
+}
+
+.guardrail-toggle.disabled {
+  border-color: #EF4444;
+  background: rgba(239, 68, 68, 0.2);
+}
+
 /* Chat Content */
 .chat-content {
   flex: 1;
