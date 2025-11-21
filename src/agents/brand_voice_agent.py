@@ -137,18 +137,14 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     variation_name = ld_config.get("_variation", "unknown")
     print(f"   📌 Variation: {variation_name}")
     
-    # Check for simulated guardrail setting
-    custom_params = ld_config.get("_custom", {}) or ld_config.get("model", {}).get("custom", {})
-    simulate_guardrail_block = custom_params.get("simulate_guardrail_block", False)
+    # Check if this is the toxic variation that should trigger simulated guardrail
+    variation_name = ld_config.get("_variation", "unknown")
+    should_simulate_guardrail = (variation_name == "llama-4-toxic-prompt")
     
-    # Debug: Show what custom params we received
-    if custom_params:
-        print(f"   🔧 Custom params: {list(custom_params.keys())}")
-    
-    if simulate_guardrail_block and guardrail_enabled:
-        print(f"   🛡️  Simulated Guardrail: ENABLED (will block response)")
-    elif simulate_guardrail_block and not guardrail_enabled:
-        print(f"   🛡️  Simulated Guardrail: DISABLED BY USER")
+    if should_simulate_guardrail and guardrail_enabled:
+        print(f"   ⚠️  TOXIC VARIATION DETECTED - Guardrail will intervene")
+    elif should_simulate_guardrail and not guardrail_enabled:
+        print(f"   ⚠️  TOXIC VARIATION - Guardrail DISABLED by user")
     
     print(f"{'─'*80}")
     
@@ -191,85 +187,94 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     if hasattr(response, "response_metadata") and isinstance(response.response_metadata, dict):
         ttft_ms = response.response_metadata.get("ttft_ms")
     
-    # Simulate guardrail intervention if enabled (via LaunchDarkly custom parameter)
+    # Simulate guardrail intervention if toxic variation is served AND guardrail enabled
     guardrail_action = None
     guardrail_trace = None
     
-    if simulate_guardrail_block and guardrail_enabled:
-        # SIMULATED GUARDRAIL: Block the response
+    if should_simulate_guardrail and guardrail_enabled:
+        # SIMULATED AWS BEDROCK GUARDRAIL: Block the response
+        fake_guardrail_id = "gr-healthinsure-safety-v2"
         print(f"\n{'─'*80}")
-        print(f"🛡️  SIMULATED GUARDRAIL INTERVENED")
-        print(f"   ⚠️  Response blocked by simulated guardrail")
-        print(f"   📝 Original Response (first 200 chars):")
+        print(f"🛡️  AWS BEDROCK GUARDRAIL INTERVENED")
+        print(f"   🆔 Guardrail ID: {fake_guardrail_id}")
+        print(f"   📋 Guardrail Version: DRAFT")
+        print(f"   ⚠️  Response blocked due to policy violation")
+        print(f"")
+        print(f"   📝 Model's attempted response (first 200 chars):")
         print(f"      '{response.content[:200]}{'...' if len(response.content) > 200 else ''}'")
-        print(f"   💡 Simulated Violation: Inappropriate content policy")
-        print(f"   🎭 This is a DEMO - not a real AWS Bedrock guardrail")
+        print(f"")
+        print(f"   🚨 Violation Details:")
+        print(f"      • Policy Type: Content Policy")
+        print(f"      • Filter Type: MISCONDUCT")
+        print(f"      • Confidence: HIGH")
+        print(f"      • Action: BLOCKED")
+        print(f"")
+        print(f"   💡 The model generated content that violates health safety guidelines")
         print(f"{'─'*80}\n")
         guardrail_action = "GUARDRAIL_INTERVENED"
-        guardrail_trace = {"simulated": True, "original_response": response.content[:500]}
+        guardrail_trace = {
+            "guardrail_id": fake_guardrail_id,
+            "action": "BLOCKED",
+            "original_response": response.content[:500]
+        }
     
     # No additional display needed - already shown above when simulated
     
-    # Self-healing: If guardrail intervened, fall back to default config
+    # Self-healing: If guardrail intervened, fall back to LaunchDarkly default
     if guardrail_action == "GUARDRAIL_INTERVENED":
         print(f"\n{'='*80}")
-        print(f"🔄 SELF-HEALING: Simulated guardrail blocked response - falling back to safe default")
+        print(f"🔄 SELF-HEALING: Guardrail blocked response - falling back to LaunchDarkly default")
         print(f"{'='*80}")
-        print(f"   ❌ Blocked content (first 150 chars):")
-        print(f"      '{response.content[:150]}{'...' if len(response.content) > 150 else ''}'")
-        print(f"   🎯 Goal: Generate safe response using hardcoded default prompt (no guardrail)")
+        print(f"   ❌ Blocked: Toxic variation '{variation_name}' generated unsafe content")
+        print(f"   🎯 Retrieving LaunchDarkly flag DEFAULT variation...")
         print(f"{'='*80}\n")
         
         try:
-            # ALWAYS use hardcoded default for self-healing (never trust LaunchDarkly variations)
-            # Any LaunchDarkly variation might also have a guardrail that could fail again
-            print(f"   🔄 Using hardcoded safe default (guaranteed no guardrail)")
+            # Retrieve the DEFAULT variation from LaunchDarkly
+            from ..utils.launchdarkly_config import get_ai_config
+            from langchain_core.messages import SystemMessage, HumanMessage
             
-            # Create a fresh LLM with the default config (no guardrail)
-            from ..utils.bedrock_llm import BedrockConverseLLM, get_bedrock_model_id
-            import os
+            print(f"   🏁 Fetching default variation from LaunchDarkly...")
             
-            default_model = DEFAULT_BRAND_AGENT_CONFIG.model.name
-            default_temp = DEFAULT_BRAND_AGENT_CONFIG.model.parameters.get("temperature", 0.7)
-            default_max_tokens = DEFAULT_BRAND_AGENT_CONFIG.model.parameters.get("maxTokens", 2000)
+            # Get the default config by passing default_config=DEFAULT_BRAND_AGENT_CONFIG
+            # This tells LaunchDarkly to use the default if the flag doesn't evaluate
+            default_ld_config = get_ai_config(
+                flag_key="brand_agent",
+                context=state.get("ld_context"),
+                default_config=DEFAULT_BRAND_AGENT_CONFIG,
+            )
             
-            # Create Bedrock LLM (no simulated guardrail)
-            model_id = get_bedrock_model_id(default_model)
-            region = os.getenv("AWS_REGION", "us-east-1")
-            profile = os.getenv("AWS_PROFILE")
+            default_variation_name = default_ld_config.get("_variation", "default")
+            print(f"   ✅ Retrieved variation: '{default_variation_name}'")
             
-            fallback_llm = BedrockConverseLLM(
-                model_id=model_id,
-                temperature=default_temp,
-                max_tokens=default_max_tokens,
-                region=region,
-                profile_name=profile,
+            # Build model invoker for default config
+            from ..utils.llm_config import get_model_invoker
+            
+            default_model_invoker = get_model_invoker(
+                config=default_ld_config,
+                context=state.get("ld_context"),
+                request_id=request_id,
+                override_guardrail_enabled=False,  # NEVER apply guardrail to fallback
             )
             
             # Build messages from default config
-            fallback_messages = []
-            for msg in DEFAULT_BRAND_AGENT_CONFIG.messages:
-                content = msg.content
-                # Replace template variables
-                for key, value in context_vars.items():
-                    content = content.replace(f"{{{key}}}", str(value))
-                
-                if msg.role == "system":
-                    fallback_messages.append(SystemMessage(content=content))
-                else:
-                    fallback_messages.append(HumanMessage(content=content))
+            ld_client = get_ld_client()
+            fallback_messages = ld_client.build_langchain_messages(default_ld_config, context_vars)
             
-            # Invoke without guardrail
+            # Invoke with default config
+            print(f"   🔄 Generating response with default variation...")
             fallback_start = time.time()
-            fallback_response = fallback_llm.invoke(fallback_messages)
+            fallback_response = default_model_invoker.invoke(fallback_messages)
             fallback_duration = int((time.time() - fallback_start) * 1000)
             
-            # Success! Use fallback response (no guardrail on default)
+            # Success! Use fallback response from LaunchDarkly default
             final_response = fallback_response.content
-            print(f"   ✅ Fallback succeeded - serving safe response to customer")
-            print(f"   📝 Generated (first 150 chars):")
+            print(f"   ✅ Self-healing succeeded!")
+            print(f"   📦 Used LaunchDarkly default variation: '{default_variation_name}'")
+            print(f"   💬 Safe response (first 150 chars):")
             print(f"      '{final_response[:150]}{'...' if len(final_response) > 150 else ''}'")
             print(f"   ⏱️  Fallback duration: {fallback_duration}ms")
+            print(f"   🎯 Customer receives safe, approved response")
             
             # Update tokens and duration for the fallback
             if hasattr(fallback_response, "usage_metadata") and fallback_response.usage_metadata:
@@ -285,8 +290,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
             print(f"{'='*80}\n")
             
         except Exception as e:
-            print(f"   ❌ Fallback failed: {e}")
-            print(f"   Using generic error message")
+            print(f"   ❌ Self-healing failed: {e}")
+            print(f"   📋 Unable to retrieve LaunchDarkly default variation")
+            print(f"   🆘 Using generic safe message as final fallback")
             print(f"{'='*80}\n")
             final_response = "I apologize, but I'm unable to provide a response at this time. Please contact our support team for assistance."
     else:

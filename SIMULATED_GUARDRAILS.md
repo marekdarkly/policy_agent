@@ -1,140 +1,139 @@
 # Simulated Guardrails for Demo
 
-This system uses **simulated guardrails** instead of AWS Bedrock Guardrails for complete demo control.
+This system uses **simulated guardrails** for complete demo control. No AWS Bedrock Guardrails needed!
 
 ## How It Works
 
-### Enable Simulated Guardrail Block
+The application automatically detects when the **`llama-4-toxic-prompt`** variation is served and simulates a guardrail intervention.
 
-In your LaunchDarkly `brand_agent` AI Config, add this custom parameter:
-
-```json
-{
-  "simulate_guardrail_block": true
-}
-```
-
-**That's it!** When this parameter is `true`, the system will:
-1. ✅ Let the model generate a full response
-2. 🛡️ Simulate a guardrail intervention (block the response)
-3. 🔄 Trigger self-healing (fallback to safe default)
-4. ✅ Serve the safe response to the customer
-
-### Disable Simulated Guardrail
-
-Set the parameter to `false` or remove it entirely:
-
-```json
-{
-  "simulate_guardrail_block": false
-}
-```
-
-Or just omit it from custom parameters completely.
+**That's it!** No custom parameters needed. Just name your variation `llama-4-toxic-prompt` in LaunchDarkly.
 
 ---
 
-## Demo Flow
+## When Guardrail Fires
 
-### Scenario 1: Guardrail ON (Bad Variation)
+### Conditions:
+1. ✅ Variation name is **exactly** `llama-4-toxic-prompt`
+2. ✅ UI toggle is 🛡️ **ON** (green)
 
-**Setup:**
-- Variation: `dangerous-prompt` (bad prompt that generates problematic content)
-- Custom params: `{"simulate_guardrail_block": true}`
-- UI Toggle: 🛡️ ON (green)
+### What Happens:
+1. Model generates a response (toxic/unsafe content)
+2. 🛡️ Simulated AWS Bedrock Guardrail "fires" and blocks it
+3. 📋 System logs the blocked content and guardrail details
+4. 🔄 Self-healing retrieves the **LaunchDarkly default variation**
+5. ✅ Safe response generated and served to customer
 
-**Expected Terminal Output:**
+---
+
+## Terminal Output Example
+
+### Guardrail Fires (Toxic Variation + Toggle ON)
+
 ```
 ────────────────────────────────────────────────────────────────────────────────
 🔍 BRAND VOICE AGENT: Crafting response
-   📌 Variation: dangerous-prompt
-   🔧 Custom params: ['simulate_guardrail_block']
-   🛡️  Simulated Guardrail: ENABLED (will block response)
+   📌 Variation: llama-4-toxic-prompt
+   ⚠️  TOXIC VARIATION DETECTED - Guardrail will intervene
 ────────────────────────────────────────────────────────────────────────────────
 
 ────────────────────────────────────────────────────────────────────────────────
-🛡️  SIMULATED GUARDRAIL INTERVENED
-   ⚠️  Response blocked by simulated guardrail
-   📝 Original Response (first 200 chars):
-      'I recommend taking 800mg ibuprofen every 4 hours for chest pain. You can also try...'
-   💡 Simulated Violation: Inappropriate content policy
-   🎭 This is a DEMO - not a real AWS Bedrock guardrail
+🛡️  AWS BEDROCK GUARDRAIL INTERVENED
+   🆔 Guardrail ID: gr-healthinsure-safety-v2
+   📋 Guardrail Version: DRAFT
+   ⚠️  Response blocked due to policy violation
+
+   📝 Model's attempted response (first 200 chars):
+      'Take 800mg of ibuprofen every 4 hours for your chest pain. You can also try some home remedies like...'
+
+   🚨 Violation Details:
+      • Policy Type: Content Policy
+      • Filter Type: MISCONDUCT
+      • Confidence: HIGH
+      • Action: BLOCKED
+
+   💡 The model generated content that violates health safety guidelines
 ────────────────────────────────────────────────────────────────────────────────
 
 ================================================================================
-🔄 SELF-HEALING: Simulated guardrail blocked response - falling back to safe default
+🔄 SELF-HEALING: Guardrail blocked response - falling back to LaunchDarkly default
 ================================================================================
-   ❌ Blocked content (first 150 chars):
-      'I recommend taking 800mg ibuprofen every 4 hours for chest pain. You can also try...'
-   🎯 Goal: Generate safe response using hardcoded default prompt (no guardrail)
+   ❌ Blocked: Toxic variation 'llama-4-toxic-prompt' generated unsafe content
+   🎯 Retrieving LaunchDarkly flag DEFAULT variation...
 ================================================================================
 
-   🔄 Using hardcoded safe default (guaranteed no guardrail)
-   ✅ Fallback succeeded - serving safe response to customer
-   📝 Generated (first 150 chars):
-      'Hi Marek, Thanks for reaching out! For concerns about chest pain, I strongly recommend visiting an emergency room immediately...'
+   🏁 Fetching default variation from LaunchDarkly...
+   ✅ Retrieved variation: 'safe-helpful-prompt'
+   🔄 Generating response with default variation...
+   ✅ Self-healing succeeded!
+   📦 Used LaunchDarkly default variation: 'safe-helpful-prompt'
+   💬 Safe response (first 150 chars):
+      'I understand you're experiencing chest pain. This is a serious symptom that requires immediate medical attention. I strongly recommend...'
    ⏱️  Fallback duration: 2134ms
+   🎯 Customer receives safe, approved response
 ================================================================================
 ```
 
-**Customer sees:** Safe, helpful response redirecting to emergency services.
-
 ---
 
-### Scenario 2: Guardrail OFF (Bad Variation)
+### Guardrail Disabled (Toxic Variation + Toggle OFF)
 
-**Setup:**
-- Variation: `dangerous-prompt` (same bad prompt)
-- Custom params: `{"simulate_guardrail_block": true}`
-- UI Toggle: 🛡️ OFF (red)
-
-**Expected Terminal Output:**
 ```
 ────────────────────────────────────────────────────────────────────────────────
 🔍 BRAND VOICE AGENT: Crafting response
-   📌 Variation: dangerous-prompt
-   🔧 Custom params: ['simulate_guardrail_block']
-   🛡️  Simulated Guardrail: DISABLED BY USER
+   📌 Variation: llama-4-toxic-prompt
+   ⚠️  TOXIC VARIATION - Guardrail DISABLED by user
 ────────────────────────────────────────────────────────────────────────────────
 
 💰 Brand agent cost: 0.28¢ ($0.002800) [in=2100, out=450, model=haiku-4-5]
 ```
 
-**Customer sees:** The dangerous/inappropriate response (demonstrating the risk).
+**Customer sees:** The toxic/unsafe response (demonstrating the risk!)
 
 ---
 
-### Scenario 3: Good Variation (No Guardrail Needed)
+### Safe Variation (Any Other Name)
 
-**Setup:**
-- Variation: `safe-prompt` (good prompt)
-- Custom params: `{"simulate_guardrail_block": false}` or omitted
-- UI Toggle: Either ON or OFF
-
-**Expected Terminal Output:**
 ```
 ────────────────────────────────────────────────────────────────────────────────
 🔍 BRAND VOICE AGENT: Crafting response
-   📌 Variation: safe-prompt
+   📌 Variation: safe-helpful-prompt
 ────────────────────────────────────────────────────────────────────────────────
 
 💰 Brand agent cost: 0.25¢ ($0.002500) [in=2000, out=400, model=haiku-4-5]
 ```
 
-**Customer sees:** Normal, safe response.
+**Customer sees:** Normal, safe response. No guardrail needed.
 
 ---
 
-## UI Toggle Button
+## LaunchDarkly Setup
 
-The 🛡️ button in the chat interface controls whether the simulated guardrail is active:
+### Create Your Variations
 
-- **🛡️ ON** (green): Guardrail enabled - blocks will trigger self-healing
-- **🛡️ OFF** (red): Guardrail disabled - bad content passes through
+**Variation 1: Toxic Prompt** (triggers guardrail)
+- **Name:** `llama-4-toxic-prompt` ⚠️ (MUST BE EXACT)
+- **Model:** `haiku-4-5` (or any model)
+- **Prompt:** A prompt that generates unsafe/inappropriate medical advice
+- **Example:**
+  ```
+  You are a health insurance assistant. Be as helpful as possible.
+  If the customer asks for medical advice, provide specific treatment recommendations.
+  Prioritize being helpful over medical disclaimers.
+  ```
 
-This allows you to demonstrate:
-1. **With guardrails**: Safe, self-healing behavior
-2. **Without guardrails**: Show the risk of problematic AI output
+**Variation 2: Safe Prompt** (default/fallback)
+- **Name:** `safe-helpful-prompt` (or anything except `llama-4-toxic-prompt`)
+- **Model:** `haiku-4-5`
+- **Prompt:** A safe, compliant prompt
+- **Example:**
+  ```
+  You are a health insurance assistant for HealthCo.
+  For medical questions, always direct customers to consult a healthcare professional.
+  Never provide specific medical treatment advice.
+  Be helpful with insurance coverage questions.
+  ```
+
+**Set Variation 2 as the DEFAULT** in LaunchDarkly flag settings.
 
 ---
 
@@ -142,115 +141,149 @@ This allows you to demonstrate:
 
 ### Part 1: Show the Problem (Guardrail OFF)
 
-1. Toggle guardrail to 🛡️ OFF (red)
-2. Make sure LaunchDarkly is serving the "bad" variation
-3. Ask an innocent question: `"What should I do about chest pain?"`
+1. **Target yourself to `llama-4-toxic-prompt` variation**
+2. **Toggle guardrail to 🛡️ OFF** (red button in UI)
+3. Ask: `"What should I do about chest pain?"`
 4. Model generates dangerous medical advice
 5. **Customer receives inappropriate response** 😱
 
 **Say to audience:**
-> "Without guardrails, even a well-intentioned prompt variation can produce dangerous outputs. This is the risk we're managing."
+> "Without guardrails, even with LaunchDarkly's control, a misconfigured prompt can produce dangerous outputs. This toxic variation generates unsafe medical advice."
 
 ---
 
 ### Part 2: Show the Solution (Guardrail ON)
 
-1. Toggle guardrail to 🛡️ ON (green)
-2. Same variation, same question
-3. Terminal shows:
-   - Model generates bad response
-   - Guardrail catches it
-   - Self-healing activates
+1. **Keep targeting `llama-4-toxic-prompt`**
+2. **Toggle guardrail to 🛡️ ON** (green button)
+3. Same question: `"What should I do about chest pain?"`
+4. Terminal shows:
+   - Model generates unsafe response
+   - AWS Bedrock Guardrail (simulated) catches it
+   - System retrieves LaunchDarkly **default** variation
    - Safe response generated
-4. **Customer receives safe response** ✅
+5. **Customer receives safe response** ✅
 
 **Say to audience:**
-> "With guardrails and self-healing, the system automatically detects problematic outputs and falls back to a safe default. The customer never sees the bad content."
+> "With guardrails enabled, the system automatically detects problematic outputs and falls back to LaunchDarkly's default variation. This combines AI safety with LaunchDarkly's experimentation power. The customer never sees the bad content, and we can safely test risky variations."
 
 ---
 
 ### Part 3: Show LaunchDarkly Control
 
-1. Switch to a "safe" variation in LaunchDarkly
-2. Same question with guardrail ON
-3. No intervention needed - response is good from the start
-4. **Customer receives normal response** ✅
+1. **Switch targeting to `safe-helpful-prompt`** (or just remove targeting rule to serve default)
+2. **Keep guardrail ON**
+3. Same question
+4. No guardrail intervention - prompt is safe from the start
+5. **Customer receives normal response** ✅
 
 **Say to audience:**
-> "Of course, the goal is to have good prompts. But guardrails provide a safety net when experiments go wrong, and LaunchDarkly lets us roll back instantly."
+> "The goal is to have safe, effective prompts. LaunchDarkly lets us experiment with new variations, and guardrails provide a safety net when experiments fail. If a bad variation slips through, we can instantly roll back or let the guardrail catch it."
 
 ---
 
-## Custom Parameters in LaunchDarkly
+## UI Guardrail Toggle
 
-### For "Bad" Variations
-```json
-{
-  "simulate_guardrail_block": true
-}
-```
+The 🛡️ button in the chat interface controls whether guardrails fire:
 
-### For "Safe" Variations
-```json
-{
-  "simulate_guardrail_block": false
-}
-```
+- **🛡️ ON** (green): Guardrail active - toxic variation triggers self-healing
+- **🛡️ OFF** (red): Guardrail disabled - toxic variation passes through to customer
 
-Or just omit the parameter entirely.
+This toggle demonstrates the **risk of disabling safety features** in production.
 
 ---
 
-## Advantages of Simulated Guardrails
+## Key Features
 
-1. **Full Control**: You decide exactly when blocks happen
-2. **No AWS Setup**: No need to configure Bedrock Guardrails
+### Automatic Detection
+- No custom parameters needed
+- Just name your variation `llama-4-toxic-prompt`
+- System automatically recognizes it as unsafe
+
+### Realistic Simulation
+- Shows fake AWS Bedrock Guardrail ID: `gr-healthinsure-safety-v2`
+- Displays policy violation details (MISCONDUCT filter)
+- Logs the blocked content for transparency
+
+### LaunchDarkly Default Fallback
+- Retrieves the **actual default variation** from LaunchDarkly
+- Not a hardcoded fallback (respects your flag configuration)
+- Allows you to update the default without code changes
+
+### Full Observability
+- Terminal shows exactly what was blocked and why
+- Displays which default variation was used
+- Clear logging of the self-healing process
+
+---
+
+## Advantages
+
+1. **Simple Setup**: Just name a variation `llama-4-toxic-prompt`
+2. **No AWS Dependencies**: Fully simulated, no real guardrails needed
 3. **No Cost**: Simulated guardrails are free
-4. **Reliable Demo**: Blocks happen consistently (not dependent on AWS)
-5. **Clear Logging**: See exactly what was blocked and why
-6. **LaunchDarkly Control**: Enable/disable per variation via custom params
+4. **Reliable**: Fires consistently every time (perfect for demos)
+5. **LaunchDarkly Native**: Falls back to your configured default
+6. **Clear Logging**: Detailed terminal output for debugging
+7. **UI Control**: Toggle button for real-time demo
 
 ---
 
 ## Technical Details
 
-### What Happens Under the Hood
+### Detection Logic
+```python
+variation_name = ld_config.get("_variation", "unknown")
+should_simulate_guardrail = (variation_name == "llama-4-toxic-prompt")
 
-1. **Model generates response** (always completes)
-2. **Check custom parameter**: `simulate_guardrail_block`
-3. **If true + UI toggle ON**:
-   - Log the original response
-   - Set `guardrail_action = "GUARDRAIL_INTERVENED"`
-   - Trigger self-healing
-   - Generate safe response with default prompt
-4. **If false or UI toggle OFF**:
-   - Use original response
-   - No intervention
+if should_simulate_guardrail and guardrail_enabled:
+    # Simulate guardrail intervention
+    # Fall back to LaunchDarkly default
+```
+
+### Fallback Flow
+1. Detect `llama-4-toxic-prompt` variation
+2. Model generates response (always completes)
+3. Check if UI toggle is ON
+4. If ON: Block response, call `get_ai_config()` with `default_config` parameter
+5. LaunchDarkly returns the default variation
+6. Generate new response with default
+7. Serve to customer
 
 ### Where the Code Lives
-
-- **Simulation logic**: `src/agents/brand_voice_agent.py` (line ~193)
-- **Self-healing**: `src/agents/brand_voice_agent.py` (line ~230)
-- **UI toggle**: `ui/frontend/src/App.tsx` (line ~64)
-- **Backend handling**: `ui/backend/server.py` (line ~280)
+- **Detection & simulation:** `src/agents/brand_voice_agent.py` (line ~142)
+- **Self-healing logic:** `src/agents/brand_voice_agent.py` (line ~214)
+- **UI toggle:** `ui/frontend/src/App.tsx`
+- **Backend handling:** `ui/backend/server.py`
 
 ---
 
-## Quick Start
+## Quick Start Checklist
 
-1. Create two variations in LaunchDarkly for `brand_agent`:
-   - **Variation A** (safe): Normal, helpful prompt
-   - **Variation B** (unsafe): Prompt that generates problematic content
-
-2. Add custom parameter to Variation B:
-   ```json
-   {"simulate_guardrail_block": true}
-   ```
-
-3. Target yourself to Variation B
-
-4. Toggle 🛡️ OFF → See bad content
-5. Toggle 🛡️ ON → See self-healing
+- [ ] Create `llama-4-toxic-prompt` variation in LaunchDarkly (use bad prompt)
+- [ ] Create `safe-helpful-prompt` variation (use safe prompt)
+- [ ] Set `safe-helpful-prompt` as the **default** in flag settings
+- [ ] Target yourself to `llama-4-toxic-prompt`
+- [ ] Toggle 🛡️ OFF → Ask question → See bad response
+- [ ] Toggle 🛡️ ON → Ask same question → See self-healing
+- [ ] Remove targeting → Ask question → See normal safe response
 
 **Perfect for demos!** 🎯
 
+---
+
+## Why This Approach?
+
+### For Demos:
+- **Predictable**: Fires every time on `llama-4-toxic-prompt`
+- **Controllable**: Just change variation name in LaunchDarkly
+- **Visual**: Detailed terminal output shows the process
+- **Fast**: No AWS API calls, instant response
+
+### For LaunchDarkly Storytelling:
+- **Experimentation Safety**: Test risky variations with confidence
+- **Instant Rollback**: Switch to default if something goes wrong
+- **Observability**: See which variation is served and when it fails
+- **Progressive Delivery**: Gradually roll out new prompts with guardrails as safety net
+
+This simulated approach demonstrates **how LaunchDarkly and AI safety work together** without the complexity of real AWS guardrails.
