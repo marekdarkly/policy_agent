@@ -305,16 +305,21 @@ class AgentTestRunner:
                         brand_tracker=brand_tracker  # Pass the actual tracker for AI Config correlation
                     )
                     
-                    # Extract both metrics
-                    accuracy_score = eval_result.get("accuracy", 0.0)
-                    accuracy_passed = eval_result.get("accuracy_passed", False)
-                    coherence_score = eval_result.get("coherence", 0.0)
-                    coherence_passed = coherence_score >= 0.7  # 70% threshold
+                    # Extract both metrics (nested structure: {"accuracy": {"score": 0.0, "passed": False}})
+                    accuracy_result = eval_result.get("accuracy", {})
+                    accuracy_score = accuracy_result.get("score", 0.0)
+                    accuracy_passed = accuracy_result.get("passed", False)
+                    accuracy_reason = accuracy_result.get("reason", "N/A")
+                    
+                    coherence_result = eval_result.get("coherence", {})
+                    coherence_score = coherence_result.get("score", 0.0)
+                    coherence_passed = coherence_result.get("passed", False)
+                    coherence_reason = coherence_result.get("reason", "N/A")
                     
                     print(f"   📊 Brand Accuracy: {accuracy_score:.2f} {'✅ PASS' if accuracy_passed else '❌ FAIL'}")
-                    print(f"   Reason: {eval_result.get('accuracy_reasoning', 'N/A')}")
+                    print(f"   Reason: {accuracy_reason}")
                     print(f"   📊 Brand Coherence: {coherence_score:.2f} {'✅ PASS' if coherence_passed else '❌ FAIL'}")
-                    print(f"   Reason: {eval_result.get('coherence_reasoning', 'N/A')}")
+                    print(f"   Reason: {coherence_reason}")
                     print(f"   💰 Cost Metrics:")
                     print(f"      Model: {agent_model}")
                     print(f"      Duration: {agent_duration_ms}ms")
@@ -354,10 +359,10 @@ class AgentTestRunner:
                         "agent_used": True,
                         "accuracy_score": accuracy_score,
                         "accuracy_passed": accuracy_passed,
-                        "accuracy_reason": eval_result.get('accuracy_reasoning', 'N/A'),
+                        "accuracy_reason": accuracy_reason,
                         "coherence_score": coherence_score,
                         "coherence_passed": coherence_passed,
-                        "coherence_reason": eval_result.get('coherence_reasoning', 'N/A'),
+                        "coherence_reason": coherence_reason,
                         "passed": accuracy_passed and coherence_passed,  # Both must pass
                         "model": agent_model,
                         "duration_ms": agent_duration_ms,
