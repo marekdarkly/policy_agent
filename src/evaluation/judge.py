@@ -330,33 +330,41 @@ class BrandVoiceEvaluator:
             # Use brand_tracker to send metrics with AI config metadata
             # This ensures metrics show up on the brand_agent's monitoring page
             
+            # Get the raw LaunchDarkly client for sending numeric metrics
+            import ldclient
+            raw_ld_client = ldclient.get()
+            
+            # Get the context from the brand_tracker (ModelInvoker stores it as user_context)
+            # This context has the AI Config metadata that associates metrics with the brand_agent config
+            ld_context = brand_tracker.user_context
+            
             # 1. Hallucinations metric (accuracy score: higher = fewer hallucinations)
             hallucinations_score = float(accuracy_result["score"])
-            brand_tracker.track_feedback({
-                "kind": "metric",
-                "value": hallucinations_score,
-                "name": "$ld:ai:hallucinations"
-            })
+            raw_ld_client.track(
+                event_name="$ld:ai:hallucinations",
+                context=ld_context,
+                metric_value=hallucinations_score
+            )
             
             # 1b. Also send to judge-specific accuracy metric (duplicate)
-            brand_tracker.track_feedback({
-                "kind": "metric",
-                "value": hallucinations_score,
-                "name": "$ld:ai:judge:accuracy"
-            })
+            raw_ld_client.track(
+                event_name="$ld:ai:judge:accuracy",
+                context=ld_context,
+                metric_value=hallucinations_score
+            )
             
             # 2. Coherence metric
             coherence_score = float(coherence_result["score"])
-            brand_tracker.track_feedback({
-                "kind": "metric",
-                "value": coherence_score,
-                "name": "$ld:ai:coherence"
-            })
+            raw_ld_client.track(
+                event_name="$ld:ai:coherence",
+                context=ld_context,
+                metric_value=coherence_score
+            )
             
             print(f"📊 Sent judgment metrics to brand_agent AI config:")
-            print(f"   - $ld:ai:hallucinations: {accuracy_result['score']:.2f}")
-            print(f"   - $ld:ai:judge:accuracy: {accuracy_result['score']:.2f}")
-            print(f"   - $ld:ai:coherence: {coherence_result['score']:.2f}")
+            print(f"   - $ld:ai:hallucinations: {hallucinations_score:.2f}")
+            print(f"   - $ld:ai:judge:accuracy: {hallucinations_score:.2f}")
+            print(f"   - $ld:ai:coherence: {coherence_score:.2f}")
             
             # Display evaluation results with reasoning
             print("\n" + "="*80)
