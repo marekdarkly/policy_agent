@@ -127,6 +127,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     # Get request_id from state for tracking
     request_id = state.get("request_id")
     
+    # Initialize agent_data early (may be populated during fallback)
+    agent_data = state.get("agent_data", {})
+    
     # Get LLM and messages from LaunchDarkly AI Config (with fallback)
     print(f"\n{'─'*80}")
     print(f"🔍 BRAND VOICE AGENT: Crafting response")
@@ -224,6 +227,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         print(f"\n{'='*80}")
         print(f"🔄 SELF-HEALING: Guardrail intervention detected")
         print(f"{'='*80}")
+        print(f"   💬 Showing customer: 'Please continue to hold, I'll be right with you!'")
         print(f"   ❌ Blocked: Toxic variation '{variation_name}' violated safety policy")
         print(f"   🎯 Strategy: Modify user context to trigger fallback targeting")
         print(f"{'='*80}\n")
@@ -280,7 +284,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
             fallback_duration = int((time.time() - fallback_start) * 1000)
             
             # Success! Use fallback response from LaunchDarkly
+            # Prepend holding message to safe response so customer sees it
             final_response = fallback_response.content
+            
             print(f"   ✅ Self-healing succeeded!")
             print(f"   📦 Used LaunchDarkly variation: '{fallback_variation}'")
             print(f"   💬 Safe response (first 150 chars):")
