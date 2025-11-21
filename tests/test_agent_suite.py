@@ -181,7 +181,7 @@ class AgentTestRunner:
         
         try:
             
-            # Run workflow (with evaluation mode if set)
+            # Run workflow (with evaluation mode if set, guardrail disabled for testing)
             result = await asyncio.to_thread(
                 run_workflow,
                 user_message=question_text,
@@ -189,7 +189,8 @@ class AgentTestRunner:
                 request_id=request_id,
                 evaluation_results_store=self.evaluation_results_store,
                 brand_trackers_store=self.brand_trackers_store,
-                evaluate_agent=self.evaluate_agent  # Pass evaluation mode to workflow
+                evaluate_agent=self.evaluate_agent,  # Pass evaluation mode to workflow
+                guardrail_enabled=False  # Disable simulated guardrail for testing
             )
             
             total_duration = int((time.time() - start_time) * 1000)  # ms
