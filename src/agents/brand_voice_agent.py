@@ -479,6 +479,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     # Add debug info to agent_data (store full responses for hallucination debugging)
     brand_data = {
         "model": model_id,  # Track which model was used
+        "response": final_response,  # Full response for evaluation (test suite expects this field)
         "original_specialist_response": specialist_response[:500] + "..." if len(specialist_response) > 500 else specialist_response,
         "final_customer_response": final_response[:500] + "..." if len(final_response) > 500 else final_response,
         "brand_voice_applied": True,
