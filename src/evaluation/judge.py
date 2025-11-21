@@ -319,24 +319,27 @@ class BrandVoiceEvaluator:
             user_context: User context dict with user_key, name, etc.
             accuracy_result: Dict with "score" key (0.0-1.0)
             coherence_result: Dict with "score" key (0.0-1.0)
-            brand_tracker: Tracker from brand_agent AI config (contains metadata)
+            brand_tracker: ModelInvoker from brand_agent (contains tracker + LD context)
         """
         if brand_tracker is None:
-            print(f"⚠️  Cannot send metrics: brand_tracker is None")
+            print(f"⚠️  Cannot send metrics: ModelInvoker (brand_tracker) is None")
             print(f"   Metrics will NOT be correlated to brand_agent AI Config!")
             return
         
         try:
-            # Use brand_tracker to send metrics with AI config metadata
+            # Use brand_tracker (ModelInvoker) to send metrics with AI config metadata
             # This ensures metrics show up on the brand_agent's monitoring page
             
             # Get the raw LaunchDarkly client for sending numeric metrics
             import ldclient
             raw_ld_client = ldclient.get()
             
-            # Get the context from the brand_tracker (ModelInvoker stores it as user_context)
+            # Get the context from the ModelInvoker (which wraps the tracker)
             # This context has the AI Config metadata that associates metrics with the brand_agent config
             ld_context = brand_tracker.user_context
+            
+            # Get the actual tracker for any tracker-specific operations if needed
+            # tracker = brand_tracker.tracker
             
             # 1. Hallucinations metric (accuracy score: higher = fewer hallucinations)
             hallucinations_score = float(accuracy_result["score"])
