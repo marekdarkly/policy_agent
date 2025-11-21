@@ -188,7 +188,7 @@ class BedrockConverseLLM(BaseChatModel):
             if ttft_ms is None:
                 ttft_ms = int((time.time() - start_time) * 1000)
 
-            # Create response message with TTFT in metadata
+            # Create response message with TTFT metadata
             message = AIMessage(
                 content=accumulated_text,
                 response_metadata={

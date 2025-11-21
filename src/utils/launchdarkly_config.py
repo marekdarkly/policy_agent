@@ -11,7 +11,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage
 from ldclient import Context
 from ldclient.config import Config
-from ldai.client import LDAIClient, AIConfig, ModelConfig, ProviderConfig
+from ldai.client import LDAIClient, AIConfig, ModelConfig, ProviderConfig, LDMessage
 
 # Load environment variables
 load_dotenv()
@@ -186,7 +186,7 @@ class LaunchDarklyClient:
             
             config_dict["_variation"] = variation_name
             
-            # Check if config came from LaunchDarkly
+            # Check if config came from LaunchDarkly or is using the default fallback
             default_dict = self._ai_config_to_dict(default_ai_config)
             
             is_from_ld = (
@@ -196,13 +196,17 @@ class LaunchDarklyClient:
                 config_dict.get("messages")
             )
             
-            if is_from_ld:
-                # Variation logging is now handled by individual agents
-                pass
-            else:
-                error_msg = f"CATASTROPHIC: AI config '{config_key}' not found in LaunchDarkly!"
-                print(f"❌ {error_msg}")
-                raise RuntimeError(error_msg)
+            if not is_from_ld:
+                # Using default fallback - this is OK if a default was provided
+                if default_config:
+                    # User provided a default, use it gracefully
+                    config_dict["_variation"] = "default-fallback"
+                    print(f"⚠️  AI config '{config_key}' not found in LaunchDarkly - using default fallback")
+                else:
+                    # No default provided, this is an error
+                    error_msg = f"CATASTROPHIC: AI config '{config_key}' not found in LaunchDarkly!"
+                    print(f"❌ {error_msg}")
+                    raise RuntimeError(error_msg)
             
             return config_dict, tracker, ld_context
             
@@ -285,10 +289,24 @@ class LaunchDarklyClient:
             parameters=model_dict.get("parameters", {"temperature": 0.7, "maxTokens": 2000})
         )
         provider_config = ProviderConfig(name=config_dict.get("provider", "bedrock"))
+        
+        # Convert messages if present
+        messages = []
+        if config_dict.get("messages"):
+            for msg in config_dict["messages"]:
+                if isinstance(msg, dict):
+                    messages.append(LDMessage(
+                        role=msg.get("role", "user"),
+                        content=msg.get("content", "")
+                    ))
+                else:
+                    messages.append(msg)  # Already an LDMessage
+        
         return AIConfig(
             enabled=config_dict.get("enabled", True),
             model=model_config,
-            provider=provider_config
+            provider=provider_config,
+            messages=messages if messages else None
         )
 
     def _ai_config_to_dict(self, ai_config: AIConfig) -> dict[str, Any]:
@@ -334,6 +352,13 @@ class LaunchDarklyClient:
         if config_dict.get("provider"):
             provider_dict = config_dict["provider"]
             result["provider"] = provider_dict.get("name", "")
+        
+        # Extract top-level custom parameters (e.g., guardrail_id, awskbid)
+        # These can be in either _custom or model.custom
+        if config_dict.get("_custom"):
+            result["_custom"] = config_dict["_custom"]
+        elif config_dict.get("custom"):
+            result["_custom"] = config_dict["custom"]
 
         return result
 

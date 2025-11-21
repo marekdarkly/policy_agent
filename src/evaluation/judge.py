@@ -120,8 +120,8 @@ class BrandVoiceEvaluator:
             else:
                 coherence_result, coherence_model, coherence_tokens = coherence_data
             
-            # Send judgment metrics to LaunchDarkly using user context
-            self._send_judgment_to_ld(user_context, accuracy_result, coherence_result)
+            # Send judgment metrics to LaunchDarkly using user context and tracker
+            self._send_judgment_to_ld(user_context, accuracy_result, coherence_result, brand_tracker)
             
             print(f"✅ Evaluation completed: Accuracy={accuracy_result['score']:.2f}, Coherence={coherence_result['score']:.2f}")
             
@@ -301,91 +301,57 @@ class BrandVoiceEvaluator:
         self,
         user_context: Dict[str, Any],
         accuracy_result: Dict[str, Any],
-        coherence_result: Dict[str, Any]
+        coherence_result: Dict[str, Any],
+        brand_tracker: Any
     ):
         """
-        Send judgment metrics to LaunchDarkly as custom numeric events.
+        Send judgment metrics to LaunchDarkly using the brand_tracker.
         
-        Sends three custom events:
+        Uses the brand_tracker (which has AI config metadata) to associate
+        metrics with the brand_agent AI config, not the judge AI configs.
+        
+        Sends three metrics:
         - "$ld:ai:hallucinations": Accuracy score (higher = fewer hallucinations)
         - "$ld:ai:judge:accuracy": Accuracy score (duplicate for judge-specific tracking)
         - "$ld:ai:coherence": Coherence score
-        
-        These events can be used to create custom numeric metrics in LaunchDarkly.
-        To use these metrics:
-        1. In LaunchDarkly UI, go to Metrics → Create metric
-        2. Choose "Custom numeric" metric type
-        3. Set Event key to "$ld:ai:hallucinations", "$ld:ai:judge:accuracy", or "$ld:ai:coherence"
-        4. Choose aggregation method (e.g., Average)
-        5. Set randomization unit to "user"
-        6. Connect to your experiments
         
         Args:
             user_context: User context dict with user_key, name, etc.
             accuracy_result: Dict with "score" key (0.0-1.0)
             coherence_result: Dict with "score" key (0.0-1.0)
+            brand_tracker: Tracker from brand_agent AI config (contains metadata)
         """
         try:
-            import ldclient
-            from ldclient import Context
-            
-            # Build LaunchDarkly context from user_context
-            user_key = user_context.get("user_key", "anonymous")
-            
-            # Create context with user attributes for proper segmentation in experiments
-            context_builder = Context.builder(user_key).kind("user")
-            
-            # Add user attributes for better experiment targeting
-            if user_context.get("name"):
-                context_builder.set("name", user_context["name"])
-            if user_context.get("location"):
-                context_builder.set("location", user_context["location"])
-            if user_context.get("policy_id"):
-                context_builder.set("policy_id", user_context["policy_id"])
-            if user_context.get("coverage_type"):
-                context_builder.set("coverage_type", user_context["coverage_type"])
-            
-            ld_context = context_builder.build()
-            
-            # Get LaunchDarkly client
-            ld_client = ldclient.get()
-            
-            # Send custom numeric events with just the metric value
-            # Simplified to ensure metrics flow to LaunchDarkly
-            # Explicitly convert to float to ensure numeric type
+            # Use brand_tracker to send metrics with AI config metadata
+            # This ensures metrics show up on the brand_agent's monitoring page
             
             # 1. Hallucinations metric (accuracy score: higher = fewer hallucinations)
             hallucinations_score = float(accuracy_result["score"])
-            ld_client.track(
-                event_name="$ld:ai:hallucinations",
-                context=ld_context,
-                metric_value=hallucinations_score
-            )
+            brand_tracker.track_feedback({
+                "kind": "metric",
+                "value": hallucinations_score,
+                "name": "$ld:ai:hallucinations"
+            })
             
             # 1b. Also send to judge-specific accuracy metric (duplicate)
-            ld_client.track(
-                event_name="$ld:ai:judge:accuracy",
-                context=ld_context,
-                metric_value=hallucinations_score
-            )
+            brand_tracker.track_feedback({
+                "kind": "metric",
+                "value": hallucinations_score,
+                "name": "$ld:ai:judge:accuracy"
+            })
             
             # 2. Coherence metric
             coherence_score = float(coherence_result["score"])
-            ld_client.track(
-                event_name="ld:ai:coherence",
-                context=ld_context,
-                metric_value=coherence_score
-            )
+            brand_tracker.track_feedback({
+                "kind": "metric",
+                "value": coherence_score,
+                "name": "$ld:ai:coherence"
+            })
             
-            print(f"📊 DEBUG: Sent hallucinations={hallucinations_score} (type={type(hallucinations_score).__name__})")
-            print(f"📊 DEBUG: Sent judge:accuracy={hallucinations_score} (type={type(hallucinations_score).__name__})")
-            print(f"📊 DEBUG: Sent coherence={coherence_score} (type={type(coherence_score).__name__})")
-            
-            print(f"📊 Sent judgment metrics to LaunchDarkly:")
+            print(f"📊 Sent judgment metrics to brand_agent AI config:")
             print(f"   - $ld:ai:hallucinations: {accuracy_result['score']:.2f}")
             print(f"   - $ld:ai:judge:accuracy: {accuracy_result['score']:.2f}")
             print(f"   - $ld:ai:coherence: {coherence_result['score']:.2f}")
-            print(f"   (user={user_key})")
             
             # Display evaluation results with reasoning
             print("\n" + "="*80)

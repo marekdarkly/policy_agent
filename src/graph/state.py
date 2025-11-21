@@ -50,6 +50,9 @@ class AgentState(TypedDict):
     
     # Evaluation mode
     evaluate_agent: Annotated[str | None, "If set, terminates after this agent for evaluation (policy_agent, provider_agent, scheduler_agent)"]
+    
+    # Guardrail settings
+    guardrail_enabled: Annotated[bool, "Whether to use guardrails on brand agent (default True)"]
 
 
 def create_initial_state(
@@ -59,6 +62,7 @@ def create_initial_state(
     evaluation_results_store: dict[str, Any] | None = None,
     brand_trackers_store: dict[str, Any] | None = None,
     evaluate_agent: str | None = None,
+    guardrail_enabled: bool = True,
 ) -> dict[str, Any]:
     """Create an initial state for the workflow.
 
@@ -69,6 +73,7 @@ def create_initial_state(
         evaluation_results_store: Optional shared dict for storing evaluation results
         brand_trackers_store: Optional shared dict for storing brand voice trackers
         evaluate_agent: Optional agent to evaluate (stops after this agent executes)
+        guardrail_enabled: Whether to use guardrails on brand agent (default True)
 
     Returns:
         Initial state dictionary
@@ -88,4 +93,5 @@ def create_initial_state(
         "evaluation_results_store": evaluation_results_store,
         "brand_trackers_store": brand_trackers_store,
         "evaluate_agent": evaluate_agent,
+        "guardrail_enabled": guardrail_enabled,
     }

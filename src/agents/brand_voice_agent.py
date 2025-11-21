@@ -5,11 +5,49 @@ from typing import Any
 import ldclient
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from ldai.client import AIConfig, ModelConfig, ProviderConfig, LDMessage
 
 from ..graph.state import AgentState
 from ..utils.llm_config import get_model_invoker
 from ..utils.launchdarkly_config import get_ld_client
 from ..evaluation.judge import evaluate_brand_voice_async
+
+
+# Default AI Config fallback for brand_agent
+# This is used if LaunchDarkly is unavailable or the flag doesn't exist
+DEFAULT_BRAND_VOICE_SYSTEM_PROMPT = """You are ToggleHealth's Brand Voice Agent. Transform the specialist's technical response into a warm, friendly, and personalized customer response.
+
+**Brand Voice Guidelines:**
+- **Friendly & Warm**: Use a conversational tone that makes customers feel valued
+- **Empathetic**: Acknowledge customer concerns and emotions
+- **Clear & Simple**: Avoid jargon; explain complex terms in plain language
+- **Helpful**: Provide actionable next steps when appropriate
+- **Professional**: Maintain trust while being approachable
+
+**Context Variables:**
+- Customer Name: {customer_name}
+- Original Query: {original_query}
+- Query Type: {query_type}
+- Specialist Response: {specialist_response}
+
+**Your Task:**
+Transform the specialist's response into a customer-facing message that:
+1. Addresses the customer by name (if appropriate)
+2. Directly answers their question
+3. Uses ToggleHealth's warm, friendly tone
+4. Ends with a helpful closing (e.g., "Is there anything else I can help you with?")
+
+Provide ONLY the final customer-facing response. Do not include meta-commentary."""
+
+DEFAULT_BRAND_AGENT_CONFIG = AIConfig(
+    enabled=True,
+    model=ModelConfig(
+        name="us.anthropic.claude-haiku-4-5-20251001-v1:0",
+        parameters={"temperature": 0.7, "maxTokens": 2000}
+    ),
+    provider=ProviderConfig(name="bedrock"),
+    messages=[LDMessage(role="system", content=DEFAULT_BRAND_VOICE_SYSTEM_PROMPT)]
+)
 
 
 def calculate_model_cost(model_id: str, input_tokens: int, output_tokens: int) -> float:
@@ -83,16 +121,35 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
             original_query = msg.content
             break
 
-    # Get LLM and messages from LaunchDarkly AI Config
+    # Check if guardrail is enabled from state (UI toggle)
+    guardrail_enabled = state.get("guardrail_enabled", True)
+    
+    # Get LLM and messages from LaunchDarkly AI Config (with fallback)
     print(f"\n{'─'*80}")
     print(f"🔍 BRAND VOICE AGENT: Crafting response")
     model_invoker, ld_config = get_model_invoker(
         config_key="brand_agent",
         context=user_context,
         default_temperature=0.7,  # Slightly creative for natural language
+        default_config=DEFAULT_BRAND_AGENT_CONFIG,  # Fallback if LaunchDarkly unavailable
+        override_guardrail_enabled=guardrail_enabled,  # Pass UI toggle
     )
     variation_name = ld_config.get("_variation", "unknown")
     print(f"   📌 Variation: {variation_name}")
+    
+    # Check for simulated guardrail setting
+    custom_params = ld_config.get("_custom", {}) or ld_config.get("model", {}).get("custom", {})
+    simulate_guardrail_block = custom_params.get("simulate_guardrail_block", False)
+    
+    # Debug: Show what custom params we received
+    if custom_params:
+        print(f"   🔧 Custom params: {list(custom_params.keys())}")
+    
+    if simulate_guardrail_block and guardrail_enabled:
+        print(f"   🛡️  Simulated Guardrail: ENABLED (will block response)")
+    elif simulate_guardrail_block and not guardrail_enabled:
+        print(f"   🛡️  Simulated Guardrail: DISABLED BY USER")
+    
     print(f"{'─'*80}")
     
     # Extract model ID from config for tracking
@@ -121,6 +178,8 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     # Extract token usage and TTFT if available
     tokens = {"input": 0, "output": 0}
     ttft_ms = None
+    guardrail_action = None
+    guardrail_trace = None
     
     if hasattr(response, "usage_metadata") and response.usage_metadata:
         tokens = {
@@ -131,9 +190,108 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     # Extract Time to First Token (TTFT) from response metadata
     if hasattr(response, "response_metadata") and isinstance(response.response_metadata, dict):
         ttft_ms = response.response_metadata.get("ttft_ms")
-
-    # Store the brand-voiced response
-    final_response = response.content
+    
+    # Simulate guardrail intervention if enabled (via LaunchDarkly custom parameter)
+    guardrail_action = None
+    guardrail_trace = None
+    
+    if simulate_guardrail_block and guardrail_enabled:
+        # SIMULATED GUARDRAIL: Block the response
+        print(f"\n{'─'*80}")
+        print(f"🛡️  SIMULATED GUARDRAIL INTERVENED")
+        print(f"   ⚠️  Response blocked by simulated guardrail")
+        print(f"   📝 Original Response (first 200 chars):")
+        print(f"      '{response.content[:200]}{'...' if len(response.content) > 200 else ''}'")
+        print(f"   💡 Simulated Violation: Inappropriate content policy")
+        print(f"   🎭 This is a DEMO - not a real AWS Bedrock guardrail")
+        print(f"{'─'*80}\n")
+        guardrail_action = "GUARDRAIL_INTERVENED"
+        guardrail_trace = {"simulated": True, "original_response": response.content[:500]}
+    
+    # No additional display needed - already shown above when simulated
+    
+    # Self-healing: If guardrail intervened, fall back to default config
+    if guardrail_action == "GUARDRAIL_INTERVENED":
+        print(f"\n{'='*80}")
+        print(f"🔄 SELF-HEALING: Simulated guardrail blocked response - falling back to safe default")
+        print(f"{'='*80}")
+        print(f"   ❌ Blocked content (first 150 chars):")
+        print(f"      '{response.content[:150]}{'...' if len(response.content) > 150 else ''}'")
+        print(f"   🎯 Goal: Generate safe response using hardcoded default prompt (no guardrail)")
+        print(f"{'='*80}\n")
+        
+        try:
+            # ALWAYS use hardcoded default for self-healing (never trust LaunchDarkly variations)
+            # Any LaunchDarkly variation might also have a guardrail that could fail again
+            print(f"   🔄 Using hardcoded safe default (guaranteed no guardrail)")
+            
+            # Create a fresh LLM with the default config (no guardrail)
+            from ..utils.bedrock_llm import BedrockConverseLLM, get_bedrock_model_id
+            import os
+            
+            default_model = DEFAULT_BRAND_AGENT_CONFIG.model.name
+            default_temp = DEFAULT_BRAND_AGENT_CONFIG.model.parameters.get("temperature", 0.7)
+            default_max_tokens = DEFAULT_BRAND_AGENT_CONFIG.model.parameters.get("maxTokens", 2000)
+            
+            # Create Bedrock LLM (no simulated guardrail)
+            model_id = get_bedrock_model_id(default_model)
+            region = os.getenv("AWS_REGION", "us-east-1")
+            profile = os.getenv("AWS_PROFILE")
+            
+            fallback_llm = BedrockConverseLLM(
+                model_id=model_id,
+                temperature=default_temp,
+                max_tokens=default_max_tokens,
+                region=region,
+                profile_name=profile,
+            )
+            
+            # Build messages from default config
+            fallback_messages = []
+            for msg in DEFAULT_BRAND_AGENT_CONFIG.messages:
+                content = msg.content
+                # Replace template variables
+                for key, value in context_vars.items():
+                    content = content.replace(f"{{{key}}}", str(value))
+                
+                if msg.role == "system":
+                    fallback_messages.append(SystemMessage(content=content))
+                else:
+                    fallback_messages.append(HumanMessage(content=content))
+            
+            # Invoke without guardrail
+            fallback_start = time.time()
+            fallback_response = fallback_llm.invoke(fallback_messages)
+            fallback_duration = int((time.time() - fallback_start) * 1000)
+            
+            # Success! Use fallback response (no guardrail on default)
+            final_response = fallback_response.content
+            print(f"   ✅ Fallback succeeded - serving safe response to customer")
+            print(f"   📝 Generated (first 150 chars):")
+            print(f"      '{final_response[:150]}{'...' if len(final_response) > 150 else ''}'")
+            print(f"   ⏱️  Fallback duration: {fallback_duration}ms")
+            
+            # Update tokens and duration for the fallback
+            if hasattr(fallback_response, "usage_metadata") and fallback_response.usage_metadata:
+                tokens = {
+                    "input": fallback_response.usage_metadata.get("input_tokens", 0),
+                    "output": fallback_response.usage_metadata.get("output_tokens", 0)
+                }
+            duration_ms = fallback_duration
+            
+            if hasattr(fallback_response, "response_metadata") and isinstance(fallback_response.response_metadata, dict):
+                ttft_ms = fallback_response.response_metadata.get("ttft_ms")
+            
+            print(f"{'='*80}\n")
+            
+        except Exception as e:
+            print(f"   ❌ Fallback failed: {e}")
+            print(f"   Using generic error message")
+            print(f"{'='*80}\n")
+            final_response = "I apologize, but I'm unable to provide a response at this time. Please contact our support team for assistance."
+    else:
+        # No guardrail intervention, use original response
+        final_response = response.content
     
     # Start async evaluation without blocking (fire-and-forget)
     # This evaluates GLOBAL SYSTEM ACCURACY against RAG documents
@@ -250,7 +408,17 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         "personalization": {
             "customer_name": customer_name,
             "query_type": str(query_type),
-        }
+        },
+        "guardrail": {
+            "action": guardrail_action,
+            "intervened": guardrail_action == "GUARDRAIL_INTERVENED",
+            "trace": guardrail_trace,
+        } if guardrail_action else None,
+        "self_healing": {
+            "triggered": guardrail_action == "GUARDRAIL_INTERVENED",
+            "used_fallback": guardrail_action == "GUARDRAIL_INTERVENED",
+            "fallback_config": "DEFAULT_BRAND_AGENT_CONFIG",
+        } if guardrail_action == "GUARDRAIL_INTERVENED" else None,
     }
 
     # Update agent_data

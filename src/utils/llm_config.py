@@ -142,6 +142,8 @@ def get_model_invoker(
     context: Optional[dict[str, Any]] = None,
     default_temperature: float = 0.7,
     skip_span_annotation: bool = False,
+    default_config: Optional[Any] = None,
+    override_guardrail_enabled: Optional[bool] = None,
 ) -> Tuple[ModelInvoker, dict[str, Any]]:
     """Get a ModelInvoker with tracking and full config (including messages) from LaunchDarkly.
 
@@ -150,13 +152,21 @@ def get_model_invoker(
         context: User/session context for targeting
         default_temperature: Default temperature if not specified in config
         skip_span_annotation: If True, skip all span annotation (for background threads like judges)
+        default_config: Default AIConfig to use if LaunchDarkly is unavailable or flag doesn't exist
+        override_guardrail_enabled: If provided, override guardrail setting (True=enable, False=disable, None=use config)
 
     Returns:
         Tuple of (ModelInvoker instance with tracking, full config dict including messages)
     """
     ld_client = get_ld_client()
     # Get config once from LaunchDarkly (now returns context too)
-    config, tracker, ld_context = ld_client.get_ai_config(config_key, context)
+    # Convert AIConfig to dict if provided
+    default_config_dict = None
+    if default_config:
+        # If it's an AIConfig object, convert it to dict using the client's method
+        default_config_dict = ld_client._ai_config_to_dict(default_config)
+    
+    config, tracker, ld_context = ld_client.get_ai_config(config_key, context, default_config_dict)
     
     # Create LLM directly from the config (don't call get_llm_from_config which would retrieve again)
     provider = config.get("provider", "bedrock")
@@ -190,7 +200,10 @@ def get_model_invoker(
 
 
 def _create_llm_for_provider(
-    provider: str, model_name: str, temperature: float, max_tokens: int
+    provider: str, 
+    model_name: str, 
+    temperature: float, 
+    max_tokens: int
 ) -> BaseChatModel:
     """Create LLM instance for the specified provider.
 

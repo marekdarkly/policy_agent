@@ -277,6 +277,7 @@ class ChatRequest(BaseModel):
     location: Optional[str] = "San Francisco, CA"
     policyId: Optional[str] = "TH-HMO-GOLD-2024"
     coverageType: Optional[str] = "Gold HMO"
+    guardrailEnabled: Optional[bool] = True  # Toggle guardrail on/off
 
 
 class ChatResponse(BaseModel):
@@ -320,14 +321,15 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
         current_agent_start = time.time()
         request_id = str(uuid4())
         
-        # Run workflow with request_id, evaluation store, and tracker store
+        # Run workflow with request_id, evaluation store, tracker store, and guardrail setting
         result = await asyncio.to_thread(
             run_workflow,
             user_message=request.userInput,
             user_context=user_context,
             request_id=request_id,
             evaluation_results_store=EVALUATION_RESULTS,
-            brand_trackers_store=BRAND_TRACKERS
+            brand_trackers_store=BRAND_TRACKERS,
+            guardrail_enabled=request.guardrailEnabled
         )
         
         total_duration = int((time.time() - start_time) * 1000)  # ms
