@@ -45,8 +45,8 @@ logging.getLogger("src.utils.launchdarkly_config").setLevel(logging.WARNING)
 warnings.filterwarnings("ignore", message=".*ended span.*")
 warnings.filterwarnings("ignore", message=".*Setting attribute.*")
 
-# Add project root to path
-project_root = os.path.dirname(os.path.abspath(__file__))
+# Add project root to path (parent directory of tests/)
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
 # Initialize observability BEFORE any LLM imports (but suppress its logs)
