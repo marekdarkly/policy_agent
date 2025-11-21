@@ -138,7 +138,6 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     print(f"   📌 Variation: {variation_name}")
     
     # Check if this is the toxic variation that should trigger simulated guardrail
-    variation_name = ld_config.get("_variation", "unknown")
     should_simulate_guardrail = (variation_name == "llama-4-toxic-prompt")
     
     if should_simulate_guardrail and guardrail_enabled:
@@ -223,54 +222,62 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     # Self-healing: If guardrail intervened, fall back to LaunchDarkly default
     if guardrail_action == "GUARDRAIL_INTERVENED":
         print(f"\n{'='*80}")
-        print(f"🔄 SELF-HEALING: Guardrail blocked response - falling back to LaunchDarkly default")
+        print(f"🔄 SELF-HEALING: Guardrail blocked response - falling back to safe default")
         print(f"{'='*80}")
         print(f"   ❌ Blocked: Toxic variation '{variation_name}' generated unsafe content")
-        print(f"   🎯 Retrieving LaunchDarkly flag DEFAULT variation...")
+        print(f"   🎯 Falling back to hardcoded safe configuration...")
         print(f"{'='*80}\n")
         
         try:
-            # Retrieve the DEFAULT variation from LaunchDarkly
-            from ..utils.launchdarkly_config import get_ai_config
-            from langchain_core.messages import SystemMessage, HumanMessage
+            # Use hardcoded default config (can't retrieve LaunchDarkly default for targeted users)
+            # If we call LaunchDarkly again with same context, it will return the toxic variation!
+            print(f"   🔄 Using hardcoded safe default configuration")
+            print(f"   💡 Cannot retrieve LaunchDarkly 'default variation' for targeted users")
             
-            print(f"   🏁 Fetching default variation from LaunchDarkly...")
+            from ..utils.bedrock_llm import BedrockConverseLLM, get_bedrock_model_id
+            import os
             
-            # Get the default config by passing default_config=DEFAULT_BRAND_AGENT_CONFIG
-            # This tells LaunchDarkly to use the default if the flag doesn't evaluate
-            default_ld_config = get_ai_config(
-                flag_key="brand_agent",
-                context=state.get("ld_context"),
-                default_config=DEFAULT_BRAND_AGENT_CONFIG,
+            # Extract config from DEFAULT_BRAND_AGENT_CONFIG
+            default_model = DEFAULT_BRAND_AGENT_CONFIG.model.name
+            default_temp = DEFAULT_BRAND_AGENT_CONFIG.model.parameters.get("temperature", 0.7)
+            default_max_tokens = DEFAULT_BRAND_AGENT_CONFIG.model.parameters.get("maxTokens", 2000)
+            
+            # Create Bedrock LLM with default settings
+            model_id = get_bedrock_model_id(default_model)
+            region = os.getenv("AWS_REGION", "us-east-1")
+            profile = os.getenv("AWS_PROFILE")
+            
+            fallback_llm = BedrockConverseLLM(
+                model_id=model_id,
+                temperature=default_temp,
+                max_tokens=default_max_tokens,
+                region=region,
+                profile_name=profile,
             )
             
-            default_variation_name = default_ld_config.get("_variation", "default")
-            print(f"   ✅ Retrieved variation: '{default_variation_name}'")
+            # Build messages from hardcoded default config
+            fallback_messages = []
+            for msg in DEFAULT_BRAND_AGENT_CONFIG.messages:
+                content = msg.content
+                # Replace template variables
+                for key, value in context_vars.items():
+                    content = content.replace(f"{{{key}}}", str(value))
+                
+                if msg.role == "system":
+                    fallback_messages.append(SystemMessage(content=content))
+                else:
+                    fallback_messages.append(HumanMessage(content=content))
             
-            # Build model invoker for default config
-            from ..utils.llm_config import get_model_invoker
-            
-            default_model_invoker = get_model_invoker(
-                config=default_ld_config,
-                context=state.get("ld_context"),
-                request_id=request_id,
-                override_guardrail_enabled=False,  # NEVER apply guardrail to fallback
-            )
-            
-            # Build messages from default config
-            ld_client = get_ld_client()
-            fallback_messages = ld_client.build_langchain_messages(default_ld_config, context_vars)
-            
-            # Invoke with default config
-            print(f"   🔄 Generating response with default variation...")
+            # Invoke with hardcoded default
+            print(f"   🔄 Generating response with safe default prompt...")
             fallback_start = time.time()
-            fallback_response = default_model_invoker.invoke(fallback_messages)
+            fallback_response = fallback_llm.invoke(fallback_messages)
             fallback_duration = int((time.time() - fallback_start) * 1000)
             
-            # Success! Use fallback response from LaunchDarkly default
+            # Success! Use fallback response from hardcoded default
             final_response = fallback_response.content
             print(f"   ✅ Self-healing succeeded!")
-            print(f"   📦 Used LaunchDarkly default variation: '{default_variation_name}'")
+            print(f"   📦 Used hardcoded safe default (Haiku 4.5, temperature 0.7)")
             print(f"   💬 Safe response (first 150 chars):")
             print(f"      '{final_response[:150]}{'...' if len(final_response) > 150 else ''}'")
             print(f"   ⏱️  Fallback duration: {fallback_duration}ms")
@@ -291,7 +298,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
             
         except Exception as e:
             print(f"   ❌ Self-healing failed: {e}")
-            print(f"   📋 Unable to retrieve LaunchDarkly default variation")
+            print(f"   📋 Unable to generate safe response with default config")
             print(f"   🆘 Using generic safe message as final fallback")
             print(f"{'='*80}\n")
             final_response = "I apologize, but I'm unable to provide a response at this time. Please contact our support team for assistance."

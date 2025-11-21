@@ -20,7 +20,7 @@ The application automatically detects when the **`llama-4-toxic-prompt`** variat
 1. Model generates a response (toxic/unsafe content)
 2. 🛡️ Simulated AWS Bedrock Guardrail "fires" and blocks it
 3. 📋 System logs the blocked content and guardrail details
-4. 🔄 Self-healing retrieves the **LaunchDarkly default variation**
+4. 🔄 Self-healing uses **hardcoded safe default configuration**
 5. ✅ Safe response generated and served to customer
 
 ---
@@ -55,17 +55,17 @@ The application automatically detects when the **`llama-4-toxic-prompt`** variat
 ────────────────────────────────────────────────────────────────────────────────
 
 ================================================================================
-🔄 SELF-HEALING: Guardrail blocked response - falling back to LaunchDarkly default
+🔄 SELF-HEALING: Guardrail blocked response - falling back to safe default
 ================================================================================
    ❌ Blocked: Toxic variation 'llama-4-toxic-prompt' generated unsafe content
-   🎯 Retrieving LaunchDarkly flag DEFAULT variation...
+   🎯 Falling back to hardcoded safe configuration...
 ================================================================================
 
-   🏁 Fetching default variation from LaunchDarkly...
-   ✅ Retrieved variation: 'safe-helpful-prompt'
-   🔄 Generating response with default variation...
+   🔄 Using hardcoded safe default configuration
+   💡 Cannot retrieve LaunchDarkly 'default variation' for targeted users
+   🔄 Generating response with safe default prompt...
    ✅ Self-healing succeeded!
-   📦 Used LaunchDarkly default variation: 'safe-helpful-prompt'
+   📦 Used hardcoded safe default (Haiku 4.5, temperature 0.7)
    💬 Safe response (first 150 chars):
       'I understand you're experiencing chest pain. This is a serious symptom that requires immediate medical attention. I strongly recommend...'
    ⏱️  Fallback duration: 2134ms
@@ -165,7 +165,7 @@ The application automatically detects when the **`llama-4-toxic-prompt`** variat
 5. **Customer receives safe response** ✅
 
 **Say to audience:**
-> "With guardrails enabled, the system automatically detects problematic outputs and falls back to LaunchDarkly's default variation. This combines AI safety with LaunchDarkly's experimentation power. The customer never sees the bad content, and we can safely test risky variations."
+> "With guardrails enabled, the system automatically detects problematic outputs and falls back to a safe, hardcoded default. This combines AI safety with LaunchDarkly's experimentation power. The customer never sees the bad content, and we can safely test risky variations with confidence that there's always a fallback."
 
 ---
 
@@ -205,10 +205,11 @@ This toggle demonstrates the **risk of disabling safety features** in production
 - Displays policy violation details (MISCONDUCT filter)
 - Logs the blocked content for transparency
 
-### LaunchDarkly Default Fallback
-- Retrieves the **actual default variation** from LaunchDarkly
-- Not a hardcoded fallback (respects your flag configuration)
-- Allows you to update the default without code changes
+### Hardcoded Safe Fallback
+- Uses a **guaranteed safe configuration** that never changes
+- Haiku 4.5 model with temperature 0.7
+- Cannot be accidentally misconfigured via LaunchDarkly
+- Always available, even if LaunchDarkly is unreachable
 
 ### Full Observability
 - Terminal shows exactly what was blocked and why
@@ -223,7 +224,7 @@ This toggle demonstrates the **risk of disabling safety features** in production
 2. **No AWS Dependencies**: Fully simulated, no real guardrails needed
 3. **No Cost**: Simulated guardrails are free
 4. **Reliable**: Fires consistently every time (perfect for demos)
-5. **LaunchDarkly Native**: Falls back to your configured default
+5. **Guaranteed Safe Fallback**: Hardcoded default cannot be misconfigured
 6. **Clear Logging**: Detailed terminal output for debugging
 7. **UI Control**: Toggle button for real-time demo
 
@@ -245,10 +246,13 @@ if should_simulate_guardrail and guardrail_enabled:
 1. Detect `llama-4-toxic-prompt` variation
 2. Model generates response (always completes)
 3. Check if UI toggle is ON
-4. If ON: Block response, call `get_ai_config()` with `default_config` parameter
-5. LaunchDarkly returns the default variation
-6. Generate new response with default
+4. If ON: Block response, use hardcoded `DEFAULT_BRAND_AGENT_CONFIG`
+5. Build LLM directly with safe default settings
+6. Generate new response with safe prompt
 7. Serve to customer
+
+**Why not retrieve LaunchDarkly's default variation?**
+If a user is targeted to the toxic variation, calling LaunchDarkly again with the same context will return the toxic variation again! The `default_config` parameter only applies when the flag doesn't exist or LD is unavailable. Therefore, we use a hardcoded safe default that's guaranteed to work.
 
 ### Where the Code Lives
 - **Detection & simulation:** `src/agents/brand_voice_agent.py` (line ~142)
