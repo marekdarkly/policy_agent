@@ -324,11 +324,11 @@ status: info ## Alias for 'info' - show system status
 
 test-suite: aws-check ## Run automated agent test suite (50 iterations)
 	@echo "$(COLOR_CYAN)$(COLOR_BOLD)🧪 Running Agent Test Suite (50 iterations)...$(COLOR_RESET)"
-	@. venv/bin/activate && python test_agent_suite.py
+	@. venv/bin/activate && python tests/test_agent_suite.py
 
 test-quick: aws-check ## Run quick test (5 iterations)
 	@echo "$(COLOR_CYAN)$(COLOR_BOLD)🧪 Running Quick Test (5 iterations)...$(COLOR_RESET)"
-	@. venv/bin/activate && TEST_ITERATIONS=5 python test_agent_suite.py
+	@. venv/bin/activate && TEST_ITERATIONS=5 python tests/test_agent_suite.py
 
 test-chunks: aws-check ## Diagnose RAG chunk sizes
 	@echo "$(COLOR_CYAN)$(COLOR_BOLD)🔍 Diagnosing RAG Chunk Sizes...$(COLOR_RESET)"
@@ -338,7 +338,7 @@ test-chunks: aws-check ## Diagnose RAG chunk sizes
 
 upload-tools: ## Upload all 20 tools to LaunchDarkly Tool Library
 	@echo "$(COLOR_CYAN)$(COLOR_BOLD)🚀 Uploading Tools to LaunchDarkly...$(COLOR_RESET)"
-	@$(PYTHON_VENV) upload_tools_to_launchdarkly.py
+	@$(PYTHON_VENV) scripts/upload_tools_to_launchdarkly.py
 
 ##@ Default
 
