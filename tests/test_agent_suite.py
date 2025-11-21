@@ -289,14 +289,15 @@ class AgentTestRunner:
                     # Create evaluator and run evaluation
                     evaluator = BrandVoiceEvaluator()
                     
-                    # We don't have a brand_tracker in test mode, pass None
-                    # The evaluator will handle sending metrics directly
+                    # Retrieve the brand_tracker from the store (populated by brand_voice_agent)
+                    brand_tracker = self.brand_trackers_store.get(request_id)
+                    
                     eval_result = await evaluator.evaluate_async(
                         original_query=question_text,
                         rag_documents=rag_documents,
                         brand_voice_output=agent_output,
                         user_context=user_context,
-                        brand_tracker=None  # No tracker in test mode
+                        brand_tracker=brand_tracker  # Pass the actual tracker for AI Config correlation
                     )
                     
                     # Extract both metrics
