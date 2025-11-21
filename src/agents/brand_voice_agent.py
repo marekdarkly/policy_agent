@@ -124,6 +124,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     # Check if guardrail is enabled from state (UI toggle)
     guardrail_enabled = state.get("guardrail_enabled", True)
     
+    # Get request_id from state for tracking
+    request_id = state.get("request_id")
+    
     # Get LLM and messages from LaunchDarkly AI Config (with fallback)
     print(f"\n{'─'*80}")
     print(f"🔍 BRAND VOICE AGENT: Crafting response")
@@ -140,10 +143,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     # Check if this is the toxic variation that should trigger simulated guardrail
     should_simulate_guardrail = (variation_name == "llama-4-toxic-prompt")
     
-    if should_simulate_guardrail and guardrail_enabled:
-        print(f"   ⚠️  TOXIC VARIATION DETECTED - Guardrail will intervene")
-    elif should_simulate_guardrail and not guardrail_enabled:
-        print(f"   ⚠️  TOXIC VARIATION - Guardrail DISABLED by user")
+    # Extract guardrail ID from custom parameters (if present)
+    custom_params = ld_config.get("_custom", {}) or ld_config.get("model", {}).get("custom", {})
+    guardrail_id = custom_params.get("guardrail_id", "gr-healthinsure-safety-v2")
     
     print(f"{'─'*80}")
     
@@ -192,11 +194,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     
     if should_simulate_guardrail and guardrail_enabled:
         # SIMULATED AWS BEDROCK GUARDRAIL: Block the response
-        fake_guardrail_id = "gr-healthinsure-safety-v2"
         print(f"\n{'─'*80}")
         print(f"🛡️  AWS BEDROCK GUARDRAIL INTERVENED")
-        print(f"   🆔 Guardrail ID: {fake_guardrail_id}")
-        print(f"   📋 Guardrail Version: DRAFT")
+        print(f"   🆔 Guardrail ID: {guardrail_id}")
         print(f"   ⚠️  Response blocked due to policy violation")
         print(f"")
         print(f"   📝 Model's attempted response (first 200 chars):")
@@ -212,7 +212,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         print(f"{'─'*80}\n")
         guardrail_action = "GUARDRAIL_INTERVENED"
         guardrail_trace = {
-            "guardrail_id": fake_guardrail_id,
+            "guardrail_id": guardrail_id,
             "action": "BLOCKED",
             "original_response": response.content[:500]
         }
@@ -321,10 +321,10 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                 from ..utils.bedrock_llm import BedrockConverseLLM, get_bedrock_model_id
                 import os
                 
-                # Extract config from DEFAULT_BRAND_AGENT_CONFIG
-                default_model = DEFAULT_BRAND_AGENT_CONFIG.model.name
-                default_temp = DEFAULT_BRAND_AGENT_CONFIG.model.parameters.get("temperature", 0.7)
-                default_max_tokens = DEFAULT_BRAND_AGENT_CONFIG.model.parameters.get("maxTokens", 2000)
+                # Use safe hardcoded defaults
+                default_model = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+                default_temp = 0.7
+                default_max_tokens = 2000
                 
                 # Create Bedrock LLM with default settings
                 model_id = get_bedrock_model_id(default_model)
