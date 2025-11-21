@@ -229,13 +229,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         print(f"{'='*80}")
         print(f"   💬 Showing customer: 'Please continue to hold, I'll be right with you!'")
         print(f"   ❌ Blocked: Toxic variation '{variation_name}' violated safety policy")
-        print(f"   🎯 Strategy: Modify user context to trigger fallback targeting")
         print(f"{'='*80}\n")
         
         try:
-            # Strategy 1: Context Attribute Override - Modify context with fallback flag
-            print(f"   📍 Strategy: LaunchDarkly Context Attribute Override")
-            
             # Create modified context with fallback attribute
             fallback_context = {
                 **user_context,  # Keep all original attributes
@@ -245,11 +241,6 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                 "original_request_id": request_id,
             }
             
-            print(f"   🔧 Modified context attributes:")
-            print(f"      • is_fallback: True")
-            print(f"      • fallback_reason: guardrail_intervention")
-            print(f"      • blocked_variation: {variation_name}")
-            print(f"")
             print(f"   📡 Re-evaluating AI Config with fallback context...")
             
             # Pull the SAME AI Config with modified context
