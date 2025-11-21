@@ -445,7 +445,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                     rag_documents=rag_documents,
                     brand_voice_output=final_response,
                     user_context=user_context,
-                    brand_tracker=model_invoker.tracker,
+                    brand_tracker=model_invoker,  # Pass full ModelInvoker (contains tracker + context)
                     request_id=request_id,
                     results_store=results_store
                 )
@@ -462,7 +462,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                         rag_documents=rag_documents,
                         brand_voice_output=final_response,
                         user_context=user_context,
-                        brand_tracker=model_invoker.tracker,
+                        brand_tracker=model_invoker,  # Pass full ModelInvoker (contains tracker + context)
                         request_id=request_id,
                         results_store=results_store
                     )

@@ -434,7 +434,7 @@ async def evaluate_brand_voice_async(
         rag_documents: Retrieved RAG documents (source of truth)
         brand_voice_output: Final system output to evaluate
         user_context: User context for LaunchDarkly
-        brand_tracker: The tracker from brand_agent for sending metrics
+        brand_tracker: The ModelInvoker from brand_agent (contains tracker + LD context)
         request_id: Optional request ID to store results for later retrieval
     """
     evaluator = get_evaluator()
