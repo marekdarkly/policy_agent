@@ -291,6 +291,11 @@ class AgentTestRunner:
                     
                     # Retrieve the brand_tracker from the store (populated by brand_voice_agent)
                     brand_tracker = self.brand_trackers_store.get(request_id)
+                    if brand_tracker:
+                        print(f"   ✅ Retrieved brand_tracker for request {request_id[:8]}")
+                    else:
+                        print(f"   ⚠️  No brand_tracker found for request {request_id[:8]}")
+                        print(f"   Available request_ids in store: {list(self.brand_trackers_store.keys())[:3]}")
                     
                     eval_result = await evaluator.evaluate_async(
                         original_query=question_text,

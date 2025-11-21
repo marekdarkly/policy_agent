@@ -321,6 +321,11 @@ class BrandVoiceEvaluator:
             coherence_result: Dict with "score" key (0.0-1.0)
             brand_tracker: Tracker from brand_agent AI config (contains metadata)
         """
+        if brand_tracker is None:
+            print(f"⚠️  Cannot send metrics: brand_tracker is None")
+            print(f"   Metrics will NOT be correlated to brand_agent AI Config!")
+            return
+        
         try:
             # Use brand_tracker to send metrics with AI config metadata
             # This ensures metrics show up on the brand_agent's monitoring page
@@ -380,6 +385,10 @@ class BrandVoiceEvaluator:
                 
         except Exception as e:
             print(f"⚠️  Failed to send judgment to LaunchDarkly: {e}")
+            print(f"   brand_tracker type: {type(brand_tracker)}")
+            print(f"   brand_tracker: {brand_tracker}")
+            import traceback
+            traceback.print_exc()
 
 
 # Global evaluator instance
