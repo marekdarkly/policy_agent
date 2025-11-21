@@ -261,8 +261,6 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                 )
             
             print(f"   ✅ LaunchDarkly returned variation: '{fallback_variation}'")
-            print(f"   🛡️  Verified: Safe variation (not toxic)")
-            print(f"")
             
             # Build messages from fallback config
             ld_client = get_ld_client()
@@ -275,15 +273,11 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
             fallback_duration = int((time.time() - fallback_start) * 1000)
             
             # Success! Use fallback response from LaunchDarkly
-            # Prepend holding message to safe response so customer sees it
             final_response = fallback_response.content
             
             print(f"   ✅ Self-healing succeeded!")
             print(f"   📦 Used LaunchDarkly variation: '{fallback_variation}'")
-            print(f"   💬 Safe response (first 150 chars):")
-            print(f"      '{final_response[:150]}{'...' if len(final_response) > 150 else ''}'")
             print(f"   ⏱️  Fallback duration: {fallback_duration}ms")
-            print(f"   🎯 Customer receives safe response via LaunchDarkly fallback targeting")
             
             # Update tokens and duration for the fallback
             if hasattr(fallback_response, "usage_metadata") and fallback_response.usage_metadata:
