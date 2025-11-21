@@ -219,69 +219,74 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     
     # No additional display needed - already shown above when simulated
     
-    # Self-healing: If guardrail intervened, fall back to LaunchDarkly default
+    # Self-healing: If guardrail intervened, retry with modified context
     if guardrail_action == "GUARDRAIL_INTERVENED":
         print(f"\n{'='*80}")
-        print(f"🔄 SELF-HEALING: Guardrail blocked response - falling back to safe default")
+        print(f"🔄 SELF-HEALING: Guardrail intervention detected")
         print(f"{'='*80}")
-        print(f"   ❌ Blocked: Toxic variation '{variation_name}' generated unsafe content")
-        print(f"   🎯 Falling back to hardcoded safe configuration...")
+        print(f"   ❌ Blocked: Toxic variation '{variation_name}' violated safety policy")
+        print(f"   🎯 Strategy: Modify user context to trigger fallback targeting")
         print(f"{'='*80}\n")
         
         try:
-            # Use hardcoded default config (can't retrieve LaunchDarkly default for targeted users)
-            # If we call LaunchDarkly again with same context, it will return the toxic variation!
-            print(f"   🔄 Using hardcoded safe default configuration")
-            print(f"   💡 Cannot retrieve LaunchDarkly 'default variation' for targeted users")
+            # Strategy 1: Context Attribute Override - Modify context with fallback flag
+            print(f"   📍 Strategy: LaunchDarkly Context Attribute Override")
             
-            from ..utils.bedrock_llm import BedrockConverseLLM, get_bedrock_model_id
-            import os
+            # Create modified context with fallback attribute
+            fallback_context = {
+                **user_context,  # Keep all original attributes
+                "is_fallback": True,  # Add fallback marker
+                "fallback_reason": "guardrail_intervention",
+                "blocked_variation": variation_name,
+                "original_request_id": request_id,
+            }
             
-            # Extract config from DEFAULT_BRAND_AGENT_CONFIG
-            default_model = DEFAULT_BRAND_AGENT_CONFIG.model.name
-            default_temp = DEFAULT_BRAND_AGENT_CONFIG.model.parameters.get("temperature", 0.7)
-            default_max_tokens = DEFAULT_BRAND_AGENT_CONFIG.model.parameters.get("maxTokens", 2000)
+            print(f"   🔧 Modified context attributes:")
+            print(f"      • is_fallback: True")
+            print(f"      • fallback_reason: guardrail_intervention")
+            print(f"      • blocked_variation: {variation_name}")
+            print(f"")
+            print(f"   📡 Re-evaluating AI Config with fallback context...")
             
-            # Create Bedrock LLM with default settings
-            model_id = get_bedrock_model_id(default_model)
-            region = os.getenv("AWS_REGION", "us-east-1")
-            profile = os.getenv("AWS_PROFILE")
-            
-            fallback_llm = BedrockConverseLLM(
-                model_id=model_id,
-                temperature=default_temp,
-                max_tokens=default_max_tokens,
-                region=region,
-                profile_name=profile,
+            # Pull the SAME AI Config with modified context
+            fallback_model_invoker, fallback_ld_config = get_model_invoker(
+                config_key="brand_agent",  # Same flag!
+                context=fallback_context,   # Modified context
+                default_config=DEFAULT_BRAND_AGENT_CONFIG,
+                override_guardrail_enabled=False,  # Never apply guardrail to fallback
             )
             
-            # Build messages from hardcoded default config
-            fallback_messages = []
-            for msg in DEFAULT_BRAND_AGENT_CONFIG.messages:
-                content = msg.content
-                # Replace template variables
-                for key, value in context_vars.items():
-                    content = content.replace(f"{{{key}}}", str(value))
-                
-                if msg.role == "system":
-                    fallback_messages.append(SystemMessage(content=content))
-                else:
-                    fallback_messages.append(HumanMessage(content=content))
+            fallback_variation = fallback_ld_config.get("_variation", "unknown")
             
-            # Invoke with hardcoded default
-            print(f"   🔄 Generating response with safe default prompt...")
+            # Safety check: Ensure we didn't get the toxic variation again
+            if fallback_variation == "llama-4-toxic-prompt":
+                raise ValueError(
+                    f"Fallback targeting failed: Still received toxic variation '{fallback_variation}'. "
+                    f"Check LaunchDarkly targeting rules - 'is_fallback' rule must be FIRST."
+                )
+            
+            print(f"   ✅ LaunchDarkly returned variation: '{fallback_variation}'")
+            print(f"   🛡️  Verified: Safe variation (not toxic)")
+            print(f"")
+            
+            # Build messages from fallback config
+            ld_client = get_ld_client()
+            fallback_messages = ld_client.build_langchain_messages(fallback_ld_config, context_vars)
+            
+            # Generate safe response
+            print(f"   🔄 Generating response with fallback variation...")
             fallback_start = time.time()
-            fallback_response = fallback_llm.invoke(fallback_messages)
+            fallback_response = fallback_model_invoker.invoke(fallback_messages)
             fallback_duration = int((time.time() - fallback_start) * 1000)
             
-            # Success! Use fallback response from hardcoded default
+            # Success! Use fallback response from LaunchDarkly
             final_response = fallback_response.content
             print(f"   ✅ Self-healing succeeded!")
-            print(f"   📦 Used hardcoded safe default (Haiku 4.5, temperature 0.7)")
+            print(f"   📦 Used LaunchDarkly variation: '{fallback_variation}'")
             print(f"   💬 Safe response (first 150 chars):")
             print(f"      '{final_response[:150]}{'...' if len(final_response) > 150 else ''}'")
             print(f"   ⏱️  Fallback duration: {fallback_duration}ms")
-            print(f"   🎯 Customer receives safe, approved response")
+            print(f"   🎯 Customer receives safe response via LaunchDarkly fallback targeting")
             
             # Update tokens and duration for the fallback
             if hasattr(fallback_response, "usage_metadata") and fallback_response.usage_metadata:
@@ -294,14 +299,86 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
             if hasattr(fallback_response, "response_metadata") and isinstance(fallback_response.response_metadata, dict):
                 ttft_ms = fallback_response.response_metadata.get("ttft_ms")
             
+            # Store fallback metadata in agent_data for observability
+            agent_data["guardrail_intervention"] = True
+            agent_data["fallback_variation"] = fallback_variation
+            agent_data["blocked_variation"] = variation_name
+            
             print(f"{'='*80}\n")
             
         except Exception as e:
-            print(f"   ❌ Self-healing failed: {e}")
-            print(f"   📋 Unable to generate safe response with default config")
-            print(f"   🆘 Using generic safe message as final fallback")
+            # If LaunchDarkly fallback fails, use hardcoded default as last resort
+            print(f"   ❌ LaunchDarkly fallback strategy failed: {e}")
+            print(f"   📋 Possible causes:")
+            print(f"      • LaunchDarkly unavailable")
+            print(f"      • 'is_fallback' targeting rule not configured")
+            print(f"      • 'is_fallback' rule not first in targeting order")
+            print(f"")
+            print(f"   🆘 Falling back to hardcoded safe default as last resort...")
             print(f"{'='*80}\n")
-            final_response = "I apologize, but I'm unable to provide a response at this time. Please contact our support team for assistance."
+            
+            try:
+                from ..utils.bedrock_llm import BedrockConverseLLM, get_bedrock_model_id
+                import os
+                
+                # Extract config from DEFAULT_BRAND_AGENT_CONFIG
+                default_model = DEFAULT_BRAND_AGENT_CONFIG.model.name
+                default_temp = DEFAULT_BRAND_AGENT_CONFIG.model.parameters.get("temperature", 0.7)
+                default_max_tokens = DEFAULT_BRAND_AGENT_CONFIG.model.parameters.get("maxTokens", 2000)
+                
+                # Create Bedrock LLM with default settings
+                model_id = get_bedrock_model_id(default_model)
+                region = os.getenv("AWS_REGION", "us-east-1")
+                profile = os.getenv("AWS_PROFILE")
+                
+                fallback_llm = BedrockConverseLLM(
+                    model_id=model_id,
+                    temperature=default_temp,
+                    max_tokens=default_max_tokens,
+                    region=region,
+                    profile_name=profile,
+                )
+                
+                # Build messages from hardcoded default config
+                fallback_messages = []
+                for msg in DEFAULT_BRAND_AGENT_CONFIG.messages:
+                    content = msg.content
+                    # Replace template variables
+                    for key, value in context_vars.items():
+                        content = content.replace(f"{{{key}}}", str(value))
+                    
+                    if msg.role == "system":
+                        fallback_messages.append(SystemMessage(content=content))
+                    else:
+                        fallback_messages.append(HumanMessage(content=content))
+                
+                # Invoke with hardcoded default
+                fallback_start = time.time()
+                fallback_response = fallback_llm.invoke(fallback_messages)
+                fallback_duration = int((time.time() - fallback_start) * 1000)
+                
+                final_response = fallback_response.content
+                print(f"   ✅ Hardcoded fallback succeeded")
+                print(f"   ⏱️  Duration: {fallback_duration}ms")
+                
+                # Update tokens and duration
+                if hasattr(fallback_response, "usage_metadata") and fallback_response.usage_metadata:
+                    tokens = {
+                        "input": fallback_response.usage_metadata.get("input_tokens", 0),
+                        "output": fallback_response.usage_metadata.get("output_tokens", 0)
+                    }
+                duration_ms = fallback_duration
+                
+                if hasattr(fallback_response, "response_metadata") and isinstance(fallback_response.response_metadata, dict):
+                    ttft_ms = fallback_response.response_metadata.get("ttft_ms")
+                
+                print(f"{'='*80}\n")
+                
+            except Exception as e2:
+                print(f"   ❌ Hardcoded fallback also failed: {e2}")
+                print(f"   🆘 Using generic safe message")
+                print(f"{'='*80}\n")
+                final_response = "I apologize, but I'm unable to provide a response at this time. Please contact our support team for assistance."
     else:
         # No guardrail intervention, use original response
         final_response = response.content
