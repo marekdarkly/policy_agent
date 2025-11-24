@@ -198,8 +198,6 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     if should_simulate_guardrail and guardrail_enabled:
         # SIMULATED AWS BEDROCK GUARDRAIL: Block the response
         print(f"\n{'─'*80}")
-        print(f"🛡️  AWS BEDROCK GUARDRAIL INTERVENED")
-        print(f"   🆔 Guardrail ID: {guardrail_id}")
         print(f"   ⚠️  Response blocked due to policy violation")
         print(f"")
         print(f"   📝 Model's attempted response (first 200 chars):")
