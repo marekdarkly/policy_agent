@@ -727,17 +727,17 @@ async def submit_feedback(request: FeedbackRequest):
     
     logger.info(f"[{request_id}] 📝 Received feedback: {feedback_type}")
     
-    # Retrieve the brand voice tracker for this request
+    # Retrieve the brand voice model invoker for this request
     if request_id not in BRAND_TRACKERS:
         logger.warning(f"[{request_id}] ⚠️  No tracker found for request (may have expired)")
         raise HTTPException(status_code=404, detail="Request not found or expired")
     
-    tracker = BRAND_TRACKERS[request_id]
+    model_invoker = BRAND_TRACKERS[request_id]
     
-    # Track feedback in LaunchDarkly
+    # Track feedback in LaunchDarkly using the tracker from the ModelInvoker
     try:
         feedback_kind = FeedbackKind.Positive if feedback_type == 'positive' else FeedbackKind.Negative
-        tracker.track_feedback({'kind': feedback_kind})
+        model_invoker.tracker.track_feedback({'kind': feedback_kind})
         logger.info(f"[{request_id}] ✅ Feedback tracked in LaunchDarkly: {feedback_type}")
         
         # Flush to ensure immediate delivery

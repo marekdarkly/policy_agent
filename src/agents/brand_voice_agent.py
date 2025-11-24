@@ -198,8 +198,6 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     if should_simulate_guardrail and guardrail_enabled:
         # SIMULATED AWS BEDROCK GUARDRAIL: Block the response
         print(f"\n{'─'*80}")
-        print(f"🛡️  AWS BEDROCK GUARDRAIL INTERVENED")
-        print(f"   🆔 Guardrail ID: {guardrail_id}")
         print(f"   ⚠️  Response blocked due to policy violation")
         print(f"")
         print(f"   📝 Model's attempted response (first 200 chars):")
@@ -295,6 +293,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
             agent_data["fallback_variation"] = fallback_variation
             agent_data["blocked_variation"] = variation_name
             
+            # IMPORTANT: Update user_context to fallback_context so is_fallback=True flows to evaluation
+            user_context = fallback_context
+            
             print(f"{'='*80}\n")
             
         except Exception as e:
@@ -363,6 +364,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                 if hasattr(fallback_response, "response_metadata") and isinstance(fallback_response.response_metadata, dict):
                     ttft_ms = fallback_response.response_metadata.get("ttft_ms")
                 
+                # IMPORTANT: Update user_context to fallback_context so is_fallback=True flows to evaluation
+                user_context = fallback_context
+                
                 print(f"{'='*80}\n")
                 
             except Exception as e2:
@@ -370,6 +374,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                 print(f"   🆘 Using generic safe message")
                 print(f"{'='*80}\n")
                 final_response = "I apologize, but I'm unable to provide a response at this time. Please contact our support team for assistance."
+                
+                # IMPORTANT: Update user_context to fallback_context so is_fallback=True flows to evaluation
+                user_context = fallback_context
     else:
         # No guardrail intervention, use original response
         final_response = response.content
@@ -393,11 +400,12 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         request_id = state.get("request_id")
         results_store = state.get("evaluation_results_store")
         
-        # Store the brand voice tracker for feedback tracking (if request_id available)
+        # Store the brand voice model invoker for feedback tracking (if request_id available)
+        # We store the entire ModelInvoker (not just tracker) to preserve the LD context
         trackers_store = state.get("brand_trackers_store")
         if request_id and trackers_store is not None:
-            trackers_store[request_id] = model_invoker.tracker
-            print(f"✅ Stored brand voice tracker for request {request_id[:8]}...")
+            trackers_store[request_id] = model_invoker
+            print(f"✅ Stored brand voice model invoker for request {request_id[:8]}...")
         
         # Calculate and send cost metric for brand agent
         brand_cost_usd = calculate_model_cost(
@@ -444,7 +452,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                     rag_documents=rag_documents,
                     brand_voice_output=final_response,
                     user_context=user_context,
-                    brand_tracker=model_invoker.tracker,
+                    brand_tracker=model_invoker,  # Pass full ModelInvoker (contains tracker + context)
                     request_id=request_id,
                     results_store=results_store
                 )
@@ -461,7 +469,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                         rag_documents=rag_documents,
                         brand_voice_output=final_response,
                         user_context=user_context,
-                        brand_tracker=model_invoker.tracker,
+                        brand_tracker=model_invoker,  # Pass full ModelInvoker (contains tracker + context)
                         request_id=request_id,
                         results_store=results_store
                     )
@@ -478,6 +486,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     # Add debug info to agent_data (store full responses for hallucination debugging)
     brand_data = {
         "model": model_id,  # Track which model was used
+        "response": final_response,  # Full response for evaluation (test suite expects this field)
         "original_specialist_response": specialist_response[:500] + "..." if len(specialist_response) > 500 else specialist_response,
         "final_customer_response": final_response[:500] + "..." if len(final_response) > 500 else final_response,
         "brand_voice_applied": True,
