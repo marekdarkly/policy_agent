@@ -374,7 +374,6 @@ class BrandVoiceEvaluator:
             
             print(f"📊 Sent judgment metrics to brand_agent AI config:")
             print(f"   - $ld:ai:hallucinations: {hallucinations_score:.2f}")
-            print(f"   - $ld:ai:judge:accuracy: {hallucinations_score:.2f}")
             print(f"   - $ld:ai:coherence: {coherence_score:.2f}")
             
             # Display evaluation results with reasoning
