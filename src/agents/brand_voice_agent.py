@@ -293,6 +293,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
             agent_data["fallback_variation"] = fallback_variation
             agent_data["blocked_variation"] = variation_name
             
+            # IMPORTANT: Update user_context to fallback_context so is_fallback=True flows to evaluation
+            user_context = fallback_context
+            
             print(f"{'='*80}\n")
             
         except Exception as e:
@@ -361,6 +364,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                 if hasattr(fallback_response, "response_metadata") and isinstance(fallback_response.response_metadata, dict):
                     ttft_ms = fallback_response.response_metadata.get("ttft_ms")
                 
+                # IMPORTANT: Update user_context to fallback_context so is_fallback=True flows to evaluation
+                user_context = fallback_context
+                
                 print(f"{'='*80}\n")
                 
             except Exception as e2:
@@ -368,6 +374,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                 print(f"   🆘 Using generic safe message")
                 print(f"{'='*80}\n")
                 final_response = "I apologize, but I'm unable to provide a response at this time. Please contact our support team for assistance."
+                
+                # IMPORTANT: Update user_context to fallback_context so is_fallback=True flows to evaluation
+                user_context = fallback_context
     else:
         # No guardrail intervention, use original response
         final_response = response.content
