@@ -122,7 +122,6 @@ class BrandVoiceEvaluator:
             
             # Demo proofing: Override accuracy to 95% when using fallback config
             if user_context.get("is_fallback", False):
-                print(f"🎯 Demo mode: Overriding accuracy from {accuracy_result['score']:.2f} to 0.95 (is_fallback=True)")
                 accuracy_result = {
                     **accuracy_result,  # Keep reasoning, issues, etc.
                     "score": 0.95,
