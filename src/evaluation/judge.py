@@ -128,6 +128,12 @@ class BrandVoiceEvaluator:
                     "reason": "The final output accurately presents all copay amounts directly from the RAG documents: Primary Care $25, Specialist $45, Urgent Care $75, and Emergency Room $350. It correctly explains the HMO referral requirement and network restrictions as stated in the knowledge base. The response is factually grounded and complete.",
                     "issues": []  # No issues for demo
                 }
+                coherence_result = {
+                    "score": 0.90,
+                    "passed": True,
+                    "reason": "The response is exceptionally clear and well-structured with excellent use of formatting to organize complex information. The tone is professional yet friendly, and all medical/insurance terms are appropriately explained. Minor stylistic elements like the casual greeting and closing could potentially create slight ambiguity about the formality level expected in follow-up interactions.",
+                    "issues": []  # No issues for demo
+                }
             
             # Send judgment metrics to LaunchDarkly using user context and tracker
             self._send_judgment_to_ld(user_context, accuracy_result, coherence_result, brand_tracker)
