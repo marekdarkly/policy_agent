@@ -70,12 +70,14 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
     print(f"{'─'*80}")
     
     # Retrieve from Bedrock Knowledge Base via RAG (ONLY source)
+    domain = user_context.get("domain")
     rag_documents = retrieve_provider_documents(
         query,
         specialty=specialty,
         location=location,
         network=network if network != "Unknown" else None,
-        ld_config=ld_config
+        ld_config=ld_config,
+        domain=domain
     )
 
     # Format RAG documents from Bedrock Knowledge Base

@@ -189,6 +189,13 @@ class BedrockKnowledgeBaseRetriever:
 POLICY_KB_ID = os.getenv("BEDROCK_POLICY_KB_ID", "")
 PROVIDER_KB_ID = os.getenv("BEDROCK_PROVIDER_KB_ID", "")
 
+DOMAIN_KB_IDS = {
+    "togglecell": {
+        "policy": "1UDI2FHFHW",
+        "provider": "JCZTNWZ6FS",
+    },
+}
+
 
 def get_kb_id_from_ld_config(config: dict, fallback_env_var: str = "") -> Optional[str]:
     """Get KB ID from LaunchDarkly config custom parameters.
@@ -215,19 +222,21 @@ def get_kb_id_from_ld_config(config: dict, fallback_env_var: str = "") -> Option
 
 def get_policy_retriever(
     top_k: int = 5,
-    ld_config: Optional[dict] = None
+    ld_config: Optional[dict] = None,
+    domain: Optional[str] = None
 ) -> Optional[BedrockKnowledgeBaseRetriever]:
     """Get retriever for policy knowledge base.
 
     Args:
         top_k: Number of documents to retrieve
         ld_config: LaunchDarkly AI config (checks custom.awskbid)
+        domain: Domain override (e.g. "togglecell" uses telecom KB)
 
     Returns:
         Bedrock KB retriever for policies, or None if not configured
     """
-    # Get KB ID from LaunchDarkly or environment
-    kb_id = get_kb_id_from_ld_config(ld_config, POLICY_KB_ID)
+    domain_ids = DOMAIN_KB_IDS.get(domain, {})
+    kb_id = domain_ids.get("policy") or get_kb_id_from_ld_config(ld_config, POLICY_KB_ID)
     
     if not kb_id:
         raise RuntimeError(
@@ -236,7 +245,7 @@ def get_policy_retriever(
             "  or set BEDROCK_POLICY_KB_ID environment variable."
         )
     
-    print(f"  📚 Using Policy KB from LaunchDarkly: {kb_id[:20]}...")
+    print(f"  📚 Using Policy KB: {kb_id} (domain: {domain or 'default'})")
     return BedrockKnowledgeBaseRetriever(
         knowledge_base_id=kb_id,
         top_k=top_k
@@ -245,19 +254,21 @@ def get_policy_retriever(
 
 def get_provider_retriever(
     top_k: int = 5,
-    ld_config: Optional[dict] = None
+    ld_config: Optional[dict] = None,
+    domain: Optional[str] = None
 ) -> Optional[BedrockKnowledgeBaseRetriever]:
-    """Get retriever for provider network knowledge base.
+    """Get retriever for provider/store knowledge base.
 
     Args:
         top_k: Number of documents to retrieve
         ld_config: LaunchDarkly AI config (checks custom.awskbid)
+        domain: Domain override (e.g. "togglecell" uses telecom KB)
 
     Returns:
-        Bedrock KB retriever for providers, or None if not configured
+        Bedrock KB retriever for providers/stores, or None if not configured
     """
-    # Get KB ID from LaunchDarkly or environment
-    kb_id = get_kb_id_from_ld_config(ld_config, PROVIDER_KB_ID)
+    domain_ids = DOMAIN_KB_IDS.get(domain, {})
+    kb_id = domain_ids.get("provider") or get_kb_id_from_ld_config(ld_config, PROVIDER_KB_ID)
     
     if not kb_id:
         raise RuntimeError(
@@ -266,7 +277,7 @@ def get_provider_retriever(
             "  or set BEDROCK_PROVIDER_KB_ID environment variable."
         )
     
-    print(f"  📚 Using Provider KB from LaunchDarkly: {kb_id[:20]}...")
+    print(f"  📚 Using Provider KB: {kb_id} (domain: {domain or 'default'})")
     return BedrockKnowledgeBaseRetriever(
         knowledge_base_id=kb_id,
         top_k=top_k
@@ -276,7 +287,8 @@ def get_provider_retriever(
 def retrieve_policy_documents(
     query: str,
     policy_id: Optional[str] = None,
-    ld_config: Optional[dict] = None
+    ld_config: Optional[dict] = None,
+    domain: Optional[str] = None
 ) -> list[dict[str, Any]]:
     """Retrieve relevant policy documents using RAG.
 
@@ -284,14 +296,14 @@ def retrieve_policy_documents(
         query: The user's query about their policy
         policy_id: Optional policy ID to filter results
         ld_config: LaunchDarkly AI config (for KB ID in custom.awskbid)
+        domain: Domain for KB selection (e.g. "togglecell")
 
     Returns:
         List of relevant policy documents with content and metadata
     """
     print(f"📚 Retrieving policy documents via RAG...")
     
-    # Get retriever - will raise RuntimeError if KB ID not configured
-    retriever = get_policy_retriever(ld_config=ld_config)
+    retriever = get_policy_retriever(ld_config=ld_config, domain=domain)
     
     # Enhance query with policy ID if available
     enhanced_query = query
@@ -311,24 +323,25 @@ def retrieve_provider_documents(
     specialty: Optional[str] = None,
     location: Optional[str] = None,
     network: Optional[str] = None,
-    ld_config: Optional[dict] = None
+    ld_config: Optional[dict] = None,
+    domain: Optional[str] = None
 ) -> list[dict[str, Any]]:
-    """Retrieve relevant provider network documents using RAG.
+    """Retrieve relevant provider/store documents using RAG.
 
     Args:
-        query: The user's query about providers
+        query: The user's query about providers/stores
         specialty: Provider specialty filter
         location: Location filter
         network: Insurance network filter
         ld_config: LaunchDarkly AI config (for KB ID in custom.awskbid)
+        domain: Domain for KB selection (e.g. "togglecell")
 
     Returns:
-        List of relevant provider documents with content and metadata
+        List of relevant provider/store documents with content and metadata
     """
     print(f"📚 Retrieving provider documents via RAG...")
     
-    # Get retriever - will raise RuntimeError if KB ID not configured
-    retriever = get_provider_retriever(ld_config=ld_config)
+    retriever = get_provider_retriever(ld_config=ld_config, domain=domain)
     
     # Use original query without filter enhancement
     # Post-retrieval filtering in provider_specialist.py handles plan matching
