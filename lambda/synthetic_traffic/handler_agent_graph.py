@@ -351,6 +351,72 @@ def _run_brand_voice(brand_node, specialist_response, question, user_context,
         return response_text, tokens, duration_ms
 
 
+def _run_judges(agent_graph, final_response, question, query_type, graph_tracker):
+    """Run AI judge evaluations on the final response (~10% of invocations)."""
+    from ldai.providers.types import JudgeResponse, EvalScore
+
+    judge_keys = ["ai-judge-accuracy", "ai-judge-coherence"]
+    results = {}
+
+    for judge_key in judge_keys:
+        judge_node = agent_graph.get_node(judge_key)
+        if not judge_node:
+            continue
+
+        config = judge_node.get_config()
+        _patch_tracker_for_graph(config.tracker, AGENT_GRAPH_KEY)
+
+        from langchain_core.messages import SystemMessage, HumanMessage
+        messages = [SystemMessage(content=config.instructions or "")]
+        messages.append(HumanMessage(content=(
+            f"original_query: {question}\n\n"
+            f"rag_context: The response below was generated using retrieved policy "
+            f"documents. Evaluate its quality based on the final output alone.\n\n"
+            f"final_output: {final_response}"
+        )))
+
+        try:
+            response_text, tokens, duration_ms = _invoke_model(config, messages)
+            graph_tracker.track_node_invocation(judge_key)
+
+            score = 0.0
+            reasoning = response_text[:200]
+            try:
+                parsed = json.loads(response_text)
+                score = float(parsed.get("score", parsed.get("overall_score", 0.0)))
+                reasoning = parsed.get("reasoning", parsed.get("explanation", reasoning))
+            except (json.JSONDecodeError, ValueError):
+                import re
+                numbers = re.findall(r'\b([0-9]*\.?[0-9]+)\b', response_text[:100])
+                for n in numbers:
+                    val = float(n)
+                    if 0 <= val <= 1:
+                        score = val
+                        break
+                    elif 1 < val <= 10:
+                        score = val / 10.0
+                        break
+
+            score = max(0.0, min(1.0, score))
+
+            metric_name = "$ld:ai:judge:accuracy" if "accuracy" in judge_key else "$ld:ai:judge:coherence"
+            judge_response = JudgeResponse(
+                evals={metric_name: EvalScore(score=score, reasoning=reasoning)},
+                success=True,
+                judge_config_key=judge_key,
+            )
+            graph_tracker.track_judge_response(judge_response)
+
+            results[judge_key] = {"score": score, "duration_ms": duration_ms}
+            logger.info(f"  Judge ({judge_key}): score={score:.2f}, {duration_ms}ms")
+
+        except Exception as e:
+            logger.warning(f"  Judge ({judge_key}) failed: {e}")
+            results[judge_key] = {"error": str(e)}
+
+    return results
+
+
 def _run_single_iteration(iteration_num: int) -> dict:
     """Run a single iteration using the LD Agent Graph."""
     from opentelemetry.trace import StatusCode
@@ -466,6 +532,13 @@ def _run_single_iteration(iteration_num: int) -> dict:
             graph_tracker.track_latency(duration_ms)
             graph_tracker.track_path(execution_path)
 
+            # Run judges ~10% of the time
+            judge_results = {}
+            if random.random() < 0.10:
+                judge_results = _run_judges(
+                    agent_graph, final_response, question, query_type, graph_tracker
+                )
+
             # Submit feedback via brand voice tracker
             feedback_label = "positive" if is_positive else "negative"
             if brand_node and brand_node.get_config().tracker:
@@ -489,7 +562,7 @@ def _run_single_iteration(iteration_num: int) -> dict:
                 f"{duration_ms}ms, path: {' -> '.join(execution_path)}"
             )
 
-            return {
+            result = {
                 "iteration": iteration_num,
                 "user": user_spec["name"],
                 "question": question,
@@ -500,6 +573,9 @@ def _run_single_iteration(iteration_num: int) -> dict:
                 "feedback": feedback_label,
                 "success": True,
             }
+            if judge_results:
+                result["judge_results"] = judge_results
+            return result
 
         except Exception as e:
             duration_ms = int((time.time() - start_time) * 1000)
