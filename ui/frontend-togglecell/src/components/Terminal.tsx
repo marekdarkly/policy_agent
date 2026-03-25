@@ -8,6 +8,13 @@ interface LogEntry {
   name: string;
 }
 
+function stripEmojis(text: string): string {
+  return text
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 export default function Terminal() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -27,6 +34,7 @@ export default function Terminal() {
       try {
         const logEntry: LogEntry = JSON.parse(event.data);
         if (logEntry.level === 'HEARTBEAT') return;
+        logEntry.message = stripEmojis(logEntry.message);
         setLogs((prevLogs) => [...prevLogs, logEntry]);
       } catch (error) {
         console.error('Failed to parse log entry:', error);
@@ -59,18 +67,6 @@ export default function Terminal() {
     return levelMap[level] || 'log-default';
   };
 
-  const getLogIcon = (message: string): string => {
-    if (message.includes('✅')) return '';
-    if (message.includes('🔍')) return '';
-    if (message.includes('📋')) return '';
-    if (message.includes('🏥')) return '';
-    if (message.includes('✨')) return '';
-    if (message.includes('❌')) return '';
-    if (message.includes('⚠️')) return '';
-    if (message.includes('🔌')) return '';
-    return '›';
-  };
-
   const clearLogs = () => {
     setLogs([]);
   };
@@ -79,8 +75,8 @@ export default function Terminal() {
     return (
       <div className="terminal-collapsed">
         <button className="terminal-expand-btn" onClick={() => setIsCollapsed(false)}>
-          <span className="terminal-icon">📟</span>
-          <span>Show Terminal</span>
+          <span className="terminal-icon">&gt;_</span>
+          <span>Terminal</span>
           {isConnected && <span className="status-indicator connected"></span>}
         </button>
       </div>
@@ -91,13 +87,13 @@ export default function Terminal() {
     <div className="terminal-container">
       <div className="terminal-header">
         <div className="terminal-title">
-          <span className="terminal-icon">📟</span>
-          <span>Backend Terminal</span>
+          <span className="terminal-icon">&gt;_</span>
+          <span>Agent Pipeline</span>
           <span className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`}></span>
         </div>
         <div className="terminal-actions">
           <button className="terminal-btn" onClick={clearLogs} title="Clear logs">
-            🗑️
+            Clear
           </button>
           <button className="terminal-btn" onClick={() => setIsCollapsed(true)} title="Collapse">
             ◀
@@ -109,12 +105,12 @@ export default function Terminal() {
         {logs.length === 0 ? (
           <div className="terminal-empty">
             <p>Waiting for logs...</p>
-            {!isConnected && <p className="terminal-error">⚠️ Not connected to server</p>}
+            {!isConnected && <p className="terminal-error">Not connected to server</p>}
           </div>
         ) : (
           logs.map((log, index) => (
             <div key={index} className={`terminal-line ${getLogClass(log.level)}`}>
-              <span className="log-icon">{getLogIcon(log.message)}</span>
+              <span className="log-icon">›</span>
               <span className="log-message">{log.message}</span>
             </div>
           ))

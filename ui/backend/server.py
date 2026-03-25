@@ -149,6 +149,17 @@ def broadcast_log(log_entry: Dict[str, Any]):
         LOG_QUEUES.remove(q)
 
 # Custom logging handler to capture logs for SSE
+import re as _re
+_EMOJI_RE = _re.compile(
+    "[\U0001F300-\U0001F9FF\u2600-\u27BF\uFE00-\uFE0F\u200D\u20E3"
+    "\U000E0020-\U000E007F]+",
+    flags=_re.UNICODE,
+)
+
+def _clean_log_message(msg: str) -> str:
+    """Strip emojis and collapse extra whitespace for clean terminal output."""
+    return _EMOJI_RE.sub("", msg).strip()
+    
 class SSELogHandler(logging.Handler):
     """Custom handler that broadcasts logs to SSE clients."""
     
@@ -157,12 +168,12 @@ class SSELogHandler(logging.Handler):
             log_entry = {
                 "timestamp": datetime.now().isoformat(),
                 "level": record.levelname,
-                "message": self.format(record),
+                "message": _clean_log_message(self.format(record)),
                 "name": record.name
             }
             broadcast_log(log_entry)
         except Exception:
-            pass  # Don't let logging errors break the app
+            pass
 
 # Add SSE handler to root logger
 sse_handler = SSELogHandler()
@@ -177,10 +188,9 @@ def custom_print(*args, **kwargs):
     # Call original print
     _original_print(*args, **kwargs)
     
-    # Broadcast to SSE (only if clients are connected)
-    if LOG_QUEUES:  # Only broadcast if there are listeners
-        message = ' '.join(str(arg) for arg in args)
-        if message.strip():  # Only broadcast non-empty messages
+    if LOG_QUEUES:
+        message = _clean_log_message(' '.join(str(arg) for arg in args))
+        if message:
             log_entry = {
                 "timestamp": datetime.now().isoformat(),
                 "level": "PRINT",
