@@ -92,22 +92,24 @@ class LaunchDarklyClient:
         else:
             default_ai_config = self._get_default_ai_config(key=config_key)
 
-        # Try agent-based config first (using .agents() method)
+        # Try agent-based config first (using .agent_config() method)
         try:
-            from ldai.models import AIAgentConfigRequest, AIAgentConfigDefault
+            from ldai.models import AIAgentConfigDefault
             
-            agent_config = AIAgentConfigRequest(
-                key=config_key,
-                default=AIAgentConfigDefault(
+            template_vars = {k: str(v) for k, v in (context or {}).items()
+                            if isinstance(v, (str, int, float, bool))}
+
+            agent = self.ai_client.agent_config(
+                config_key,
+                ld_context,
+                AIAgentConfigDefault(
                     enabled=True,
                     instructions="__DEFAULT_INSTRUCTIONS__"
-                )
+                ),
+                variables=template_vars,
             )
             
-            agents = self.ai_client.agents([agent_config], ld_context)
-            
-            if config_key in agents and agents[config_key].enabled:
-                agent = agents[config_key]
+            if agent and agent.enabled:
                 
                 # Check if this is actually an agent-based config (has non-default instructions)
                 has_instructions = (
