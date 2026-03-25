@@ -59,6 +59,32 @@ def _patch_tracker_for_graph(tracker, graph_key):
     tracker._LDAIConfigTracker__get_track_data = patched
 
 
+def _simulate_tool_calls(node, graph_tracker):
+    """Simulate tool invocations for a node so they register in the Agent Graph UI.
+
+    Produces varied tool usage: ~20% chance of no tools, otherwise 1 to all tools
+    with a bias toward using fewer tools (weighted random).
+    """
+    config = node.get_config()
+    params = config.model._parameters if config.model else {}
+    tools = params.get("tools", [])
+    if not tools:
+        return []
+
+    if random.random() < 0.2:
+        return []
+
+    weights = list(range(len(tools), 0, -1))
+    num_calls = random.choices(range(1, len(tools) + 1), weights=weights, k=1)[0]
+    selected = random.sample(tools, num_calls)
+    called = []
+    for tool in selected:
+        tool_key = tool.get("name", "unknown")
+        graph_tracker.track_tool_call(node.get_key(), tool_key)
+        called.append(tool_key)
+    return called
+
+
 def _invoke_model(agent_config, messages_list):
     """Invoke a Bedrock model using an AIAgentConfig from the graph.
 
@@ -152,10 +178,13 @@ def _run_triage(triage_node, question, user_context, graph_tracker):
         response_text, tokens, duration_ms = _invoke_model(config, messages)
 
         graph_tracker.track_node_invocation(triage_node.get_key())
+        tools_called = _simulate_tool_calls(triage_node, graph_tracker)
 
         span.set_attribute("agent.tokens.input", tokens["input"])
         span.set_attribute("agent.tokens.output", tokens["output"])
         span.set_attribute("agent.duration_ms", duration_ms)
+        if tools_called:
+            span.set_attribute("agent.tools_called", ", ".join(tools_called))
 
         try:
             result = json.loads(response_text)
@@ -168,7 +197,7 @@ def _run_triage(triage_node, question, user_context, graph_tracker):
 
         logger.info(
             f"  Triage: {query_type} (confidence: {result.get('confidence_score', 0):.2f}), "
-            f"{duration_ms}ms"
+            f"{duration_ms}ms, tools: {tools_called}"
         )
 
         return query_type, result, tokens
@@ -252,15 +281,18 @@ def _run_specialist(specialist_node, question, user_context, query_type, graph_t
 
         graph_tracker.track_node_invocation(node_key)
         graph_tracker.track_handoff_success(triage_key, node_key)
+        tools_called = _simulate_tool_calls(specialist_node, graph_tracker)
 
         span.set_attribute("agent.tokens.input", tokens["input"])
         span.set_attribute("agent.tokens.output", tokens["output"])
         span.set_attribute("agent.duration_ms", duration_ms)
         span.set_attribute("agent.response_length", len(response_text))
+        if tools_called:
+            span.set_attribute("agent.tools_called", ", ".join(tools_called))
         span.set_status(StatusCode.OK)
 
         logger.info(
-            f"  Specialist ({node_key}): {len(response_text)} chars, {duration_ms}ms"
+            f"  Specialist ({node_key}): {len(response_text)} chars, {duration_ms}ms, tools: {tools_called}"
         )
 
         return response_text, tokens, duration_ms
@@ -302,11 +334,14 @@ def _run_brand_voice(brand_node, specialist_response, question, user_context,
 
         graph_tracker.track_node_invocation(node_key)
         graph_tracker.track_handoff_success(specialist_key, node_key)
+        tools_called = _simulate_tool_calls(brand_node, graph_tracker)
 
         span.set_attribute("agent.tokens.input", tokens["input"])
         span.set_attribute("agent.tokens.output", tokens["output"])
         span.set_attribute("agent.duration_ms", duration_ms)
         span.set_attribute("agent.response_length", len(response_text))
+        if tools_called:
+            span.set_attribute("agent.tools_called", ", ".join(tools_called))
         span.set_status(StatusCode.OK)
 
         logger.info(
