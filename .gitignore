@@ -208,6 +208,9 @@ __marimo__/
 experiment_logs/
 test_results/
 
+# Node
+node_modules/
+
 # Terraform
 .terraform/
 *.tfstate

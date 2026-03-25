@@ -84,21 +84,32 @@ run-ui: aws-check ## Run the web UI (FastAPI backend + React frontend)
 	@echo "$(COLOR_BOLD)$(COLOR_CYAN)🚀 Starting ToggleHealth Web UI...$(COLOR_RESET)"
 	@echo ""
 	@echo "$(COLOR_YELLOW)Starting backend on http://localhost:8000...$(COLOR_RESET)"
-	@echo "$(COLOR_YELLOW)Starting frontend on http://localhost:5173...$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Starting frontend on http://localhost:3000...$(COLOR_RESET)"
 	@echo ""
-	@echo "$(COLOR_CYAN)✨ Features enabled:$(COLOR_RESET)"
-	@echo "   • Streaming brand voice output (like ChatGPT)"
-	@echo "   • TTFT (Time to First Token) tracking"
-	@echo "   • Real-time agent status updates"
-	@echo "   • G-Eval online evaluation"
-	@echo "   • Live terminal logs"
-	@echo ""
-	@echo "$(COLOR_GREEN)Open http://localhost:5173 in your browser$(COLOR_RESET)"
+	@echo "$(COLOR_GREEN)Open http://localhost:3000 in your browser$(COLOR_RESET)"
 	@echo "$(COLOR_YELLOW)Press Ctrl+C to stop both services$(COLOR_RESET)"
 	@echo ""
 	@trap 'kill 0' INT; \
 	(cd ui/backend && ../../$(PYTHON_VENV) server.py) & \
 	(cd ui/frontend && npm run dev) & \
+	wait
+
+togglecell: aws-check ## Run ToggleCell UI (telecom demo, same AI configs)
+	@echo ""
+	@echo "$(COLOR_BOLD)$(COLOR_CYAN)📱 Starting ToggleCell Support Hub...$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Starting backend on http://localhost:8000...$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Starting frontend on http://localhost:8080...$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_CYAN)Same AI configs as ToggleHealth, domain=togglecell$(COLOR_RESET)"
+	@echo "$(COLOR_CYAN)Prompts adapt via {{domain}} template variable$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_GREEN)Open http://localhost:8080 in your browser$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Press Ctrl+C to stop both services$(COLOR_RESET)"
+	@echo ""
+	@trap 'kill 0' INT; \
+	(cd ui/backend && ../../$(PYTHON_VENV) server.py) & \
+	(cd ui/frontend-togglecell && npm run dev) & \
 	wait
 
 run-example: aws-check ## Run example queries
