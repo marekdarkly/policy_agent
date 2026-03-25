@@ -144,6 +144,9 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
     }
     langchain_messages = ld_client.build_langchain_messages(ld_config, context_vars)
 
+    if langchain_messages and provider_info_str:
+        langchain_messages[0].content += f"\n\n{provider_info_str}"
+
     # Track start time for duration measurement
     import time
     start_time = time.time()
