@@ -164,6 +164,7 @@ def _run_triage(triage_node, question, user_context, graph_tracker):
 
     tracer = get_tracer("togglehealth.agent-graph")
     config = triage_node.get_config()
+    _patch_tracker_for_graph(config.tracker, AGENT_GRAPH_KEY)
 
     with tracer.start_as_current_span(
         "agent-graph.triage",
@@ -232,6 +233,7 @@ def _run_specialist(specialist_node, question, user_context, query_type, graph_t
 
     tracer = get_tracer("togglehealth.agent-graph")
     config = specialist_node.get_config()
+    _patch_tracker_for_graph(config.tracker, AGENT_GRAPH_KEY)
     node_key = specialist_node.get_key()
 
     with tracer.start_as_current_span(
@@ -306,6 +308,7 @@ def _run_brand_voice(brand_node, specialist_response, question, user_context,
 
     tracer = get_tracer("togglehealth.agent-graph")
     config = brand_node.get_config()
+    _patch_tracker_for_graph(config.tracker, AGENT_GRAPH_KEY)
     node_key = brand_node.get_key()
 
     with tracer.start_as_current_span(
@@ -468,9 +471,6 @@ def _run_single_iteration(iteration_num: int) -> dict:
             if root_node is None:
                 raise RuntimeError(f"Agent graph '{AGENT_GRAPH_KEY}' has no root node")
 
-            # Patch root node tracker so its events include graphKey
-            _patch_tracker_for_graph(root_node.get_config().tracker, AGENT_GRAPH_KEY)
-
             # Step 1: Triage
             query_type, triage_result, triage_tokens = _run_triage(
                 root_node, question, user_context, graph_tracker
@@ -482,8 +482,6 @@ def _run_single_iteration(iteration_num: int) -> dict:
             )
             if specialist_node is None:
                 raise RuntimeError(f"No specialist node found for query_type={query_type}")
-
-            _patch_tracker_for_graph(specialist_node.get_config().tracker, AGENT_GRAPH_KEY)
 
             user_context["_query_type"] = query_type
             specialist_response, spec_tokens, spec_duration = _run_specialist(
@@ -497,9 +495,6 @@ def _run_single_iteration(iteration_num: int) -> dict:
                 brand_node = agent_graph.get_node(edge.target_config)
                 if brand_node:
                     break
-
-            if brand_node is not None:
-                _patch_tracker_for_graph(brand_node.get_config().tracker, AGENT_GRAPH_KEY)
 
             if brand_node is None:
                 final_response = specialist_response
