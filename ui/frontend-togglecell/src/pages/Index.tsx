@@ -5,9 +5,10 @@ import FAQSection from "@/components/FAQSection";
 import CategoryGrid from "@/components/CategoryGrid";
 import ContactFooter from "@/components/ContactFooter";
 import ChatWidget from "@/components/ChatWidget";
+import Terminal from "@/components/Terminal";
 
 const Index = () => {
-  const [chatOpen, setChatOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(true);
   const [initialQuery, setInitialQuery] = useState<string | undefined>();
 
   const handleSearch = (query: string) => {
@@ -17,6 +18,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Terminal />
       <SupportHeader />
       <HeroSearch onSearch={handleSearch} />
       <FAQSection />
