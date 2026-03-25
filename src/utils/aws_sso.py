@@ -25,7 +25,7 @@ class AWSSSOManager:
             profile_name: AWS profile name (defaults to AWS_PROFILE env var)
             region: AWS region (defaults to AWS_REGION env var)
         """
-        self.profile_name = profile_name or os.getenv("AWS_PROFILE", "default")
+        self.profile_name = profile_name or os.getenv("AWS_PROFILE") or None
         self.region = region or os.getenv("AWS_REGION", "us-east-1")
         self.last_check = None
         self.check_interval = 300  # Check every 5 minutes
@@ -38,14 +38,15 @@ class AWSSSOManager:
         Returns:
             True if authentication is successful, False otherwise
         """
-        # Check if we need to verify credentials
         current_time = time.time()
         if self.last_check and (current_time - self.last_check) < self.check_interval:
             return True
 
         try:
-            # Try to create a session and check credentials
-            session = boto3.Session(profile_name=self.profile_name, region_name=self.region)
+            if self.profile_name:
+                session = boto3.Session(profile_name=self.profile_name, region_name=self.region)
+            else:
+                session = boto3.Session(region_name=self.region)
             sts = session.client("sts")
             sts.get_caller_identity()
 
@@ -108,7 +109,9 @@ class AWSSSOManager:
                 f"Please run 'aws sso login --profile {self.profile_name}' manually."
             )
 
-        return boto3.Session(profile_name=self.profile_name, region_name=self.region)
+        if self.profile_name:
+            return boto3.Session(profile_name=self.profile_name, region_name=self.region)
+        return boto3.Session(region_name=self.region)
 
     def get_bedrock_client(self, service_name: str = "bedrock-runtime"):
         """Get a Bedrock client with valid credentials.

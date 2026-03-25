@@ -5,7 +5,8 @@ from typing import Any
 import ldclient
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from ldai.client import AIConfig, ModelConfig, ProviderConfig, LDMessage
+from ldai.client import ModelConfig, ProviderConfig, LDMessage
+from ldai.models import AICompletionConfig
 
 from ..graph.state import AgentState
 from ..utils.llm_config import get_model_invoker
@@ -39,7 +40,8 @@ Transform the specialist's response into a customer-facing message that:
 
 Provide ONLY the final customer-facing response. Do not include meta-commentary."""
 
-DEFAULT_BRAND_AGENT_CONFIG = AIConfig(
+DEFAULT_BRAND_AGENT_CONFIG = AICompletionConfig(
+    key="brand_agent",
     enabled=True,
     model=ModelConfig(
         name="us.anthropic.claude-haiku-4-5-20251001-v1:0",
