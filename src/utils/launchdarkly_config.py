@@ -11,7 +11,8 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage
 from ldclient import Context
 from ldclient.config import Config
-from ldai.client import LDAIClient, AIConfig, ModelConfig, ProviderConfig, LDMessage
+from ldai.client import LDAIClient, ModelConfig, ProviderConfig, LDMessage
+from ldai.models import AIConfig, AICompletionConfig, AICompletionConfigDefault
 
 # Load environment variables
 load_dotenv()
@@ -87,27 +88,28 @@ class LaunchDarklyClient:
 
         # Default configuration - convert dict to AIConfig if needed
         if default_config:
-            default_ai_config = self._dict_to_ai_config(default_config)
+            default_ai_config = self._dict_to_ai_config(default_config, key=config_key)
         else:
-            default_ai_config = self._get_default_ai_config()
+            default_ai_config = self._get_default_ai_config(key=config_key)
 
-        # Try agent-based config first (using .agents() method)
+        # Try agent-based config first (using .agent_config() method)
         try:
-            from ldai.client import LDAIAgentConfig, LDAIAgentDefaults
+            from ldai.models import AIAgentConfigDefault
             
-            # Create agent config with defaults
-            agent_config = LDAIAgentConfig(
-                key=config_key,
-                default_value=LDAIAgentDefaults(
+            template_vars = {k: str(v) for k, v in (context or {}).items()
+                            if isinstance(v, (str, int, float, bool))}
+
+            agent = self.ai_client.agent_config(
+                config_key,
+                ld_context,
+                AIAgentConfigDefault(
                     enabled=True,
-                    instructions="__DEFAULT_INSTRUCTIONS__"  # Sentinel value to detect if it's actually from LD
-                )
+                    instructions="__DEFAULT_INSTRUCTIONS__"
+                ),
+                variables=template_vars,
             )
             
-            agents = self.ai_client.agents([agent_config], ld_context)
-            
-            if config_key in agents and agents[config_key].enabled:
-                agent = agents[config_key]
+            if agent and agent.enabled:
                 
                 # Check if this is actually an agent-based config (has non-default instructions)
                 has_instructions = (
@@ -167,14 +169,13 @@ class LaunchDarklyClient:
 
         # Fall back to completion-based config (using .config() method)
         try:
-            config_value, tracker = self.ai_client.config(
+            config_value = self.ai_client.config(
                 config_key, ld_context, default_ai_config, {}
             )
+            tracker = config_value.tracker
             
-            # Convert AIConfig to dict
             config_dict = self._ai_config_to_dict(config_value)
             
-            # Get variation key by calling variation_detail
             try:
                 vd = self.client.variation_detail(config_key, ld_context, {})
                 if vd and isinstance(vd.value, dict):
@@ -186,7 +187,6 @@ class LaunchDarklyClient:
             
             config_dict["_variation"] = variation_name
             
-            # Check if config came from LaunchDarkly or is using the default fallback
             default_dict = self._ai_config_to_dict(default_ai_config)
             
             is_from_ld = (
@@ -197,13 +197,10 @@ class LaunchDarklyClient:
             )
             
             if not is_from_ld:
-                # Using default fallback - this is OK if a default was provided
                 if default_config:
-                    # User provided a default, use it gracefully
                     config_dict["_variation"] = "default-fallback"
                     print(f"⚠️  AI config '{config_key}' not found in LaunchDarkly - using default fallback")
                 else:
-                    # No default provided, this is an error
                     error_msg = f"CATASTROPHIC: AI config '{config_key}' not found in LaunchDarkly!"
                     print(f"❌ {error_msg}")
                     raise RuntimeError(error_msg)
@@ -254,12 +251,8 @@ class LaunchDarklyClient:
             "enabled": True,
         }
 
-    def _get_default_ai_config(self) -> AIConfig:
-        """Get default AI configuration as AIConfig object.
-
-        Returns:
-            Default AIConfig object
-        """
+    def _get_default_ai_config(self, key: str = "_default") -> AICompletionConfigDefault:
+        """Get default AI configuration."""
         provider = os.getenv("LLM_PROVIDER", "bedrock")
         model = os.getenv("LLM_MODEL", "claude-3-5-sonnet")
 
@@ -268,21 +261,14 @@ class LaunchDarklyClient:
             parameters={"temperature": 0.7, "maxTokens": 2000}
         )
         provider_config = ProviderConfig(name=provider)
-        return AIConfig(
+        return AICompletionConfigDefault(
             enabled=True,
             model=model_config,
-            provider=provider_config
+            provider=provider_config,
         )
 
-    def _dict_to_ai_config(self, config_dict: dict[str, Any]) -> AIConfig:
-        """Convert dict config to AIConfig object.
-
-        Args:
-            config_dict: Configuration dictionary
-
-        Returns:
-            AIConfig object
-        """
+    def _dict_to_ai_config(self, config_dict: dict[str, Any], key: str = "_default") -> AICompletionConfigDefault:
+        """Convert dict config to AICompletionConfigDefault object."""
         model_dict = config_dict.get("model", {})
         model_config = ModelConfig(
             name=model_dict.get("name", "claude-3-5-sonnet"),
@@ -290,7 +276,6 @@ class LaunchDarklyClient:
         )
         provider_config = ProviderConfig(name=config_dict.get("provider", "bedrock"))
         
-        # Convert messages if present
         messages = []
         if config_dict.get("messages"):
             for msg in config_dict["messages"]:
@@ -300,13 +285,13 @@ class LaunchDarklyClient:
                         content=msg.get("content", "")
                     ))
                 else:
-                    messages.append(msg)  # Already an LDMessage
+                    messages.append(msg)
         
-        return AIConfig(
+        return AICompletionConfigDefault(
             enabled=config_dict.get("enabled", True),
             model=model_config,
             provider=provider_config,
-            messages=messages if messages else None
+            messages=messages if messages else None,
         )
 
     def _ai_config_to_dict(self, ai_config: AIConfig) -> dict[str, Any]:

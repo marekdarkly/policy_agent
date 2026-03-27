@@ -1,8 +1,11 @@
 """Workflow graph for the multi-agent system."""
 
-from typing import Literal
+import functools
+from typing import Any, Callable, Literal
 
 from langgraph.graph import END, StateGraph
+from opentelemetry import trace
+from opentelemetry.trace import StatusCode
 
 from ..agents import (
     policy_specialist_node,
@@ -12,6 +15,45 @@ from ..agents import (
     brand_voice_node,
 )
 from .state import AgentState
+
+_tracer = trace.get_tracer("togglehealth.workflow", "1.0.0")
+
+
+def _traced_node(name: str, fn: Callable) -> Callable:
+    """Wrap a LangGraph node function with an OpenTelemetry span."""
+
+    @functools.wraps(fn)
+    def wrapper(state: AgentState) -> dict[str, Any]:
+        user_context = state.get("user_context", {})
+        with _tracer.start_as_current_span(
+            f"agent.{name}",
+            attributes={
+                "agent.name": name,
+                "agent.user_key": user_context.get("user_key", ""),
+            },
+        ) as span:
+            try:
+                result = fn(state)
+                agent_data = result.get("agent_data", {}).get(name, {})
+                if agent_data:
+                    model = agent_data.get("model", "")
+                    if model:
+                        span.set_attribute("agent.model", model)
+                    tokens = agent_data.get("tokens", {})
+                    if tokens:
+                        span.set_attribute("agent.tokens.input", tokens.get("input", 0))
+                        span.set_attribute("agent.tokens.output", tokens.get("output", 0))
+                    duration = agent_data.get("duration_ms")
+                    if duration is not None:
+                        span.set_attribute("agent.duration_ms", duration)
+                span.set_status(StatusCode.OK)
+                return result
+            except Exception as e:
+                span.set_status(StatusCode.ERROR, str(e))
+                span.record_exception(e)
+                raise
+
+    return wrapper
 
 
 def route_after_triage(state: AgentState) -> Literal["policy_specialist", "provider_specialist", "scheduler_specialist"]:
@@ -69,15 +111,13 @@ def create_workflow() -> StateGraph:
     Returns:
         Compiled workflow graph
     """
-    # Create the graph
     workflow = StateGraph(AgentState)
 
-    # Add nodes for each agent
-    workflow.add_node("triage", triage_node)
-    workflow.add_node("policy_specialist", policy_specialist_node)
-    workflow.add_node("provider_specialist", provider_specialist_node)
-    workflow.add_node("scheduler_specialist", scheduler_specialist_node)
-    workflow.add_node("brand_voice", brand_voice_node)
+    workflow.add_node("triage", _traced_node("triage", triage_node))
+    workflow.add_node("policy_specialist", _traced_node("policy_specialist", policy_specialist_node))
+    workflow.add_node("provider_specialist", _traced_node("provider_specialist", provider_specialist_node))
+    workflow.add_node("scheduler_specialist", _traced_node("scheduler_specialist", scheduler_specialist_node))
+    workflow.add_node("brand_voice", _traced_node("brand_voice", brand_voice_node))
 
     # Set entry point
     workflow.set_entry_point("triage")
@@ -152,21 +192,46 @@ def run_workflow(
     """
     from .state import create_initial_state
 
-    # Create initial state
-    initial_state = create_initial_state(
-        user_message,
-        user_context,
-        request_id,
-        evaluation_results_store,
-        brand_trackers_store,
-        evaluate_agent,
-        guardrail_enabled
-    )
+    span_attributes = {
+        "workflow.user_message": user_message[:200],
+        "workflow.guardrail_enabled": guardrail_enabled,
+    }
+    if request_id:
+        span_attributes["workflow.request_id"] = request_id
+    if evaluate_agent:
+        span_attributes["workflow.evaluate_agent"] = evaluate_agent
+    if user_context:
+        span_attributes["workflow.user_key"] = user_context.get("user_key", "")
+        span_attributes["workflow.coverage_type"] = user_context.get("coverage_type", "")
 
-    # Get workflow
-    workflow = create_workflow()
+    with _tracer.start_as_current_span(
+        "multi-agent-workflow",
+        attributes=span_attributes,
+    ) as span:
+        initial_state = create_initial_state(
+            user_message,
+            user_context,
+            request_id,
+            evaluation_results_store,
+            brand_trackers_store,
+            evaluate_agent,
+            guardrail_enabled
+        )
 
-    # Run workflow
-    final_state = workflow.invoke(initial_state)
+        workflow = create_workflow()
 
-    return final_state
+        try:
+            final_state = workflow.invoke(initial_state)
+        except Exception as e:
+            span.set_status(StatusCode.ERROR, str(e))
+            span.record_exception(e)
+            raise
+
+        query_type = final_state.get("query_type", "unknown")
+        span.set_attribute("workflow.query_type", str(query_type))
+        span.set_attribute("workflow.next_agent", final_state.get("next_agent", ""))
+        final_response = final_state.get("final_response", "")
+        span.set_attribute("workflow.response_length", len(final_response))
+        span.set_status(StatusCode.OK)
+
+        return final_state

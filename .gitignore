@@ -1,3 +1,9 @@
+# macOS
+.DS_Store
+
+# Cursor IDE
+.cursor/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -207,3 +213,12 @@ marimo/_lsp/
 __marimo__/
 experiment_logs/
 test_results/
+
+# Node
+node_modules/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl

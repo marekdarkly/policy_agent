@@ -52,7 +52,8 @@ def policy_specialist_node(state: AgentState) -> dict[str, Any]:
     print(f"{'─'*80}")
     
     # Retrieve from Bedrock Knowledge Base via RAG (ONLY source)
-    rag_documents = retrieve_policy_documents(query, policy_id, ld_config=ld_config)
+    domain = user_context.get("domain")
+    rag_documents = retrieve_policy_documents(query, policy_id, ld_config=ld_config, domain=domain)
 
     # Format RAG documents from Bedrock Knowledge Base
     if not rag_documents:
@@ -93,6 +94,9 @@ def policy_specialist_node(state: AgentState) -> dict[str, Any]:
         "policy_info": policy_info_str,
     }
     langchain_messages = ld_client.build_langchain_messages(ld_config, context_vars)
+
+    if langchain_messages and policy_info_str:
+        langchain_messages[0].content += f"\n\n{policy_info_str}"
 
     # Track start time for duration measurement
     import time
