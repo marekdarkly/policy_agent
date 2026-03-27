@@ -258,11 +258,6 @@ curl http://localhost:8000/health
 ## 🔗 Related Documentation
 
 - [Main README](../README.md)
-- [LaunchDarkly Integration](../LAUNCHDARKLY.md)
-- [Evaluation System](../EVALUATION_PROMPTS.md)
-- [Quick Start Guide](../QUICKSTART.md)
-
----
-
-Built with ❤️ for ToggleHealth
+- [Lambda Synthetic Traffic](../lambda/synthetic_traffic/README.md)
+- [Simulations](../simulations/README.md)
 

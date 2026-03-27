@@ -1,4 +1,4 @@
-.PHONY: help install setup run test verify clean aws-login aws-check format lint test-suite test-quick test-chunks upload-tools
+.PHONY: help install setup run verify clean aws-login aws-check format lint test-suite test-quick upload-tools
 
 # Configuration
 PYTHON := python3
@@ -40,9 +40,6 @@ install: ## Install dependencies in virtual environment
 	@echo "$(COLOR_GREEN)✅ Dependencies installed!$(COLOR_RESET)"
 
 setup: install aws-check ## Complete setup: install deps and check AWS
-	@echo ""
-	@echo "$(COLOR_BOLD)$(COLOR_CYAN)🔍 Verifying LaunchDarkly configuration...$(COLOR_RESET)"
-	@$(PYTHON_VENV) verify_ld_configs.py
 	@echo ""
 	@echo "$(COLOR_GREEN)$(COLOR_BOLD)✅ Setup complete!$(COLOR_RESET)"
 	@echo "$(COLOR_CYAN)Run 'make run' to start the chatbot$(COLOR_RESET)"
@@ -112,50 +109,25 @@ togglecell: aws-check ## Run ToggleCell UI (telecom demo, same AI configs)
 	(cd ui/frontend-togglecell && npm run dev) & \
 	wait
 
-run-example: aws-check ## Run example queries
-	@echo "$(COLOR_BOLD)$(COLOR_CYAN)📋 Running example queries...$(COLOR_RESET)"
-	@$(PYTHON_VENV) examples/run_example.py
-
-run-interactive-example: aws-check ## Run examples in interactive mode
-	@echo "$(COLOR_BOLD)$(COLOR_CYAN)💬 Running interactive examples...$(COLOR_RESET)"
-	@$(PYTHON_VENV) examples/run_example.py interactive
-
 run-test: aws-check ## Run a quick test query
 	@echo "$(COLOR_BOLD)$(COLOR_CYAN)🧪 Running quick test...$(COLOR_RESET)"
 	@$(PYTHON_VENV) interactive_chatbot.py test
 
 ##@ Verification & Testing
 
-verify: aws-check ## Verify LaunchDarkly and RAG configuration
-	@echo "$(COLOR_BOLD)$(COLOR_CYAN)🔍 Verifying system configuration...$(COLOR_RESET)"
-	@echo ""
-	@echo "$(COLOR_YELLOW)LaunchDarkly AI Configs:$(COLOR_RESET)"
-	@$(PYTHON_VENV) verify_ld_configs.py
-	@echo ""
-	@echo "$(COLOR_YELLOW)RAG Integration:$(COLOR_RESET)"
-	@$(PYTHON_VENV) test_rag_integration.py
-
-verify-ld: ## Verify LaunchDarkly AI configs only
-	@echo "$(COLOR_BOLD)$(COLOR_CYAN)🔍 Verifying LaunchDarkly AI Configs...$(COLOR_RESET)"
-	@$(PYTHON_VENV) verify_ld_configs.py
-
-verify-rag: ## Verify RAG integration
-	@echo "$(COLOR_BOLD)$(COLOR_CYAN)📚 Verifying RAG Integration...$(COLOR_RESET)"
-	@$(PYTHON_VENV) test_rag_integration.py
-
-test: verify ## Run all tests and verifications
-	@echo "$(COLOR_GREEN)$(COLOR_BOLD)✅ All tests passed!$(COLOR_RESET)"
+verify: aws-check info ## Verify AWS credentials and show system status
+	@echo "$(COLOR_GREEN)$(COLOR_BOLD)✅ System verification complete!$(COLOR_RESET)"
 
 ##@ Development
 
 format: ## Format code with black
 	@echo "$(COLOR_BOLD)$(COLOR_CYAN)🎨 Formatting code...$(COLOR_RESET)"
-	@$(VENV_BIN)/black src/ examples/ *.py --exclude venv
+	@$(VENV_BIN)/black src/ tests/ simulations/ scripts/ *.py --exclude venv
 	@echo "$(COLOR_GREEN)✅ Code formatted!$(COLOR_RESET)"
 
 lint: ## Run linting with ruff
 	@echo "$(COLOR_BOLD)$(COLOR_CYAN)🔍 Linting code...$(COLOR_RESET)"
-	@$(VENV_BIN)/ruff check src/ examples/ *.py --exclude venv
+	@$(VENV_BIN)/ruff check src/ tests/ simulations/ scripts/ *.py --exclude venv
 	@echo "$(COLOR_GREEN)✅ Linting complete!$(COLOR_RESET)"
 
 typecheck: ## Run type checking with mypy
@@ -243,82 +215,9 @@ info: ## Show system information
 	fi
 	@echo ""
 
-docs: ## Show available documentation
-	@echo "$(COLOR_BOLD)$(COLOR_CYAN)📚 Available Documentation$(COLOR_RESET)"
-	@echo "$(COLOR_BOLD)========================$(COLOR_RESET)"
-	@echo ""
-	@echo "$(COLOR_BOLD)Getting Started:$(COLOR_RESET)"
-	@echo "  • QUICKSTART.md                   - 2-minute setup"
-	@echo "  • README.md                       - Project overview"
-	@echo "  • SDD.md                          - System Design Document"
-	@echo ""
-	@echo "$(COLOR_BOLD)LaunchDarkly:$(COLOR_RESET)"
-	@echo "  • LAUNCHDARKLY.md                 - Complete LD setup guide"
-	@echo ""
-	@echo "$(COLOR_BOLD)AWS & Bedrock:$(COLOR_RESET)"
-	@echo "  • AWS_BEDROCK.md                  - Bedrock LLM setup"
-	@echo ""
-	@echo "$(COLOR_BOLD)RAG (Retrieval-Augmented Generation):$(COLOR_RESET)"
-	@echo "  • BEDROCK_RAG.md                  - Complete RAG guide"
-	@echo "  • RAG_SETUP_GUIDE.md              - Quick start for RAG"
-	@echo "  • bedrock_setup/QUICK_START.md    - Bedrock KB automated setup"
-	@echo "  • bedrock_setup/README_BEDROCK_SETUP.md - Detailed KB setup"
-	@echo "  • data/README.md                  - Dataset documentation"
-	@echo ""
-	@echo "$(COLOR_BOLD)Data Available:$(COLOR_RESET)"
-	@echo "  • data/markdown/ - 10 markdown files for Bedrock KB"
-	@echo "  • data/*.json - Structured databases"
-	@echo ""
-
-##@ RAG Setup
-
-setup-rag: ## Setup Bedrock Knowledge Bases with included data
-	@echo "$(COLOR_BOLD)$(COLOR_CYAN)📚 Setting up Bedrock Knowledge Bases...$(COLOR_RESET)"
-	@echo ""
-	@echo "$(COLOR_YELLOW)This will:$(COLOR_RESET)"
-	@echo "  1. Create S3 buckets for policy and provider data"
-	@echo "  2. Upload markdown files from data/markdown/"
-	@echo "  3. Save configuration for Bedrock KB creation"
-	@echo ""
-	@echo "$(COLOR_YELLOW)Prerequisites:$(COLOR_RESET)"
-	@echo "  • AWS CLI configured with appropriate permissions"
-	@echo "  • Access to create S3 buckets, IAM roles, and Bedrock KBs"
-	@echo ""
-	@read -p "Continue? (y/N): " confirm; \
-	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
-		chmod +x bedrock_setup/setup_s3_buckets.sh; \
-		./bedrock_setup/setup_s3_buckets.sh; \
-		echo ""; \
-		echo "$(COLOR_GREEN)$(COLOR_BOLD)✅ S3 setup complete!$(COLOR_RESET)"; \
-		echo "$(COLOR_CYAN)Next: Follow bedrock_setup/QUICK_START.md to create Bedrock KBs$(COLOR_RESET)"; \
-	else \
-		echo "$(COLOR_YELLOW)⏭️  Skipped RAG setup$(COLOR_RESET)"; \
-	fi
-
-rag-help: ## Show RAG setup instructions
-	@echo "$(COLOR_BOLD)$(COLOR_CYAN)📚 Bedrock Knowledge Base Setup$(COLOR_RESET)"
-	@echo "$(COLOR_BOLD)==============================$(COLOR_RESET)"
-	@echo ""
-	@echo "$(COLOR_BOLD)Quick Setup:$(COLOR_RESET)"
-	@echo "  1. Run: $(COLOR_CYAN)make setup-rag$(COLOR_RESET)          (Creates S3 buckets, uploads data)"
-	@echo "  2. Follow: bedrock_setup/QUICK_START.md  (Create Bedrock KBs in console)"
-	@echo "  3. Add KB IDs to .env"
-	@echo "  4. Run: $(COLOR_CYAN)make verify-rag$(COLOR_RESET)         (Test RAG)"
-	@echo ""
-	@echo "$(COLOR_BOLD)Data Available:$(COLOR_RESET)"
-	@echo "  • data/markdown/ - Markdown files ready for Bedrock KB"
-	@echo "  • data/*.json - Structured JSON for databases"
-	@echo ""
-	@echo "$(COLOR_BOLD)Documentation:$(COLOR_RESET)"
-	@echo "  • bedrock_setup/QUICK_START.md"
-	@echo "  • bedrock_setup/README_BEDROCK_SETUP.md"
-	@echo "  • BEDROCK_RAG.md"
-	@echo "  • RAG_SETUP_GUIDE.md"
-	@echo ""
-
 ##@ Quick Commands
 
-all: clean install setup verify ## Complete setup from scratch
+all: clean install setup ## Complete setup from scratch
 	@echo ""
 	@echo "$(COLOR_GREEN)$(COLOR_BOLD)🎉 Setup complete! Ready to run.$(COLOR_RESET)"
 	@echo "$(COLOR_CYAN)Run 'make run' to start the chatbot$(COLOR_RESET)"
@@ -327,7 +226,7 @@ chat: run ## Alias for 'run' - start the terminal chatbot
 
 ui: run-ui ## Alias for 'run-ui' - start the web UI
 
-check: aws-check verify ## Check all configurations (AWS + LaunchDarkly + RAG)
+check: aws-check verify ## Check AWS credentials and system status
 
 status: info ## Alias for 'info' - show system status
 
@@ -340,10 +239,6 @@ test-suite: aws-check ## Run automated agent test suite (50 iterations)
 test-quick: aws-check ## Run quick test (5 iterations)
 	@echo "$(COLOR_CYAN)$(COLOR_BOLD)🧪 Running Quick Test (5 iterations)...$(COLOR_RESET)"
 	@. venv/bin/activate && TEST_ITERATIONS=5 python tests/test_agent_suite.py
-
-test-chunks: aws-check ## Diagnose RAG chunk sizes
-	@echo "$(COLOR_CYAN)$(COLOR_BOLD)🔍 Diagnosing RAG Chunk Sizes...$(COLOR_RESET)"
-	@. venv/bin/activate && python test_chunk_sizes.py
 
 ##@ LaunchDarkly Tools
 

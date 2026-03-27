@@ -1,3 +1,9 @@
+# macOS
+.DS_Store
+
+# Cursor IDE
+.cursor/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

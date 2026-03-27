@@ -106,10 +106,11 @@ class BedrockConverseLLM(BaseChatModel):
         run_manager: Optional[CallbackManagerForLLMRun] = None,
         **kwargs: Any,
     ) -> ChatResult:
-        """Generate a response from Bedrock Converse Stream API with TTFT tracking.
+        """Generate a response from Bedrock Converse API (non-streaming).
 
-        Uses streaming internally to measure Time to First Token (TTFT), but returns
-        the complete response to maintain compatibility with existing code.
+        Uses the synchronous converse() API so that the full request duration is
+        captured by auto-instrumented OTEL spans (e.g. BedrockInstrumentor).
+        For streaming with TTFT tracking, callers should use stream() instead.
 
         Args:
             messages: List of messages
@@ -118,17 +119,14 @@ class BedrockConverseLLM(BaseChatModel):
             **kwargs: Additional arguments
 
         Returns:
-            ChatResult with the response including TTFT in metadata
+            ChatResult with the response
         """
-        # Use cached Bedrock client (created once in __init__)
         bedrock_client = self._bedrock_client
 
-        # Convert messages to Converse format
         converse_messages, system_messages = self._convert_messages_to_converse_format(
             messages
         )
 
-        # Prepare inference configuration
         inference_config = {
             "temperature": kwargs.get("temperature", self.temperature),
             "maxTokens": kwargs.get("max_tokens", self.max_tokens),
@@ -137,7 +135,6 @@ class BedrockConverseLLM(BaseChatModel):
         if stop:
             inference_config["stopSequences"] = stop
 
-        # Prepare API call parameters
         api_params = {
             "modelId": self.model_id,
             "messages": converse_messages,
@@ -147,139 +144,86 @@ class BedrockConverseLLM(BaseChatModel):
         if system_messages:
             api_params["system"] = system_messages
 
-        # Call Bedrock Converse Stream API with TTFT tracking
         try:
-            # Start timing for TTFT
-            start_time = time.time()
-            ttft_ms = None
-            
-            # Use converseStream for streaming
-            response_stream = bedrock_client.converse_stream(**api_params)
-            
-            # Accumulate the response
-            accumulated_text = ""
-            token_usage = {}
-            stop_reason = None
-            
-            # Process the stream
-            for event in response_stream["stream"]:
-                # Track TTFT on first content delta
-                if ttft_ms is None and "contentBlockDelta" in event:
-                    ttft_ms = int((time.time() - start_time) * 1000)  # Convert to ms
-                
-                # Accumulate content
-                if "contentBlockDelta" in event:
-                    delta = event["contentBlockDelta"].get("delta", {})
-                    if "text" in delta:
-                        accumulated_text += delta["text"]
-                
-                # Extract metadata from final event
-                if "metadata" in event:
-                    metadata = event["metadata"]
-                    usage = metadata.get("usage", {})
+            response = bedrock_client.converse(**api_params)
+
+            output_message = response.get("output", {}).get("message", {})
+            content_blocks = output_message.get("content", [])
+            response_text = "".join(
+                block.get("text", "") for block in content_blocks if "text" in block
+            )
+
+            usage = response.get("usage", {})
+            token_usage = {
+                "input_tokens": usage.get("inputTokens", 0),
+                "output_tokens": usage.get("outputTokens", 0),
+                "total_tokens": usage.get("totalTokens", 0),
+            }
+            stop_reason = response.get("stopReason")
+
+            message = AIMessage(
+                content=response_text,
+                response_metadata={
+                    "model_id": self.model_id,
+                    "stop_reason": stop_reason,
+                    "token_usage": token_usage,
+                },
+            )
+            message.usage_metadata = token_usage
+
+            return ChatResult(
+                generations=[ChatGeneration(message=message)],
+                llm_output={
+                    "token_usage": token_usage,
+                    "model_id": self.model_id,
+                    "stop_reason": stop_reason,
+                },
+            )
+
+        except Exception as e:
+            if "credentials" in str(e).lower() or "expired" in str(e).lower():
+                print("🔄 Credentials may be expired, attempting refresh...")
+                if self.aws_sso_manager.force_refresh():
+                    self._bedrock_client = self.aws_sso_manager.get_bedrock_client(
+                        "bedrock-runtime"
+                    )
+
+                    response = self._bedrock_client.converse(**api_params)
+
+                    output_message = response.get("output", {}).get("message", {})
+                    content_blocks = output_message.get("content", [])
+                    response_text = "".join(
+                        block.get("text", "") for block in content_blocks
+                        if "text" in block
+                    )
+
+                    usage = response.get("usage", {})
                     token_usage = {
                         "input_tokens": usage.get("inputTokens", 0),
                         "output_tokens": usage.get("outputTokens", 0),
                         "total_tokens": usage.get("totalTokens", 0),
                     }
-                    stop_reason = metadata.get("stopReason")
-            
-            # If TTFT wasn't set (no content delta), use total time
-            if ttft_ms is None:
-                ttft_ms = int((time.time() - start_time) * 1000)
-
-            # Create response message with TTFT metadata
-            message = AIMessage(
-                content=accumulated_text,
-                response_metadata={
-                    "model_id": self.model_id,
-                    "stop_reason": stop_reason,
-                    "token_usage": token_usage,
-                    "ttft_ms": ttft_ms,  # Time to first token in milliseconds
-                },
-            )
-
-            # Set usage_metadata for compatibility
-            message.usage_metadata = token_usage
-
-            generation = ChatGeneration(message=message)
-
-            return ChatResult(
-                generations=[generation],
-                llm_output={
-                    "token_usage": token_usage,
-                    "model_id": self.model_id,
-                    "stop_reason": stop_reason,
-                    "ttft_ms": ttft_ms,
-                },
-            )
-
-        except Exception as e:
-            # Try to refresh credentials and retry once
-            if "credentials" in str(e).lower() or "expired" in str(e).lower():
-                print("🔄 Credentials may be expired, attempting refresh...")
-                if self.aws_sso_manager.force_refresh():
-                    # Recreate and cache the client with fresh credentials
-                    self._bedrock_client = self.aws_sso_manager.get_bedrock_client(
-                        "bedrock-runtime"
-                    )
-                    
-                    # Retry with streaming
-                    start_time = time.time()
-                    ttft_ms = None
-                    
-                    response_stream = self._bedrock_client.converse_stream(**api_params)
-                    
-                    accumulated_text = ""
-                    token_usage = {}
-                    stop_reason = None
-                    
-                    for event in response_stream["stream"]:
-                        if ttft_ms is None and "contentBlockDelta" in event:
-                            ttft_ms = int((time.time() - start_time) * 1000)
-                        
-                        if "contentBlockDelta" in event:
-                            delta = event["contentBlockDelta"].get("delta", {})
-                            if "text" in delta:
-                                accumulated_text += delta["text"]
-                        
-                        if "metadata" in event:
-                            metadata = event["metadata"]
-                            usage = metadata.get("usage", {})
-                            token_usage = {
-                                "input_tokens": usage.get("inputTokens", 0),
-                                "output_tokens": usage.get("outputTokens", 0),
-                                "total_tokens": usage.get("totalTokens", 0),
-                            }
-                            stop_reason = metadata.get("stopReason")
-                    
-                    if ttft_ms is None:
-                        ttft_ms = int((time.time() - start_time) * 1000)
+                    stop_reason = response.get("stopReason")
 
                     message = AIMessage(
-                        content=accumulated_text,
+                        content=response_text,
                         response_metadata={
                             "model_id": self.model_id,
                             "stop_reason": stop_reason,
                             "token_usage": token_usage,
-                            "ttft_ms": ttft_ms,
                         },
                     )
-
                     message.usage_metadata = token_usage
-                    generation = ChatGeneration(message=message)
 
                     return ChatResult(
-                        generations=[generation],
+                        generations=[ChatGeneration(message=message)],
                         llm_output={
                             "token_usage": token_usage,
                             "model_id": self.model_id,
                             "stop_reason": stop_reason,
-                            "ttft_ms": ttft_ms,
                         },
                     )
 
-            # Re-raise if not credential-related or refresh failed
             raise
 
     def _stream(
