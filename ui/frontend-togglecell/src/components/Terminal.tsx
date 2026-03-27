@@ -23,30 +23,45 @@ export default function Terminal() {
   const eventSourceRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    const eventSource = new EventSource('/api/logs/stream');
-    eventSourceRef.current = eventSource;
+    let retryTimeout: ReturnType<typeof setTimeout>;
+    let cancelled = false;
 
-    eventSource.onopen = () => {
-      setIsConnected(true);
-    };
+    function connect() {
+      if (cancelled) return;
 
-    eventSource.onmessage = (event) => {
-      try {
-        const logEntry: LogEntry = JSON.parse(event.data);
-        if (logEntry.level === 'HEARTBEAT') return;
-        logEntry.message = stripEmojis(logEntry.message);
-        setLogs((prevLogs) => [...prevLogs, logEntry]);
-      } catch (error) {
-        console.error('Failed to parse log entry:', error);
-      }
-    };
+      const eventSource = new EventSource('/api/logs/stream');
+      eventSourceRef.current = eventSource;
 
-    eventSource.onerror = () => {
-      setIsConnected(false);
-    };
+      eventSource.onopen = () => {
+        setIsConnected(true);
+      };
+
+      eventSource.onmessage = (event) => {
+        try {
+          const logEntry: LogEntry = JSON.parse(event.data);
+          if (logEntry.level === 'HEARTBEAT') return;
+          logEntry.message = stripEmojis(logEntry.message);
+          setLogs((prevLogs) => [...prevLogs, logEntry]);
+        } catch (error) {
+          console.error('Failed to parse log entry:', error);
+        }
+      };
+
+      eventSource.onerror = () => {
+        setIsConnected(false);
+        eventSource.close();
+        if (!cancelled) {
+          retryTimeout = setTimeout(connect, 2000);
+        }
+      };
+    }
+
+    connect();
 
     return () => {
-      eventSource.close();
+      cancelled = true;
+      clearTimeout(retryTimeout);
+      eventSourceRef.current?.close();
     };
   }, []);
 

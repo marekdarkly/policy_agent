@@ -227,6 +227,7 @@ def find_specialist_node(graph, triage_node, query_type: str):
         "policy_question": "policy_agent",
         "provider_lookup": "provider_agent",
         "schedule_agent": "scheduler_agent",
+        "general_question": "brand_agent",
     }
     target_key = agent_map.get(query_type, "scheduler_agent")
 

@@ -56,10 +56,11 @@ def _traced_node(name: str, fn: Callable) -> Callable:
     return wrapper
 
 
-def route_after_triage(state: AgentState) -> Literal["policy_specialist", "provider_specialist", "scheduler_specialist"]:
+def route_after_triage(state: AgentState) -> Literal["policy_specialist", "provider_specialist", "scheduler_specialist", "brand_voice"]:
     """Routing function after triage.
 
-    Determines which specialist agent to route to based on triage results.
+    Determines which agent to route to based on triage results.
+    General questions skip specialists and go directly to brand_voice.
 
     Args:
         state: Current agent state
@@ -69,8 +70,7 @@ def route_after_triage(state: AgentState) -> Literal["policy_specialist", "provi
     """
     next_agent = state.get("next_agent", "scheduler_specialist")
 
-    # Ensure valid routing
-    valid_agents = ["policy_specialist", "provider_specialist", "scheduler_specialist"]
+    valid_agents = ["policy_specialist", "provider_specialist", "scheduler_specialist", "brand_voice"]
     if next_agent not in valid_agents:
         return "scheduler_specialist"
 
@@ -122,7 +122,7 @@ def create_workflow() -> StateGraph:
     # Set entry point
     workflow.set_entry_point("triage")
 
-    # Add conditional edges from triage to specialists
+    # Add conditional edges from triage to specialists (or brand_voice for general questions)
     workflow.add_conditional_edges(
         "triage",
         route_after_triage,
@@ -130,6 +130,7 @@ def create_workflow() -> StateGraph:
             "policy_specialist": "policy_specialist",
             "provider_specialist": "provider_specialist",
             "scheduler_specialist": "scheduler_specialist",
+            "brand_voice": "brand_voice",
         },
     )
 

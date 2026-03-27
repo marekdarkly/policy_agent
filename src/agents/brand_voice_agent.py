@@ -147,8 +147,21 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     provider = ld_config.get("provider", "")
     print(f"  Brand Voice Agent pulled from LaunchDarkly — using {model_id}" + (f" ({provider})" if provider else ""))
     
-    # Check if this is the toxic variation that should trigger simulated guardrail
-    should_simulate_guardrail = (variation_name == "llama-4-toxic-prompt")
+    # Variations that should trigger simulated guardrail intervention
+    GUARDRAIL_VARIATIONS = {
+        "llama-4-toxic-prompt": {
+            "policy_type": "Content Policy",
+            "filter_type": "MISCONDUCT",
+            "description": "The model generated content that violates health safety guidelines",
+        },
+        "llama-4-cost-cutting-prompt": {
+            "policy_type": "Topic Policy",
+            "filter_type": "OFF_TOPIC",
+            "description": "The model answered a question outside the bot's supported scope",
+        },
+    }
+    guardrail_violation = GUARDRAIL_VARIATIONS.get(variation_name)
+    should_simulate_guardrail = guardrail_violation is not None
     
     # Extract guardrail ID from custom parameters (if present)
     custom_params = ld_config.get("_custom", {}) or ld_config.get("model", {}).get("custom", {})
@@ -201,6 +214,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     
     if should_simulate_guardrail and guardrail_enabled:
         # SIMULATED AWS BEDROCK GUARDRAIL: Block the response
+        policy_type = guardrail_violation["policy_type"]
+        filter_type = guardrail_violation["filter_type"]
+        violation_desc = guardrail_violation["description"]
         print(f"\n{'─'*80}")
         print(f"  Response blocked due to policy violation")
         print(f"")
@@ -208,17 +224,18 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         print(f"      '{response.content[:200]}{'...' if len(response.content) > 200 else ''}'")
         print(f"")
         print(f"  Violation Details:")
-        print(f"      Policy Type: Content Policy")
-        print(f"      Filter Type: MISCONDUCT")
+        print(f"      Policy Type: {policy_type}")
+        print(f"      Filter Type: {filter_type}")
         print(f"      Confidence: HIGH")
         print(f"      Action: BLOCKED")
         print(f"")
-        print(f"  The model generated content that violates health safety guidelines")
+        print(f"  {violation_desc}")
         print(f"{'─'*80}\n")
         guardrail_action = "GUARDRAIL_INTERVENED"
         guardrail_trace = {
             "guardrail_id": guardrail_id,
             "action": "BLOCKED",
+            "filter_type": filter_type,
             "original_response": response.content[:500]
         }
     
@@ -230,7 +247,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         print(f"SELF-HEALING: Guardrail intervention detected")
         print(f"{'='*80}")
         print(f"  Showing customer: 'Please continue to hold, I'll be right with you!'")
-        print(f"  Blocked: Toxic variation '{variation_name}' violated safety policy")
+        print(f"  Blocked: Variation '{variation_name}' violated {guardrail_violation['filter_type']} policy")
         print(f"{'='*80}\n")
         
         try:
@@ -255,10 +272,10 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
             
             fallback_variation = fallback_ld_config.get("_variation", "unknown")
             
-            # Safety check: Ensure we didn't get the toxic variation again
-            if fallback_variation == "llama-4-toxic-prompt":
+            # Safety check: Ensure we didn't get a blocked variation again
+            if fallback_variation in GUARDRAIL_VARIATIONS:
                 raise ValueError(
-                    f"Fallback targeting failed: Still received toxic variation '{fallback_variation}'. "
+                    f"Fallback targeting failed: Still received blocked variation '{fallback_variation}'. "
                     f"Check LaunchDarkly targeting rules - 'is_fallback' rule must be FIRST."
                 )
             

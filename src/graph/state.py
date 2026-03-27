@@ -13,6 +13,7 @@ class QueryType(str, Enum):
     POLICY_QUESTION = "policy_question"
     PROVIDER_LOOKUP = "provider_lookup"
     SCHEDULE_AGENT = "schedule_agent"
+    GENERAL_QUESTION = "general_question"
     UNKNOWN = "unknown"
 
 

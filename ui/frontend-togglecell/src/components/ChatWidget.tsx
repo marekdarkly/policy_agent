@@ -61,7 +61,7 @@ const ChatWidget = ({ isOpen, onClose, initialQuery }: ChatWidgetProps) => {
       id: "0",
       role: "assistant",
       content:
-        "Hi there! I'm your ToggleCell support assistant. How can I help you today?",
+        "Hi Alex! I'm your ToggleCell support assistant. How can I help you today?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -205,7 +205,7 @@ const ChatWidget = ({ isOpen, onClose, initialQuery }: ChatWidgetProps) => {
         body: JSON.stringify({
           userInput: currentInput,
           domain: DOMAIN,
-          userName: "Demo User",
+          userName: "Alex Morgan",
           location: "London, UK",
           policyId: "TC-5G-UNLIM-2026",
           coverageType: "TC-5G-UNLIM-2026",

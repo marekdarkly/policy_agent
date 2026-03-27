@@ -99,6 +99,7 @@ def triage_node(state: AgentState) -> dict[str, Any]:
         "policy_question": QueryType.POLICY_QUESTION,
         "provider_lookup": QueryType.PROVIDER_LOOKUP,
         "schedule_agent": QueryType.SCHEDULE_AGENT,
+        "general_question": QueryType.GENERAL_QUESTION,
     }
     query_type = query_type_map.get(query_type_str, QueryType.SCHEDULE_AGENT)
 
@@ -107,16 +108,24 @@ def triage_node(state: AgentState) -> dict[str, Any]:
         QueryType.POLICY_QUESTION: "policy_specialist",
         QueryType.PROVIDER_LOOKUP: "provider_specialist",
         QueryType.SCHEDULE_AGENT: "scheduler_specialist",
+        QueryType.GENERAL_QUESTION: "brand_voice",
     }
     next_agent = agent_map[query_type]
 
-    # Check confidence - if low, escalate
+    # Check confidence - if low, escalate (but not for general questions)
     confidence_score = result.get("confidence_score", 0.0)
     escalation_needed = result.get("escalation_needed", False)
 
-    if confidence_score < 0.7:
+    if confidence_score < 0.7 and query_type != QueryType.GENERAL_QUESTION:
         escalation_needed = True
         next_agent = "scheduler_specialist"
+
+    # For general questions routed directly to brand_voice, pass the original
+    # query through so the brand voice agent can answer it directly.
+    if next_agent == "brand_voice":
+        triage_content = query
+    else:
+        triage_content = f"Routing to {next_agent} (confidence: {confidence_score:.2f})"
 
     # Update state
     updates: dict[str, Any] = {
@@ -127,7 +136,7 @@ def triage_node(state: AgentState) -> dict[str, Any]:
         "messages": messages
         + [
             AIMessage(
-                content=f"Routing to {next_agent} (confidence: {confidence_score:.2f})",
+                content=triage_content,
                 additional_kwargs={"reasoning": result.get("reasoning", "")},
             )
         ],
