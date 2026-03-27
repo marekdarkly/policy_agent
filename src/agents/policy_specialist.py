@@ -44,11 +44,12 @@ def policy_specialist_node(state: AgentState) -> dict[str, Any]:
 
     # Get LaunchDarkly config (including messages and KB ID)
     print(f"\n{'─'*80}")
-    print(f"🔍 POLICY SPECIALIST: Retrieving policy information")
+    print(f"  POLICY SPECIALIST: Retrieving policy information")
     ld_client = get_ld_client()
     ld_config, _, _ = ld_client.get_ai_config("policy_agent", user_context)
-    variation_name = ld_config.get("_variation", "unknown")
-    print(f"   📌 Variation: {variation_name}")
+    model_id = ld_config.get("model", {}).get("name", "unknown")
+    provider = ld_config.get("provider", "")
+    print(f"  Policy Agent pulled from LaunchDarkly — using {model_id}" + (f" ({provider})" if provider else ""))
     print(f"{'─'*80}")
     
     # Retrieve from Bedrock Knowledge Base via RAG (ONLY source)
@@ -58,7 +59,7 @@ def policy_specialist_node(state: AgentState) -> dict[str, Any]:
     # Format RAG documents from Bedrock Knowledge Base
     if not rag_documents:
         raise RuntimeError(
-            f"❌ CATASTROPHIC: No policy documents retrieved from Bedrock Knowledge Base!\n"
+            f"CATASTROPHIC: No policy documents retrieved from Bedrock Knowledge Base!\n"
             f"  Query: {query}\n"
             f"  Policy ID: {policy_id}\n"
             f"  This indicates either:\n"
@@ -67,7 +68,7 @@ def policy_specialist_node(state: AgentState) -> dict[str, Any]:
             f"  3. The KB is not properly configured"
         )
     
-    print(f"  📄 Retrieved {len(rag_documents)} policy documents from Bedrock KB")
+    print(f"  Retrieved {len(rag_documents)} policy documents from Bedrock KB")
     policy_info_str = "\n\n=== POLICY DOCUMENTATION (from Bedrock Knowledge Base) ===\n"
     for i, doc in enumerate(rag_documents, 1):
         score = doc.get("score", 0.0)
@@ -162,10 +163,10 @@ def policy_specialist_node(state: AgentState) -> dict[str, Any]:
             metric_value=float(duration_ms)
         )
         
-        print(f"💰 Policy agent cost: {policy_cost_cents:.2f}¢ (${policy_cost_usd:.6f}) [in={tokens['input']}, out={tokens['output']}, model={model_id.split(':')[0].split('.')[-1]}]")
-        print(f"⏱️  Policy agent duration: {duration_ms}ms")
+        print(f"  Policy agent cost: {policy_cost_cents:.2f}¢ (${policy_cost_usd:.6f}) [in={tokens['input']}, out={tokens['output']}, model={model_id.split(':')[0].split('.')[-1]}]")
+        print(f"  Policy agent duration: {duration_ms}ms")
     except Exception as e:
-        print(f"⚠️  Failed to send policy metrics: {e}")
+        print(f"  Failed to send policy metrics: {e}")
 
     # Update state
     updates: dict[str, Any] = {

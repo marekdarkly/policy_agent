@@ -62,11 +62,12 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
 
     # Get LaunchDarkly config (including messages and KB ID)
     print(f"\n{'─'*80}")
-    print(f"🔍 PROVIDER SPECIALIST: Searching for providers")
+    print(f"  PROVIDER SPECIALIST: Searching for providers")
     ld_client = get_ld_client()
     ld_config, _, _ = ld_client.get_ai_config("provider_agent", user_context)
-    variation_name = ld_config.get("_variation", "unknown")
-    print(f"   📌 Variation: {variation_name}")
+    model_id = ld_config.get("model", {}).get("name", "unknown")
+    provider = ld_config.get("provider", "")
+    print(f"  Provider Agent pulled from LaunchDarkly — using {model_id}" + (f" ({provider})" if provider else ""))
     print(f"{'─'*80}")
     
     # Retrieve from Bedrock Knowledge Base via RAG (ONLY source)
@@ -83,7 +84,7 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
     # Format RAG documents from Bedrock Knowledge Base
     if not rag_documents:
         raise RuntimeError(
-            f"❌ CATASTROPHIC: No provider documents retrieved from Bedrock Knowledge Base!\n"
+            f"CATASTROPHIC: No provider documents retrieved from Bedrock Knowledge Base!\n"
             f"  Query: {query}\n"
             f"  Location: {location}\n"
             f"  Network: {network}\n"
@@ -107,14 +108,14 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
     
     # If filtering was too aggressive, fall back to original documents but warn
     if not filtered_documents:
-        print(f"  ⚠️  WARNING: No documents explicitly mention {policy_id}, using all {len(rag_documents)} documents")
+        print(f"  WARNING: No documents explicitly mention {policy_id}, using all {len(rag_documents)} documents")
         filtered_documents = rag_documents
     else:
-        print(f"  ✅ Filtered to {len(filtered_documents)} documents matching {policy_id} (from {len(rag_documents)} total)")
+        print(f"  Filtered to {len(filtered_documents)} documents matching {policy_id} (from {len(rag_documents)} total)")
     
-    print(f"  📄 Using {len(filtered_documents)} provider documents from Bedrock KB")
+    print(f"  Using {len(filtered_documents)} provider documents from Bedrock KB")
     provider_info_str = "\n\n=== PROVIDER NETWORK INFORMATION (from Bedrock Knowledge Base) ===\n"
-    provider_info_str += f"\n⚠️ CRITICAL: User's plan is {policy_id}. ONLY return providers explicitly accepting this plan.\n"
+    provider_info_str += f"\nCRITICAL: User's plan is {policy_id}. ONLY return providers explicitly accepting this plan.\n"
     provider_info_str += f"If a provider's 'Accepted Plans' field does NOT list {policy_id}, DO NOT include them.\n\n"
     
     for i, doc in enumerate(filtered_documents, 1):
@@ -211,10 +212,10 @@ def provider_specialist_node(state: AgentState) -> dict[str, Any]:
             metric_value=float(duration_ms)
         )
         
-        print(f"💰 Provider agent cost: {provider_cost_cents:.2f}¢ (${provider_cost_usd:.6f}) [in={tokens['input']}, out={tokens['output']}, model={model_id.split(':')[0].split('.')[-1]}]")
-        print(f"⏱️  Provider agent duration: {duration_ms}ms")
+        print(f"  Provider agent cost: {provider_cost_cents:.2f}¢ (${provider_cost_usd:.6f}) [in={tokens['input']}, out={tokens['output']}, model={model_id.split(':')[0].split('.')[-1]}]")
+        print(f"  Provider agent duration: {duration_ms}ms")
     except Exception as e:
-        print(f"⚠️  Failed to send provider metrics: {e}")
+        print(f"  Failed to send provider metrics: {e}")
 
     # Update state
     updates: dict[str, Any] = {

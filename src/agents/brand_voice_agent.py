@@ -83,7 +83,7 @@ def calculate_model_cost(model_id: str, input_tokens: int, output_tokens: int) -
         rates = pricing["nova-pro"]
     else:
         # Unknown model, return 0
-        print(f"⚠️  Unknown model for cost calculation: {model_id}")
+        print(f"  Unknown model for cost calculation: {model_id}")
         return 0.0
     
     # Calculate cost (pricing is per 1000 tokens)
@@ -134,7 +134,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     
     # Get LLM and messages from LaunchDarkly AI Config (with fallback)
     print(f"\n{'─'*80}")
-    print(f"🔍 BRAND VOICE AGENT: Crafting response")
+    print(f"  BRAND VOICE AGENT: Crafting response")
     model_invoker, ld_config = get_model_invoker(
         config_key="brand_agent",
         context=user_context,
@@ -143,7 +143,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         override_guardrail_enabled=guardrail_enabled,  # Pass UI toggle
     )
     variation_name = ld_config.get("_variation", "unknown")
-    print(f"   📌 Variation: {variation_name}")
+    model_id = ld_config.get("model", {}).get("name", "unknown")
+    provider = ld_config.get("provider", "")
+    print(f"  Brand Voice Agent pulled from LaunchDarkly — using {model_id}" + (f" ({provider})" if provider else ""))
     
     # Check if this is the toxic variation that should trigger simulated guardrail
     should_simulate_guardrail = (variation_name == "llama-4-toxic-prompt")
@@ -200,18 +202,18 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     if should_simulate_guardrail and guardrail_enabled:
         # SIMULATED AWS BEDROCK GUARDRAIL: Block the response
         print(f"\n{'─'*80}")
-        print(f"   ⚠️  Response blocked due to policy violation")
+        print(f"  Response blocked due to policy violation")
         print(f"")
-        print(f"   📝 Model's attempted response (first 200 chars):")
+        print(f"  Model's attempted response (first 200 chars):")
         print(f"      '{response.content[:200]}{'...' if len(response.content) > 200 else ''}'")
         print(f"")
-        print(f"   🚨 Violation Details:")
-        print(f"      • Policy Type: Content Policy")
-        print(f"      • Filter Type: MISCONDUCT")
-        print(f"      • Confidence: HIGH")
-        print(f"      • Action: BLOCKED")
+        print(f"  Violation Details:")
+        print(f"      Policy Type: Content Policy")
+        print(f"      Filter Type: MISCONDUCT")
+        print(f"      Confidence: HIGH")
+        print(f"      Action: BLOCKED")
         print(f"")
-        print(f"   💡 The model generated content that violates health safety guidelines")
+        print(f"  The model generated content that violates health safety guidelines")
         print(f"{'─'*80}\n")
         guardrail_action = "GUARDRAIL_INTERVENED"
         guardrail_trace = {
@@ -225,10 +227,10 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
     # Self-healing: If guardrail intervened, retry with modified context
     if guardrail_action == "GUARDRAIL_INTERVENED":
         print(f"\n{'='*80}")
-        print(f"🔄 SELF-HEALING: Guardrail intervention detected")
+        print(f"SELF-HEALING: Guardrail intervention detected")
         print(f"{'='*80}")
-        print(f"   💬 Showing customer: 'Please continue to hold, I'll be right with you!'")
-        print(f"   ❌ Blocked: Toxic variation '{variation_name}' violated safety policy")
+        print(f"  Showing customer: 'Please continue to hold, I'll be right with you!'")
+        print(f"  Blocked: Toxic variation '{variation_name}' violated safety policy")
         print(f"{'='*80}\n")
         
         try:
@@ -241,7 +243,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                 "original_request_id": request_id,
             }
             
-            print(f"   📡 Re-evaluating AI Config with fallback context...")
+            print(f"  Re-evaluating AI Config with fallback context...")
             
             # Pull the SAME AI Config with modified context
             fallback_model_invoker, fallback_ld_config = get_model_invoker(
@@ -260,14 +262,14 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                     f"Check LaunchDarkly targeting rules - 'is_fallback' rule must be FIRST."
                 )
             
-            print(f"   ✅ LaunchDarkly returned variation: '{fallback_variation}'")
+            print(f"  LaunchDarkly returned variation: '{fallback_variation}'")
             
             # Build messages from fallback config
             ld_client = get_ld_client()
             fallback_messages = ld_client.build_langchain_messages(fallback_ld_config, context_vars)
             
             # Generate safe response
-            print(f"   🔄 Generating response with fallback variation...")
+            print(f"  Generating response with fallback variation...")
             fallback_start = time.time()
             fallback_response = fallback_model_invoker.invoke(fallback_messages)
             fallback_duration = int((time.time() - fallback_start) * 1000)
@@ -275,9 +277,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
             # Success! Use fallback response from LaunchDarkly
             final_response = fallback_response.content
             
-            print(f"   ✅ Self-healing succeeded!")
-            print(f"   📦 Used LaunchDarkly variation: '{fallback_variation}'")
-            print(f"   ⏱️  Fallback duration: {fallback_duration}ms")
+            print(f"  Self-healing succeeded.")
+            print(f"  Used LaunchDarkly variation: '{fallback_variation}'")
+            print(f"  Fallback duration: {fallback_duration}ms")
             
             # Update tokens and duration for the fallback
             if hasattr(fallback_response, "usage_metadata") and fallback_response.usage_metadata:
@@ -302,13 +304,13 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
             
         except Exception as e:
             # If LaunchDarkly fallback fails, use hardcoded default as last resort
-            print(f"   ❌ LaunchDarkly fallback strategy failed: {e}")
-            print(f"   📋 Possible causes:")
-            print(f"      • LaunchDarkly unavailable")
-            print(f"      • 'is_fallback' targeting rule not configured")
-            print(f"      • 'is_fallback' rule not first in targeting order")
+            print(f"  LaunchDarkly fallback strategy failed: {e}")
+            print(f"  Possible causes:")
+            print(f"      LaunchDarkly unavailable")
+            print(f"      'is_fallback' targeting rule not configured")
+            print(f"      'is_fallback' rule not first in targeting order")
             print(f"")
-            print(f"   🆘 Falling back to hardcoded safe default as last resort...")
+            print(f"  Falling back to hardcoded safe default as last resort...")
             print(f"{'='*80}\n")
             
             try:
@@ -352,8 +354,8 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                 fallback_duration = int((time.time() - fallback_start) * 1000)
                 
                 final_response = fallback_response.content
-                print(f"   ✅ Hardcoded fallback succeeded")
-                print(f"   ⏱️  Duration: {fallback_duration}ms")
+                print(f"  Hardcoded fallback succeeded.")
+                print(f"  Duration: {fallback_duration}ms")
                 
                 # Update tokens and duration
                 if hasattr(fallback_response, "usage_metadata") and fallback_response.usage_metadata:
@@ -372,8 +374,8 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                 print(f"{'='*80}\n")
                 
             except Exception as e2:
-                print(f"   ❌ Hardcoded fallback also failed: {e2}")
-                print(f"   🆘 Using generic safe message")
+                print(f"  Hardcoded fallback also failed: {e2}")
+                print(f"  Using generic safe message.")
                 print(f"{'='*80}\n")
                 final_response = "I apologize, but I'm unable to provide a response at this time. Please contact our support team for assistance."
                 
@@ -407,7 +409,7 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
         trackers_store = state.get("brand_trackers_store")
         if request_id and trackers_store is not None:
             trackers_store[request_id] = model_invoker
-            print(f"✅ Stored brand voice model invoker for request {request_id[:8]}...")
+            print(f"  Stored brand voice model invoker for request {request_id[:8]}...")
         
         # Calculate and send cost metric for brand agent
         brand_cost_usd = calculate_model_cost(
@@ -439,9 +441,9 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
                 metric_value=float(brand_cost_cents)
             )
             
-            print(f"💰 Brand agent cost: {brand_cost_cents:.2f}¢ (${brand_cost_usd:.6f}) [in={tokens['input']}, out={tokens['output']}, model={model_id.split(':')[0].split('.')[-1]}]")
+            print(f"  Brand agent cost: {brand_cost_cents:.2f}¢ (${brand_cost_usd:.6f}) [in={tokens['input']}, out={tokens['output']}, model={model_id.split(':')[0].split('.')[-1]}]")
         except Exception as e:
-            print(f"⚠️  Failed to send cost metric: {e}")
+            print(f"  Failed to send cost metric: {e}")
         
         # Handle both sync and async contexts
         try:
@@ -480,10 +482,10 @@ def brand_voice_node(state: AgentState) -> dict[str, Any]:
             thread = threading.Thread(target=run_eval_in_thread, daemon=True)
             thread.start()
         
-        print(f"🔍 Background evaluation started (evaluating against {len(rag_documents)} RAG documents) - request_id: {request_id[:8] if request_id else 'N/A'}...")
+        print(f"  Background evaluation started (evaluating against {len(rag_documents)} RAG documents) - request_id: {request_id[:8] if request_id else 'N/A'}...")
     except Exception as e:
         # Never let evaluation errors affect the main flow
-        print(f"⚠️  Failed to start background evaluation: {e}")
+        print(f"  Failed to start background evaluation: {e}")
 
     # Add debug info to agent_data (store full responses for hallucination debugging)
     brand_data = {
