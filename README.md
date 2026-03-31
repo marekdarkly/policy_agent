@@ -1,11 +1,12 @@
-# ToggleHealth / ToggleCell Multi-Agent System
+# ToggleHealth / ToggleCell / ToggleBank Multi-Agent System
 
-Multi-agent customer support system demonstrating **LaunchDarkly AI Configs**, **LangGraph**, **AWS Bedrock RAG**, and **G-Eval** evaluation across two demo brands:
+Multi-agent customer support system demonstrating **LaunchDarkly AI Configs**, **LangGraph**, **AWS Bedrock RAG**, and **G-Eval** evaluation across three demo brands:
 
 - **ToggleHealth** — Medical insurance support (policy coverage, provider lookup, scheduling)
 - **ToggleCell** — Mobile/telecom support (plans, stores, billing)
+- **ToggleBank** — Banking support (accounts, branches, mortgages, loans)
 
-Both brands share the same AI agent architecture and LaunchDarkly configuration. Prompts adapt per-domain via the `{{domain}}` template variable in AI Config prompts.
+All brands share the same AI agent architecture and LaunchDarkly configuration. Prompts adapt per-domain via the `{{domain}}` template variable in AI Config prompts.
 
 ## Quick Start
 
@@ -19,6 +20,10 @@ cd ui && ./start.sh
 # ToggleCell (telecom)
 make togglecell
 # Open http://localhost:8080
+
+# ToggleBank (banking)
+make togglebank
+# Open http://localhost:8081
 ```
 
 ### Terminal Interface
@@ -119,12 +124,13 @@ See `src/utils/observability.py` for initialization details.
 
 ## UI
 
-Two React frontends share a single FastAPI backend:
+Three React frontends share a single FastAPI backend:
 
 | Frontend | Brand | Port | Command |
 |----------|-------|------|---------|
 | `ui/frontend/` | ToggleHealth (medical insurance) | 3000 | `make ui` |
 | `ui/frontend-togglecell/` | ToggleCell (telecom) | 8080 | `make togglecell` |
+| `ui/frontend-togglebank/` | ToggleBank (banking) | 8081 | `make togglebank` |
 
 The backend (`ui/backend/server.py`) runs on port 8000 and proxies requests to the multi-agent workflow.
 
@@ -210,6 +216,8 @@ Markdown documents in `data/markdown/` serve as the source corpus for AWS Bedroc
 | `providers/` | 280 | ToggleHealth provider directory (PCPs, specialists, mental health, pharmacies across 20 states) |
 | `togglecell-plans/` | 23 | ToggleCell mobile plans (5G Unlimited, Family Share, SIM Flex, Pay-As-You-Go), coverage, devices |
 | `togglecell-stores/` | 20 | ToggleCell retail store locations across the UK |
+| `togglebank-accounts/` | 64 | ToggleBank account products (current accounts, savings, ISAs, mortgages, loans, credit cards, insurance, investments), guides, and reference docs |
+| `togglebank-branches/` | 30 | ToggleBank branch locations across the UK and international |
 
 ## Environment Setup
 
@@ -245,6 +253,7 @@ make setup          # Install dependencies & check AWS
 make run            # Interactive chatbot (terminal)
 make ui             # ToggleHealth web UI
 make togglecell     # ToggleCell web UI
+make togglebank     # ToggleBank web UI
 make test-suite     # Full agent test suite (50 iterations)
 make test-quick     # Quick test (5 iterations)
 make upload-tools   # Upload tools to LaunchDarkly
@@ -292,13 +301,16 @@ policy_agent/
 │       ├── policies/               # ToggleHealth policy docs (90)
 │       ├── providers/              # ToggleHealth provider directory (280)
 │       ├── togglecell-plans/       # ToggleCell plan docs (23)
-│       └── togglecell-stores/      # ToggleCell store locations (20)
+│       ├── togglecell-stores/      # ToggleCell store locations (20)
+│       ├── togglebank-accounts/   # ToggleBank account products (64)
+│       └── togglebank-branches/    # ToggleBank branch locations (30)
 ├── ui/
 │   ├── backend/                    # FastAPI server
 │   │   ├── server.py
 │   │   └── requirements.txt
 │   ├── frontend/                   # React + Vite (ToggleHealth)
 │   ├── frontend-togglecell/        # React + Vite (ToggleCell)
+│   ├── frontend-togglebank/        # React + Vite (ToggleBank)
 │   ├── public/                     # Shared static assets
 │   └── start.sh                    # Auto-setup launcher
 ├── lambda/
@@ -340,7 +352,7 @@ policy_agent/
 All prompts and model configurations are managed in LaunchDarkly AI Configs -- zero hardcoded prompts in application code. Model selection, prompt engineering, and agent behavior can be changed via LaunchDarkly without redeployment.
 
 ### Multi-Domain Support
-A single set of AI Configs powers both ToggleHealth and ToggleCell. The `{{domain}}` template variable in prompts adapts agent behavior to the active brand.
+A single set of AI Configs powers ToggleHealth, ToggleCell, and ToggleBank. The `{{domain}}` template variable in prompts adapts agent behavior to the active brand.
 
 ### Dual Workflow Engines
 The system supports two orchestration approaches: a LangGraph `StateGraph` with explicit Python node/edge definitions, and the LaunchDarkly Agent Graph SDK which resolves graph structure from the LaunchDarkly platform.
