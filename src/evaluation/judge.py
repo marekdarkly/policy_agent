@@ -136,6 +136,19 @@ class BrandVoiceEvaluator:
                         "reason": "The response is exceptionally clear and well-structured with excellent use of formatting to organize billing details. The tone is professional yet friendly, and all telecom/billing terms are appropriately explained. Minor stylistic elements like the casual greeting and closing could potentially create slight ambiguity about the formality level expected in follow-up interactions.",
                         "issues": []
                     }
+                elif domain == "togglebank":
+                    accuracy_result = {
+                        "score": 0.95,
+                        "passed": True,
+                        "reason": "The final output accurately addresses the customer's banking question using information directly from the RAG documents. It correctly references account terms, applicable fees, and current interest rates as stated in the knowledge base. The response is factually grounded and complete.",
+                        "issues": []
+                    }
+                    coherence_result = {
+                        "score": 0.90,
+                        "passed": True,
+                        "reason": "The response is exceptionally clear and well-structured with excellent use of formatting to organize banking details. The tone is professional yet approachable, and all financial terms are appropriately explained. Minor stylistic elements like the casual greeting and closing could potentially create slight ambiguity about the formality level expected in follow-up interactions.",
+                        "issues": []
+                    }
                 else:
                     accuracy_result = {
                         "score": 0.95,

@@ -109,6 +109,24 @@ togglecell: aws-check ## Run ToggleCell UI (telecom demo, same AI configs)
 	(cd ui/frontend-togglecell && npm run dev) & \
 	wait
 
+togglebank: aws-check ## Run ToggleBank UI (banking demo, same AI configs)
+	@echo ""
+	@echo "$(COLOR_BOLD)$(COLOR_CYAN)🏦 Starting ToggleBank Support Hub...$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Starting backend on http://localhost:8000...$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Starting frontend on http://localhost:8081...$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_CYAN)Same AI configs as ToggleHealth, domain=togglebank$(COLOR_RESET)"
+	@echo "$(COLOR_CYAN)Prompts adapt via {{domain}} template variable$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_GREEN)Open http://localhost:8081 in your browser$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Press Ctrl+C to stop both services$(COLOR_RESET)"
+	@echo ""
+	@trap 'kill 0' INT; \
+	(cd ui/backend && ../../$(PYTHON_VENV) server.py) & \
+	(cd ui/frontend-togglebank && npm run dev) & \
+	wait
+
 run-test: aws-check ## Run a quick test query
 	@echo "$(COLOR_BOLD)$(COLOR_CYAN)🧪 Running quick test...$(COLOR_RESET)"
 	@$(PYTHON_VENV) interactive_chatbot.py test

@@ -194,6 +194,10 @@ DOMAIN_KB_IDS = {
         "policy": "1UDI2FHFHW",
         "provider": "JCZTNWZ6FS",
     },
+    "togglebank": {
+        "policy": "3I6VNSA6EN",
+        "provider": "BXBDMAVNB5",
+    },
 }
 
 
