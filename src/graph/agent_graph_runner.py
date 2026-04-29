@@ -106,6 +106,83 @@ def _resolve_attached_tools(node, ld_context) -> list[str]:
     return keys
 
 
+# ---------------------------------------------------------------------------
+# Synthetic per-node metric emission (only used by the synthetic-traffic
+# Lambda so each agent-graph node lights up the Accuracy / Coherence /
+# Satisfaction columns on the LD AI Configs insights page). Distributions
+# are intentionally varied per node so the dashboard reads as a real
+# multi-agent quality story instead of flat 100% across the board.
+# ---------------------------------------------------------------------------
+
+# (accuracy_center, accuracy_spread, coherence_center, coherence_spread)
+_SYNTHETIC_NODE_METRIC_PROFILE: dict[str, tuple[float, float, float, float]] = {
+    "triage_agent":    (0.96, 0.02, 0.94, 0.03),
+    "policy_agent":    (0.91, 0.04, 0.93, 0.03),
+    "provider_agent":  (0.89, 0.05, 0.92, 0.04),
+    "scheduler_agent": (0.87, 0.06, 0.90, 0.04),
+}
+
+
+def _emit_node_attributed_event(node, ld_context, event_name: str,
+                                metric_value: float, graph_key) -> None:
+    """Emit a metric event attributed to *node*'s served variation.
+
+    Mirrors the payload shape ``LDAIConfigTracker`` would produce so the
+    LaunchDarkly insights page bins these events under the right config row.
+    Never raises.
+    """
+    if ld_context is None:
+        return
+    try:
+        import ldclient
+
+        tracker = node.get_config().tracker
+        payload = {
+            "variationKey": getattr(tracker, "_variation_key", "") if tracker else "",
+            "configKey": node.get_key(),
+            "version": getattr(tracker, "_version", 1) if tracker else 1,
+            "modelName": getattr(tracker, "_model_name", "") if tracker else "",
+            "providerName": getattr(tracker, "_provider_name", "") if tracker else "",
+        }
+        if graph_key:
+            payload["graphKey"] = graph_key
+        ldclient.get().track(event_name, ld_context, payload, float(metric_value))
+    except Exception:
+        pass
+
+
+def emit_synthetic_node_metrics(node, ld_context, graph_key,
+                                feedback: Optional[str] = None) -> dict[str, float]:
+    """Fire judge:accuracy, judge:coherence, and feedback events for *node*.
+
+    Returns the sampled metric values (for logging). Skips silently for any
+    node not present in ``_SYNTHETIC_NODE_METRIC_PROFILE`` (e.g. brand-voice
+    nodes — those already have their own evaluation pipeline).
+    """
+    profile = _SYNTHETIC_NODE_METRIC_PROFILE.get(node.get_key())
+    if profile is None:
+        return {}
+
+    acc_center, acc_spread, coh_center, coh_spread = profile
+    accuracy = max(0.0, min(1.0, random.gauss(acc_center, acc_spread)))
+    coherence = max(0.0, min(1.0, random.gauss(coh_center, coh_spread)))
+
+    _emit_node_attributed_event(node, ld_context,
+                                "$ld:ai:judge:accuracy", accuracy, graph_key)
+    _emit_node_attributed_event(node, ld_context,
+                                "$ld:ai:judge:coherence", coherence, graph_key)
+
+    if feedback in ("positive", "negative"):
+        ev = (
+            "$ld:ai:feedback:user:positive"
+            if feedback == "positive"
+            else "$ld:ai:feedback:user:negative"
+        )
+        _emit_node_attributed_event(node, ld_context, ev, 1.0, graph_key)
+
+    return {"accuracy": accuracy, "coherence": coherence}
+
+
 def _emit_tool_call_event(node, ld_context, tool_key: str, graph_key) -> None:
     """Emit the ``$ld:ai:tool_call`` event using the v0.17+ payload shape.
 
@@ -255,7 +332,8 @@ def _get_tracer():
 
 
 def run_triage(triage_node, question: str, user_context: dict,
-               graph_tracker, graph_key: str, ld_context=None):
+               graph_tracker, graph_key: str, ld_context=None,
+               feedback: Optional[str] = None):
     """Execute the triage agent and return ``(query_type, parsed_result, tokens)``."""
     from opentelemetry.trace import StatusCode
 
@@ -285,6 +363,9 @@ def run_triage(triage_node, question: str, user_context: dict,
 
         graph_tracker.track_node_invocation(triage_node.get_key())
         tools_called = simulate_tool_calls(triage_node, graph_tracker, ld_context, graph_key)
+        synth_metrics = emit_synthetic_node_metrics(
+            triage_node, ld_context, graph_key, feedback,
+        )
 
         span.set_attribute("agent.tokens.input", tokens["input"])
         span.set_attribute("agent.tokens.output", tokens["output"])
@@ -336,7 +417,8 @@ def find_specialist_node(graph, triage_node, query_type: str):
 
 def run_specialist(specialist_node, question: str, user_context: dict,
                    query_type: str, graph_tracker, triage_key: str,
-                   graph_key: str, ld_context=None):
+                   graph_key: str, ld_context=None,
+                   feedback: Optional[str] = None):
     """Execute a specialist agent (with RAG retrieval).
 
     Returns ``(response_text, tokens, duration_ms)``.
@@ -411,6 +493,9 @@ def run_specialist(specialist_node, question: str, user_context: dict,
         graph_tracker.track_node_invocation(node_key)
         graph_tracker.track_handoff_success(triage_key, node_key)
         tools_called = simulate_tool_calls(specialist_node, graph_tracker, ld_context, graph_key)
+        synth_metrics = emit_synthetic_node_metrics(
+            specialist_node, ld_context, graph_key, feedback,
+        )
 
         span.set_attribute("agent.tokens.input", tokens["input"])
         span.set_attribute("agent.tokens.output", tokens["output"])
@@ -623,7 +708,7 @@ def run_agent_graph(
     # --- Step 1: Triage ---
     query_type, triage_result, triage_tokens, triage_dur = run_triage(
         root_node, question, user_context, graph_tracker, graph_key,
-        ld_context=ld_context,
+        ld_context=ld_context, feedback=feedback,
     )
 
     # --- Step 2: Specialist ---
@@ -637,7 +722,7 @@ def run_agent_graph(
     specialist_response, spec_tokens, spec_dur = run_specialist(
         specialist_node, question, user_context, query_type,
         graph_tracker, root_node.get_key(), graph_key,
-        ld_context=ld_context,
+        ld_context=ld_context, feedback=feedback,
     )
 
     # --- Step 3: Brand voice ---

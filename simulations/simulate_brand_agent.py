@@ -162,20 +162,37 @@ def send_metrics_for_variation(
                 ld_context.set(key, value)
         ld_context = ld_context.build()
         
-        # Pull the brand_agent AI Config to get variation
+        # Pull the brand_agent AI Config to get variation + the metadata we need
+        # to attach to each metric event so it gets attributed to this config in
+        # the LD insights page (without this, events show up under an empty row).
         variation_detail = ld_client_instance.variation_detail(CONFIG_KEY, ld_context, {})
-        
-        # Extract variation key
-        variation_key = None
-        if isinstance(variation_detail.value, dict):
-            variation_key = variation_detail.value.get("_ldMeta", {}).get("variationKey")
-        
+
+        if not isinstance(variation_detail.value, dict):
+            return {"success": False, "error": "variation value is not a dict"}
+
+        variation_value = variation_detail.value
+        ld_meta = variation_value.get("_ldMeta", {}) or {}
+        variation_key = ld_meta.get("variationKey")
+
         if not variation_key or variation_key not in distributions:
             return {
                 "success": False,
                 "error": f"Unknown variation: {variation_key}"
             }
-        
+
+        # Build the event-attribution payload that mirrors what the LD AI SDK
+        # tracker would attach internally. Required for the insights page to
+        # bin these events under the brand_agent row instead of an orphan row.
+        model_obj = variation_value.get("model") or {}
+        provider_obj = variation_value.get("provider") or {}
+        attribution = {
+            "configKey": CONFIG_KEY,
+            "variationKey": variation_key,
+            "version": int(ld_meta.get("version", 1)),
+            "modelName": model_obj.get("name", ""),
+            "providerName": provider_obj.get("name", ""),
+        }
+
         # Get pre-generated metrics for this variation and iteration
         idx = iteration % len(distributions[variation_key]["accuracy"])
         
@@ -184,14 +201,36 @@ def send_metrics_for_variation(
         duration = int(distributions[variation_key]["duration"][idx])
         tokens = int(distributions[variation_key]["tokens"][idx])
         cost = float(distributions[variation_key]["cost"][idx])
-        
-        # Send metrics to LaunchDarkly
-        ld_client_instance.track("$ld:ai:hallucinations", ld_context, accuracy)
-        ld_client_instance.track("$ld:ai:judge:accuracy", ld_context, accuracy)
-        ld_client_instance.track("$ld:ai:coherence", ld_context, coherence)
-        ld_client_instance.track("$ld:ai:duration:total", ld_context, float(duration))
-        ld_client_instance.track("$ld:ai:tokens:total", ld_context, float(tokens))
-        ld_client_instance.track("$ld:ai:tokens:costmanual", ld_context, cost)
+
+        # Send metrics to LaunchDarkly. NOTE: client.track signature is
+        # track(event_name, context, data=None, metric_value=None), so the
+        # numeric value MUST be passed via the metric_value keyword (the
+        # previous version was passing it as `data`, which silently dropped
+        # the metric and produced unattributed events).
+        ld_client_instance.track(
+            "$ld:ai:hallucinations", ld_context,
+            data=attribution, metric_value=accuracy,
+        )
+        ld_client_instance.track(
+            "$ld:ai:judge:accuracy", ld_context,
+            data=attribution, metric_value=accuracy,
+        )
+        ld_client_instance.track(
+            "$ld:ai:coherence", ld_context,
+            data=attribution, metric_value=coherence,
+        )
+        ld_client_instance.track(
+            "$ld:ai:duration:total", ld_context,
+            data=attribution, metric_value=float(duration),
+        )
+        ld_client_instance.track(
+            "$ld:ai:tokens:total", ld_context,
+            data=attribution, metric_value=float(tokens),
+        )
+        ld_client_instance.track(
+            "$ld:ai:tokens:costmanual", ld_context,
+            data=attribution, metric_value=cost,
+        )
         
         # Don't flush immediately - let SDK batch events
         
