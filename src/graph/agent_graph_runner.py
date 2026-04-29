@@ -65,28 +65,119 @@ def patch_tracker_for_graph(tracker, graph_key: str) -> None:
     tracker._LDAIConfigTracker__get_track_data = patched
 
 
-def simulate_tool_calls(node, graph_tracker) -> list[str]:
-    """Report simulated tool invocations for *node*.
+def _resolve_attached_tools(node, ld_context) -> list[str]:
+    """Resolve the AI Tool keys attached to *node*'s currently-served variation.
 
-    Produces varied tool usage: ~20 % chance of no tools, otherwise 1-to-all
-    tools with a bias toward fewer calls (weighted random).
+    At runtime, the LD SDK inlines each attached AI Tool's full schema into
+    ``model.parameters.tools`` of the variation payload (each entry looks
+    like ``{"name": "...", "type": "function", "description": "...",
+    "parameters": {...}}``). We read that list and return the names so they
+    can be reported to ``track_tool_call``.
+
+    Returns an empty list when no tools are attached, the SDK is unavailable,
+    or the payload is shaped unexpectedly. Never raises.
     """
-    config = node.get_config()
-    params = config.model._parameters if config.model else {}
-    tools = params.get("tools", [])
-    if not tools:
+    try:
+        import ldclient
+
+        raw = ldclient.get().variation(node.get_key(), ld_context, {})
+    except Exception:
+        return []
+
+    if not isinstance(raw, dict):
+        return []
+
+    model = raw.get("model")
+    if not isinstance(model, dict):
+        return []
+    params = model.get("parameters")
+    if not isinstance(params, dict):
+        return []
+    tools = params.get("tools")
+    if not isinstance(tools, list):
+        return []
+
+    keys: list[str] = []
+    for tool in tools:
+        if isinstance(tool, dict):
+            key = tool.get("name") or tool.get("key")
+            if isinstance(key, str) and key:
+                keys.append(key)
+    return keys
+
+
+def _emit_tool_call_event(node, ld_context, tool_key: str, graph_key) -> None:
+    """Emit the ``$ld:ai:tool_call`` event using the v0.17+ payload shape.
+
+    The LaunchDarkly Agent Graph monitoring UI (Tool calls by node chart)
+    indexes this event name. The legacy ``$ld:ai:graph:tool_call`` from
+    ``AIGraphTracker.track_tool_call`` (SDK 0.16.x) is no longer surfaced
+    by the UI, so we manually emit the new event in parallel. Never raises.
+    """
+    if ld_context is None:
+        return
+    try:
+        import ldclient
+
+        tracker = node.get_config().tracker
+        payload = {
+            "variationKey": getattr(tracker, "_variation_key", "") if tracker else "",
+            "configKey": node.get_key(),
+            "version": getattr(tracker, "_version", 1) if tracker else 1,
+            "modelName": getattr(tracker, "_model_name", "") if tracker else "",
+            "providerName": getattr(tracker, "_provider_name", "") if tracker else "",
+            "toolKey": tool_key,
+        }
+        if graph_key:
+            payload["graphKey"] = graph_key
+        ldclient.get().track("$ld:ai:tool_call", ld_context, payload, 1)
+    except Exception:
+        # Telemetry must never break a synthetic run.
+        pass
+
+
+def simulate_tool_calls(node, graph_tracker, ld_context=None, graph_key=None) -> list[str]:
+    """Emit tool-call events for tools attached to *node*'s served variation.
+
+    Reads the tool list from the variation served to ``ld_context`` and
+    fires both the legacy graph-scoped event (``$ld:ai:graph:tool_call``,
+    via ``AIGraphTracker.track_tool_call``) and the new per-config event
+    (``$ld:ai:tool_call``) that the LaunchDarkly Agent Graph UI now reads.
+
+    Produces varied tool usage: ~20% chance of no tools, otherwise 1-to-all
+    attached tools with a bias toward fewer calls (weighted random).
+
+    Backwards compatible: if ``ld_context`` is omitted we fall back to the
+    legacy behaviour of reading tools from ``model._parameters['tools']``.
+    """
+    if ld_context is not None:
+        tool_keys = _resolve_attached_tools(node, ld_context)
+    else:
+        config = node.get_config()
+        params = (config.model._parameters if (config.model and config.model._parameters) else {}) or {}
+        legacy = params.get("tools", []) or []
+        tool_keys = [
+            (t.get("key") or t.get("name"))
+            for t in legacy
+            if isinstance(t, dict) and (t.get("key") or t.get("name"))
+        ]
+
+    if not tool_keys:
         return []
 
     if random.random() < 0.2:
         return []
 
-    weights = list(range(len(tools), 0, -1))
-    num_calls = random.choices(range(1, len(tools) + 1), weights=weights, k=1)[0]
-    selected = random.sample(tools, num_calls)
-    called = []
-    for tool in selected:
-        tool_key = tool.get("name", "unknown")
-        graph_tracker.track_tool_call(node.get_key(), tool_key)
+    weights = list(range(len(tool_keys), 0, -1))
+    num_calls = random.choices(range(1, len(tool_keys) + 1), weights=weights, k=1)[0]
+    selected = random.sample(tool_keys, num_calls)
+    called: list[str] = []
+    for tool_key in selected:
+        try:
+            graph_tracker.track_tool_call(node.get_key(), tool_key)
+        except Exception:
+            pass
+        _emit_tool_call_event(node, ld_context, tool_key, graph_key)
         called.append(tool_key)
     return called
 
@@ -164,7 +255,7 @@ def _get_tracer():
 
 
 def run_triage(triage_node, question: str, user_context: dict,
-               graph_tracker, graph_key: str):
+               graph_tracker, graph_key: str, ld_context=None):
     """Execute the triage agent and return ``(query_type, parsed_result, tokens)``."""
     from opentelemetry.trace import StatusCode
 
@@ -193,7 +284,7 @@ def run_triage(triage_node, question: str, user_context: dict,
             config.tracker.track_success()
 
         graph_tracker.track_node_invocation(triage_node.get_key())
-        tools_called = simulate_tool_calls(triage_node, graph_tracker)
+        tools_called = simulate_tool_calls(triage_node, graph_tracker, ld_context, graph_key)
 
         span.set_attribute("agent.tokens.input", tokens["input"])
         span.set_attribute("agent.tokens.output", tokens["output"])
@@ -245,7 +336,7 @@ def find_specialist_node(graph, triage_node, query_type: str):
 
 def run_specialist(specialist_node, question: str, user_context: dict,
                    query_type: str, graph_tracker, triage_key: str,
-                   graph_key: str):
+                   graph_key: str, ld_context=None):
     """Execute a specialist agent (with RAG retrieval).
 
     Returns ``(response_text, tokens, duration_ms)``.
@@ -319,7 +410,7 @@ def run_specialist(specialist_node, question: str, user_context: dict,
 
         graph_tracker.track_node_invocation(node_key)
         graph_tracker.track_handoff_success(triage_key, node_key)
-        tools_called = simulate_tool_calls(specialist_node, graph_tracker)
+        tools_called = simulate_tool_calls(specialist_node, graph_tracker, ld_context, graph_key)
 
         span.set_attribute("agent.tokens.input", tokens["input"])
         span.set_attribute("agent.tokens.output", tokens["output"])
@@ -339,7 +430,7 @@ def run_specialist(specialist_node, question: str, user_context: dict,
 
 def run_brand_voice(brand_node, specialist_response: str, question: str,
                     user_context: dict, graph_tracker, specialist_key: str,
-                    graph_key: str):
+                    graph_key: str, ld_context=None):
     """Execute the brand-voice agent.
 
     Returns ``(response_text, tokens, duration_ms)``.
@@ -385,7 +476,7 @@ def run_brand_voice(brand_node, specialist_response: str, question: str,
 
         graph_tracker.track_node_invocation(node_key)
         graph_tracker.track_handoff_success(specialist_key, node_key)
-        tools_called = simulate_tool_calls(brand_node, graph_tracker)
+        tools_called = simulate_tool_calls(brand_node, graph_tracker, ld_context, graph_key)
 
         span.set_attribute("agent.tokens.input", tokens["input"])
         span.set_attribute("agent.tokens.output", tokens["output"])
@@ -532,6 +623,7 @@ def run_agent_graph(
     # --- Step 1: Triage ---
     query_type, triage_result, triage_tokens, triage_dur = run_triage(
         root_node, question, user_context, graph_tracker, graph_key,
+        ld_context=ld_context,
     )
 
     # --- Step 2: Specialist ---
@@ -545,6 +637,7 @@ def run_agent_graph(
     specialist_response, spec_tokens, spec_dur = run_specialist(
         specialist_node, question, user_context, query_type,
         graph_tracker, root_node.get_key(), graph_key,
+        ld_context=ld_context,
     )
 
     # --- Step 3: Brand voice ---
@@ -563,6 +656,7 @@ def run_agent_graph(
         final_response, brand_tokens, brand_dur = run_brand_voice(
             brand_node, specialist_response, question, user_context,
             graph_tracker, specialist_node.get_key(), graph_key,
+            ld_context=ld_context,
         )
         execution_path = [
             root_node.get_key(),
