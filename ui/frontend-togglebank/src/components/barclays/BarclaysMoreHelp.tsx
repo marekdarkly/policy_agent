@@ -1,11 +1,11 @@
-import { ChevronRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 const helpSections = [
   {
     title: "About you",
     links: [
-      { name: "Text Alerts", sub: "Set up balance and transaction alerts" },
+      { name: "Text alerts", sub: "Set up balance and transaction alerts" },
       { name: "Your details", sub: "Update name, address, or phone number" },
       { name: "Lost or stolen card", sub: "Report and order a replacement" },
       { name: "Security and fraud", sub: "Protect your account" },
@@ -50,37 +50,51 @@ const helpSections = [
 
 const BarclaysMoreHelp = () => {
   return (
-    <section className="py-16 md:py-24 bg-surface">
-      <div className="container">
-        <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-3 tracking-tight">
-          Find more help here
-        </h2>
-        <p className="text-muted-foreground text-center mb-12 max-w-lg mx-auto">
-          Browse all of our help categories to find exactly what you need.
-        </p>
+    <section className="relative py-20 md:py-28 bg-secondary/40">
+      <div className="absolute inset-x-0 top-0 section-divider" />
+      <div className="container relative">
+        <div className="max-w-3xl mb-14">
+          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground/80 font-medium mb-3">
+            Help directory
+          </p>
+          <h2 className="font-display text-4xl md:text-5xl text-foreground leading-[1.05] mb-4">
+            The full library, neatly indexed.
+          </h2>
+          <p className="text-base text-muted-foreground max-w-xl">
+            Every guide, FAQ, and policy — organised so you can jump straight to what you
+            need.
+          </p>
+        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {helpSections.map((section, i) => (
             <motion.div
               key={section.title}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 18 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.08, duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
-              className="bg-background rounded-xl p-6 shadow-card"
+              transition={{ delay: i * 0.06, duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
+              className="bg-card rounded-2xl p-7 ring-hairline"
             >
-              <h3 className="text-base font-bold text-foreground mb-5 pb-3 border-b-2 border-[hsl(var(--barclays-primary))]">
-                {section.title}
-              </h3>
-              <ul className="space-y-3.5">
+              <div className="flex items-center justify-between mb-5 pb-4 border-b border-border">
+                <h3 className="text-base font-semibold text-foreground tracking-tight">
+                  {section.title}
+                </h3>
+                <span className="text-xs font-mono tabular-nums text-muted-foreground/60">
+                  {String(section.links.length).padStart(2, "0")}
+                </span>
+              </div>
+              <ul className="space-y-4">
                 {section.links.map((link) => (
                   <li key={link.name}>
                     <button className="group text-left w-full">
-                      <span className="text-sm font-medium text-[hsl(var(--barclays-primary))] group-hover:underline flex items-center gap-1">
+                      <span className="text-sm font-medium text-foreground group-hover:text-accent transition-colors flex items-center gap-1">
                         {link.name}
-                        <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-0.5 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                       </span>
-                      <span className="text-xs text-muted-foreground block mt-0.5">{link.sub}</span>
+                      <span className="text-xs text-muted-foreground block mt-0.5">
+                        {link.sub}
+                      </span>
                     </button>
                   </li>
                 ))}

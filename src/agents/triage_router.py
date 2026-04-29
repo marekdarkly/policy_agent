@@ -80,6 +80,24 @@ def triage_node(state: AgentState) -> dict[str, Any]:
     if hasattr(response, "response_metadata") and isinstance(response.response_metadata, dict):
         ttft_ms = response.response_metadata.get("ttft_ms")
 
+    # Emit cost/duration so the UI terminal can mark this node complete
+    try:
+        from .brand_voice_agent import calculate_model_cost
+        triage_cost_usd = calculate_model_cost(
+            model_id=model_id,
+            input_tokens=tokens["input"],
+            output_tokens=tokens["output"],
+        )
+        triage_cost_cents = round(triage_cost_usd * 100.0, 2)
+        print(
+            f"  Triage agent cost: {triage_cost_cents:.2f}¢ (${triage_cost_usd:.6f}) "
+            f"[in={tokens['input']}, out={tokens['output']}, "
+            f"model={model_id.split(':')[0].split('.')[-1]}]"
+        )
+        print(f"  Triage agent duration: {duration_ms}ms")
+    except Exception as e:
+        print(f"  Failed to compute triage cost: {e}")
+
     # Parse the JSON response
     try:
         result = json.loads(response.content)

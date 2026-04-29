@@ -14,18 +14,25 @@ def create_user_profile(
     name: str = "Marek Poliks",
     location: str = "San Francisco, CA",
     policy_id: str = "POL-12345",
-    coverage_type: str = "Gold Plan"
+    coverage_type: str = "Gold Plan",
+    domain: str = "togglehealth",
 ) -> dict[str, Any]:
     """Create a comprehensive user profile for LaunchDarkly context.
     
     This follows LaunchDarkly's best practices for rich context attributes,
     enabling targeted feature flags, A/B testing, and personalized experiences.
     
+    The profile adapts to the domain (togglehealth, togglecell, togglebank) so
+    that context fields are coherent with the brand the customer is interacting
+    with. This prevents the coherence judge from flagging domain mismatches
+    (e.g. health-insurance fields on a banking customer).
+    
     Args:
         name: User's full name
         location: City and state
-        policy_id: Insurance policy identifier
-        coverage_type: Type of coverage plan
+        policy_id: Insurance policy identifier (health) or account ID (bank/cell)
+        coverage_type: Type of coverage plan (health) or account type (bank/cell)
+        domain: Brand domain — ``togglehealth``, ``togglecell``, or ``togglebank``
         
     Returns:
         Dictionary of user attributes for LaunchDarkly context
@@ -46,111 +53,198 @@ def create_user_profile(
         "IL": "America/Chicago",
     }
     timezone = timezone_map.get(state, "America/Los_Angeles")
-    
-    # Map plan type to tier
-    plan_tier_map = {
-        "Bronze": 1,
-        "Silver": 2,
-        "Gold": 3,
-        "Platinum": 4
-    }
-    plan_tier = None
-    for tier_name, tier_num in plan_tier_map.items():
-        if tier_name in coverage_type:
-            plan_tier = tier_num
-            break
-    
-    # Determine network type
-    network = "Premier Network"  # Could be derived from policy data
-    if "HMO" in coverage_type:
-        network = "HMO Network"
-    elif "PPO" in coverage_type:
-        network = "PPO Network"
-    elif "EPO" in coverage_type:
-        network = "EPO Network"
-    
-    return {
+
+    # Normalise domain for comparison
+    domain = (domain or "togglehealth").lower()
+
+    email_domain = {
+        "togglehealth": "togglehealth.com",
+        "togglecell": "togglecell.com",
+        "togglebank": "togglebank.com",
+    }.get(domain, "togglehealth.com")
+
+    # ── shared base ──────────────────────────────────────────────────────
+    profile: dict[str, Any] = {
         # Core Identity
         "user_key": user_key,
         "name": name,
-        "email": f"{user_key}@togglehealth.com",
-        
-        # Location & Time
+        "email": f"{user_key}@{email_domain}",
+
+        # Location & Time — always US-based
         "location": location,
         "city": city,
         "state": state,
-        "zip_code": "94102",  # Downtown San Francisco
+        "zip_code": "94102",
         "timezone": timezone,
         "country": "US",
-        
-        # Insurance Policy Details
-        "policy_id": policy_id,
-        "coverage_type": coverage_type,
-        "plan_tier": plan_tier or 3,  # 1=Bronze, 2=Silver, 3=Gold, 4=Platinum
-        "network": network,
-        "network_type": "Premier",
-        "member_since": "2023-01-15",
-        "policy_status": "active",
-        "renewal_date": "2025-01-15",
-        
-        # Billing & Payment
-        "billing_status": "current",  # current, past_due, suspended
-        "payment_method": "auto_pay",
-        "premium_amount": 650.00,
-        "billing_cycle": "monthly",
-        "autopay_enabled": True,
-        
+
         # Demographics (for segmentation)
-        "age_range": "35-44",  # Age ranges for privacy
+        "age_range": "35-44",
         "family_size": 1,
         "has_dependents": False,
         "employment_status": "employed",
-        
-        # Healthcare Profile
-        "primary_care_assigned": True,
-        "has_chronic_conditions": False,
-        "recent_claims_count": 3,
-        "last_claim_date": "2024-10-15",
-        "preferred_providers": ["SPEC-MA-001", "PCP-MA-002"],
-        
+
         # Preferences & Behavior
         "preferred_language": "en",
-        "communication_preference": "email",  # email, sms, phone, app
+        "communication_preference": "email",
         "notification_enabled": True,
         "paperless_billing": True,
-        
+
         # Segmentation Attributes (for targeting)
-        "customer_segment": "gold_member",  # bronze_member, silver_member, gold_member, platinum_member
-        "engagement_level": "high",  # low, medium, high
-        "risk_profile": "low",  # low, medium, high (for underwriting)
-        "lifetime_value": "high",  # low, medium, high
-        
-        # RAG Enhancement Attributes
-        "search_context": {
-            "primary_location": f"{city}, {state}",
-            "network_filter": network,
-            "plan_type_filter": coverage_type,
-            "coverage_tier": plan_tier or 3,
-        },
-        
+        "engagement_level": "high",
+        "lifetime_value": "high",
+
         # Feature Flags Context
         "beta_tester": False,
         "early_access": True,
-        "customer_tier": "gold",
-        
+
         # Session Metadata
         "session_id": f"session-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
         "last_login": datetime.now().isoformat(),
         "device_type": "web",
         "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+
+        # Domain tag (consumed by judges, triage, brand voice)
+        "domain": domain,
     }
+
+    # ── domain-specific fields ───────────────────────────────────────────
+    if domain == "togglebank":
+        # Tier labels must include "Gold" so the default server value
+        # ("Gold HMO") resolves correctly and the LD segment rules
+        # (plan=gold, customer_tier=gold) continue to match.
+        account_tier_map = {
+            "Basic": 1, "Standard": 2, "Gold": 3,
+            "Premium": 3, "Private": 4, "Platinum": 4,
+        }
+        account_tier = next(
+            (t for label, t in account_tier_map.items() if label in coverage_type),
+            3,
+        )
+        tier_label = {1: "bronze", 2: "silver", 3: "gold", 4: "platinum"}.get(
+            account_tier, "gold"
+        )
+        profile.update({
+            "account_id": policy_id,
+            "account_type": coverage_type,
+            "account_tier": account_tier,
+            "plan": tier_label,
+            "customer_segment": f"{tier_label}_member",
+            "customer_tier": tier_label,
+            "member_since": "2023-01-15",
+            "account_status": "active",
+            "currency": "USD",
+
+            "billing_status": "current",
+            "payment_method": "auto_pay",
+            "autopay_enabled": True,
+
+            "risk_profile": "low",
+
+            "search_context": {
+                "primary_location": f"{city}, {state}",
+                "account_type_filter": coverage_type,
+                "account_tier": account_tier,
+            },
+        })
+
+    elif domain == "togglecell":
+        plan_tier_map = {
+            "Basic": 1, "Standard": 2, "Gold": 3,
+            "Plus": 3, "Unlimited": 4,
+        }
+        plan_tier = next(
+            (t for label, t in plan_tier_map.items() if label in coverage_type),
+            3,
+        )
+        tier_label = {1: "bronze", 2: "silver", 3: "gold", 4: "platinum"}.get(
+            plan_tier, "gold"
+        )
+        profile.update({
+            "account_id": policy_id,
+            "plan_name": coverage_type,
+            "plan_tier": plan_tier,
+            "plan": tier_label,
+            "customer_segment": f"{tier_label}_member",
+            "customer_tier": tier_label,
+            "member_since": "2023-01-15",
+            "account_status": "active",
+
+            "billing_status": "current",
+            "payment_method": "auto_pay",
+            "monthly_amount": 75.00,
+            "billing_cycle": "monthly",
+            "autopay_enabled": True,
+
+            "search_context": {
+                "primary_location": f"{city}, {state}",
+                "plan_type_filter": coverage_type,
+                "plan_tier": plan_tier,
+            },
+        })
+
+    else:
+        # togglehealth (default)
+        plan_tier_map = {"Bronze": 1, "Silver": 2, "Gold": 3, "Platinum": 4}
+        plan_tier = next(
+            (t for label, t in plan_tier_map.items() if label in coverage_type),
+            3,
+        )
+        tier_label = {1: "bronze", 2: "silver", 3: "gold", 4: "platinum"}.get(
+            plan_tier, "gold"
+        )
+        network = "Premier Network"
+        if "HMO" in coverage_type:
+            network = "HMO Network"
+        elif "PPO" in coverage_type:
+            network = "PPO Network"
+        elif "EPO" in coverage_type:
+            network = "EPO Network"
+
+        profile.update({
+            "policy_id": policy_id,
+            "coverage_type": coverage_type,
+            "plan_tier": plan_tier,
+            "plan": tier_label,
+            "network": network,
+            "network_type": "Premier",
+            "member_since": "2023-01-15",
+            "policy_status": "active",
+            "renewal_date": "2025-01-15",
+
+            "billing_status": "current",
+            "payment_method": "auto_pay",
+            "premium_amount": 650.00,
+            "billing_cycle": "monthly",
+            "autopay_enabled": True,
+
+            "customer_segment": f"{tier_label}_member",
+            "customer_tier": tier_label,
+            "risk_profile": "low",
+
+            "primary_care_assigned": True,
+            "has_chronic_conditions": False,
+            "recent_claims_count": 3,
+            "last_claim_date": "2024-10-15",
+            "preferred_providers": ["SPEC-MA-001", "PCP-MA-002"],
+
+            "search_context": {
+                "primary_location": f"{city}, {state}",
+                "network_filter": network,
+                "plan_type_filter": coverage_type,
+                "coverage_tier": plan_tier,
+            },
+        })
+
+    return profile
 
 
 def get_targeted_search_context(user_profile: dict[str, Any]) -> dict[str, str]:
     """Extract search-optimized context from user profile.
     
     This creates a focused context dict specifically for RAG queries,
-    enabling highly targeted retrieval.
+    enabling highly targeted retrieval.  Adapts to the domain stored in
+    the profile so only relevant fields are included.
     
     Args:
         user_profile: Full user profile dictionary
@@ -158,19 +252,39 @@ def get_targeted_search_context(user_profile: dict[str, Any]) -> dict[str, str]:
     Returns:
         Focused context for RAG searches
     """
-    return {
+    domain = user_profile.get("domain", "togglehealth")
+    base = {
         "user_name": user_profile.get("name", ""),
         "location": user_profile.get("location", ""),
         "city": user_profile.get("city", ""),
         "state": user_profile.get("state", ""),
-        "network": user_profile.get("network", ""),
-        "network_type": user_profile.get("network_type", ""),
-        "coverage_type": user_profile.get("coverage_type", ""),
-        "plan_tier": str(user_profile.get("plan_tier", "")),
-        "policy_id": user_profile.get("policy_id", ""),
         "member_since": user_profile.get("member_since", ""),
-        "has_chronic_conditions": str(user_profile.get("has_chronic_conditions", False)),
     }
+
+    if domain == "togglebank":
+        base.update({
+            "account_id": user_profile.get("account_id", ""),
+            "account_type": user_profile.get("account_type", ""),
+            "account_tier": str(user_profile.get("account_tier", "")),
+            "currency": user_profile.get("currency", "USD"),
+        })
+    elif domain == "togglecell":
+        base.update({
+            "account_id": user_profile.get("account_id", ""),
+            "plan_name": user_profile.get("plan_name", ""),
+            "plan_tier": str(user_profile.get("plan_tier", "")),
+        })
+    else:
+        base.update({
+            "network": user_profile.get("network", ""),
+            "network_type": user_profile.get("network_type", ""),
+            "coverage_type": user_profile.get("coverage_type", ""),
+            "plan_tier": str(user_profile.get("plan_tier", "")),
+            "policy_id": user_profile.get("policy_id", ""),
+            "has_chronic_conditions": str(user_profile.get("has_chronic_conditions", False)),
+        })
+
+    return base
 
 
 def format_profile_summary(user_profile: dict[str, Any]) -> str:
@@ -182,6 +296,8 @@ def format_profile_summary(user_profile: dict[str, Any]) -> str:
     Returns:
         Formatted string summary
     """
+    domain = user_profile.get("domain", "togglehealth")
+
     lines = [
         "=" * 80,
         "USER PROFILE",
@@ -197,16 +313,39 @@ def format_profile_summary(user_profile: dict[str, Any]) -> str:
         f"  • Timezone: {user_profile.get('timezone')}",
         f"  • Zip Code: {user_profile.get('zip_code')}",
         "",
-        "Insurance Coverage:",
-        f"  • Policy ID: {user_profile.get('policy_id')}",
-        f"  • Plan: {user_profile.get('coverage_type')}",
-        f"  • Network: {user_profile.get('network')}",
-        f"  • Member Since: {user_profile.get('member_since')}",
-        f"  • Status: {user_profile.get('policy_status', 'active').upper()}",
+    ]
+
+    if domain == "togglebank":
+        lines += [
+            "Banking Details:",
+            f"  • Account ID: {user_profile.get('account_id')}",
+            f"  • Account Type: {user_profile.get('account_type')}",
+            f"  • Member Since: {user_profile.get('member_since')}",
+            f"  • Status: {user_profile.get('account_status', 'active').upper()}",
+            f"  • Currency: {user_profile.get('currency', 'USD')}",
+        ]
+    elif domain == "togglecell":
+        lines += [
+            "Plan Details:",
+            f"  • Account ID: {user_profile.get('account_id')}",
+            f"  • Plan: {user_profile.get('plan_name')}",
+            f"  • Member Since: {user_profile.get('member_since')}",
+            f"  • Status: {user_profile.get('account_status', 'active').upper()}",
+        ]
+    else:
+        lines += [
+            "Insurance Coverage:",
+            f"  • Policy ID: {user_profile.get('policy_id')}",
+            f"  • Plan: {user_profile.get('coverage_type')}",
+            f"  • Network: {user_profile.get('network')}",
+            f"  • Member Since: {user_profile.get('member_since')}",
+            f"  • Status: {user_profile.get('policy_status', 'active').upper()}",
+        ]
+
+    lines += [
         "",
         "Billing:",
         f"  • Status: {user_profile.get('billing_status', 'current').upper()}",
-        f"  • Premium: ${user_profile.get('premium_amount', 0):.2f}/{user_profile.get('billing_cycle', 'monthly')}",
         f"  • Auto-Pay: {'Enabled' if user_profile.get('autopay_enabled') else 'Disabled'}",
         "",
         "Segmentation:",
@@ -229,6 +368,7 @@ DEFAULT_PROFILE = create_user_profile(
     name="Marek Poliks",
     location="San Francisco, CA",
     policy_id="TH-HMO-GOLD-2024",
-    coverage_type="Gold HMO"
+    coverage_type="Gold HMO",
+    domain="togglehealth",
 )
 

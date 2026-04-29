@@ -97,7 +97,25 @@ def scheduler_specialist_node(state: AgentState) -> dict[str, Any]:
     # Extract Time to First Token (TTFT) from response metadata
     if hasattr(response, "response_metadata") and isinstance(response.response_metadata, dict):
         ttft_ms = response.response_metadata.get("ttft_ms")
-    
+
+    # Emit cost/duration so the UI terminal can mark this node complete
+    try:
+        from .brand_voice_agent import calculate_model_cost
+        scheduler_cost_usd = calculate_model_cost(
+            model_id=model_id,
+            input_tokens=tokens["input"],
+            output_tokens=tokens["output"],
+        )
+        scheduler_cost_cents = round(scheduler_cost_usd * 100.0, 2)
+        print(
+            f"  Scheduler agent cost: {scheduler_cost_cents:.2f}¢ (${scheduler_cost_usd:.6f}) "
+            f"[in={tokens['input']}, out={tokens['output']}, "
+            f"model={model_id.split(':')[0].split('.')[-1]}]"
+        )
+        print(f"  Scheduler agent duration: {duration_ms}ms")
+    except Exception as e:
+        print(f"  Failed to compute scheduler cost: {e}")
+
     response_text = response.content
 
     # Check if escalation was needed

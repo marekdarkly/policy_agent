@@ -1,88 +1,126 @@
-import { ShieldCheck, AlertTriangle, Lock, Eye } from "lucide-react";
+import { ShieldCheck, AlertTriangle, Lock, Eye, ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 const tips = [
   {
     icon: AlertTriangle,
-    title: "Scam warnings",
-    desc: "We'll never ask for your full PIN or password by email, text, or phone.",
+    title: "Spot a scam",
+    desc: "We will never ask for your full PIN or password by email, text, or phone — no exceptions.",
+    label: "Awareness",
   },
   {
     icon: Lock,
     title: "Strong authentication",
-    desc: "Use PINsentry or the app to verify it's you when logging in or making payments.",
+    desc: "PINsentry, biometrics, and step-up verification keep every payment secure end-to-end.",
+    label: "Protection",
   },
   {
     icon: Eye,
-    title: "Check your statements",
-    desc: "Regularly review transactions and report anything you don't recognise immediately.",
+    title: "Always-on monitoring",
+    desc: "Real-time anomaly detection on every transaction, with instant alerts to your phone.",
+    label: "Surveillance",
   },
 ];
 
 const BarclaysSecurityBanner = () => {
   return (
-    <section className="py-16 md:py-20 bg-[hsl(var(--barclays-dark))]">
-      <div className="container">
-        <div className="text-center mb-12">
+    <section className="relative py-20 md:py-28 bg-ink overflow-hidden">
+      {/* Ambient glow */}
+      <div
+        className="absolute inset-0 opacity-70"
+        style={{
+          background:
+            "radial-gradient(800px circle at 20% 0%, hsl(var(--brand-accent) / .25), transparent 50%), radial-gradient(700px circle at 90% 100%, hsl(var(--brand-violet) / .22), transparent 50%)",
+        }}
+      />
+      {/* Grid texture */}
+      <div
+        className="absolute inset-0 opacity-[0.07]"
+        style={{
+          backgroundImage:
+            "linear-gradient(hsl(var(--brand-cream)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--brand-cream)) 1px, transparent 1px)",
+          backgroundSize: "56px 56px",
+        }}
+      />
+
+      <div className="container relative">
+        <div className="max-w-3xl mb-14">
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
-            className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 mb-4"
+            className="inline-flex items-center gap-2 bg-cream/[0.06] border border-cream/10 rounded-full px-3 py-1.5 mb-5"
           >
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span className="text-xs font-semibold text-white/90 tracking-wide uppercase">Security centre</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald2" />
+            <span className="text-[10px] font-semibold text-cream/80 tracking-[0.2em] uppercase">
+              Security centre
+            </span>
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.05, duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
-            className="text-2xl md:text-3xl font-bold text-white tracking-tight mb-3"
+            className="font-display text-4xl md:text-5xl text-cream leading-[1.05] mb-4"
           >
-            Keeping your money safe
+            Your money. Defended at every layer.
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1, duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
-            className="text-white/60 max-w-md mx-auto"
+            className="text-cream/65 max-w-xl text-base"
           >
-            Your security is our priority. Here's how to protect yourself.
+            Three intersecting systems — vigilance, authentication, and monitoring — quietly
+            stand between you and risk, every second of every day.
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {tips.map((tip, i) => (
             <motion.div
               key={tip.title}
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 22 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 + i * 0.08, duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
-              className="bg-white/[0.06] backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:bg-white/[0.1] transition-colors duration-300"
+              className="group relative bg-cream/[0.04] backdrop-blur-sm rounded-2xl p-7 border border-cream/10 hover:bg-cream/[0.06] transition-colors duration-300"
             >
-              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-4">
-                <tip.icon className="w-5 h-5 text-emerald-400" />
+              <div className="flex items-center justify-between mb-6">
+                <div className="w-11 h-11 rounded-xl bg-cream/10 flex items-center justify-center">
+                  <tip.icon className="w-5 h-5 text-emerald2" strokeWidth={1.75} />
+                </div>
+                <span className="text-[10px] uppercase tracking-[0.18em] text-cream/40 font-medium">
+                  {tip.label}
+                </span>
               </div>
-              <h3 className="text-base font-bold text-white mb-2">{tip.title}</h3>
-              <p className="text-sm text-white/60 leading-relaxed">{tip.desc}</p>
+              <h3 className="text-lg font-semibold text-cream mb-2 tracking-tight">
+                {tip.title}
+              </h3>
+              <p className="text-sm text-cream/60 leading-relaxed">{tip.desc}</p>
             </motion.div>
           ))}
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.3, duration: 0.4, ease: [0.2, 0.8, 0.2, 1] }}
-          className="text-center mt-10"
+          className="mt-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 p-6 rounded-2xl bg-cream/[0.04] border border-cream/10"
         >
-          <button className="inline-flex items-center gap-2 bg-white text-[hsl(var(--barclays-dark))] font-semibold text-sm px-6 py-2.5 rounded-md hover:bg-white/90 transition-colors">
+          <div>
+            <h4 className="text-base font-semibold text-cream mb-1">Need to report something now?</h4>
+            <p className="text-sm text-cream/60">
+              24/7 fraud line · Instant card freeze · Phishing report
+            </p>
+          </div>
+          <button className="inline-flex items-center gap-2 bg-cream text-ink font-semibold text-sm px-5 py-3 rounded-xl hover:bg-cream/90 transition-colors shrink-0">
             <ShieldCheck className="w-4 h-4" />
-            Visit our Security Centre
+            Visit Security Centre
+            <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
         </motion.div>
       </div>

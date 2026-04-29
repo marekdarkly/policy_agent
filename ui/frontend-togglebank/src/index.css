@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,42 +6,65 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
+    /* Premium warm-cream + deep-ink palette --------------------------- */
+    --background: 38 38% 97%;            /* warm ivory */
+    --foreground: 220 40% 10%;           /* deep ink */
 
-    --card: 0 0% 96%;
-    --card-foreground: 0 0% 10%;
+    --card: 0 0% 100%;                   /* pure white cards */
+    --card-foreground: 220 40% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 220 40% 10%;
 
-    --primary: 0 100% 45%;
-    --primary-foreground: 0 0% 100%;
-    --primary-hover: 0 100% 37%;
+    --primary: 220 60% 14%;              /* deep ocean navy */
+    --primary-foreground: 38 38% 97%;
+    --primary-hover: 220 60% 9%;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary: 38 30% 93%;             /* warm sand */
+    --secondary-foreground: 220 40% 10%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 38 25% 94%;
+    --muted-foreground: 220 12% 38%;
 
-    --accent: 189 100% 29%;
+    --accent: 222 90% 56%;               /* electric sapphire */
     --accent-foreground: 0 0% 100%;
+    --accent-soft: 222 90% 96%;
 
-    --destructive: 0 72% 51%;
+    --gold: 36 50% 56%;                  /* refined warm gold */
+    --gold-soft: 36 60% 92%;
+
+    --emerald: 158 60% 32%;
+    --emerald-soft: 158 60% 94%;
+
+    --destructive: 358 70% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 100% 45%;
+    --border: 38 18% 88%;                /* warm hairline */
+    --border-strong: 220 15% 80%;
+    --input: 38 18% 88%;
+    --ring: 222 90% 56%;
 
-    --radius: 0.5rem;
+    --radius: 0.875rem;
 
-    --surface: 0 0% 96%;
-    --surface-alt: 0 0% 92%;
+    --surface: 38 32% 95%;               /* warm cream surface */
+    --surface-alt: 38 25% 92%;
 
-    --shadow-card: 0 0 0 1px rgba(0,0,0,.06), 0 4px 12px -2px rgba(0,0,0,.08);
-    --shadow-card-hover: 0 0 0 1px rgba(0,0,0,.06), 0 8px 24px -4px rgba(0,0,0,.12);
+    /* Layered, refined shadows -------------------------------------- */
+    --shadow-xs: 0 1px 0 rgba(15, 23, 42, .04);
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, .04), 0 1px 1px rgba(15, 23, 42, .02);
+    --shadow-card:
+      0 1px 1px rgba(15, 23, 42, .04),
+      0 4px 10px -2px rgba(15, 23, 42, .06),
+      0 0 0 1px rgba(15, 23, 42, .04);
+    --shadow-card-hover:
+      0 1px 1px rgba(15, 23, 42, .05),
+      0 12px 28px -8px rgba(15, 23, 42, .14),
+      0 0 0 1px rgba(15, 23, 42, .05);
+    --shadow-elevated:
+      0 8px 24px -6px rgba(15, 23, 42, .12),
+      0 30px 60px -20px rgba(15, 23, 42, .25),
+      0 0 0 1px rgba(15, 23, 42, .04);
+    --shadow-glow: 0 0 0 6px rgba(38, 103, 255, .12);
 
     --ease-premium: cubic-bezier(0.2, 0.8, 0.2, 1);
 
@@ -55,13 +78,25 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
+  /* Brand tokens used throughout the marketing surface */
   .barclays-theme {
-    --barclays-primary: 193 100% 30%;
-    --barclays-dark: 203 60% 18%;
-    --barclays-sky-light: 200 60% 78%;
-    --barclays-sky: 200 50% 65%;
-    --barclays-green: 120 20% 45%;
-    --barclays-green-dark: 120 25% 30%;
+    --brand-ink: 220 60% 8%;             /* near-black navy */
+    --brand-ink-2: 220 50% 14%;
+    --brand-cream: 38 38% 97%;
+    --brand-cream-2: 38 30% 93%;
+    --brand-accent: 222 90% 56%;
+    --brand-accent-2: 196 95% 50%;       /* cyan blue */
+    --brand-violet: 258 80% 64%;
+    --brand-gold: 36 55% 56%;
+    --brand-emerald: 158 60% 38%;
+
+    /* Back-compat aliases for legacy class names left in components */
+    --barclays-primary: var(--brand-ink);
+    --barclays-dark: var(--brand-ink);
+    --barclays-sky-light: var(--brand-cream);
+    --barclays-sky: var(--brand-cream-2);
+    --barclays-green: 38 25% 88%;
+    --barclays-green-dark: 220 50% 14%;
   }
 }
 
@@ -70,12 +105,150 @@
     @apply border-border;
   }
 
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    /* Subtle paper grain over the entire surface for tactile premium feel */
+    background-image:
+      radial-gradient(1200px 600px at 12% -10%, hsl(222 90% 56% / 0.05), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, hsl(36 55% 56% / 0.05), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: .35;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.04 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   }
 
   h1, h2, h3, h4, h5, h6 {
     text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+
+  .font-display {
+    font-family: 'Instrument Serif', 'Times New Roman', serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
+
+  .glass {
+    background: hsl(0 0% 100% / 0.72);
+    backdrop-filter: saturate(160%) blur(14px);
+    -webkit-backdrop-filter: saturate(160%) blur(14px);
+  }
+
+  .glass-dark {
+    background: hsl(220 50% 10% / 0.55);
+    backdrop-filter: saturate(160%) blur(14px);
+    -webkit-backdrop-filter: saturate(160%) blur(14px);
+  }
+
+  .ring-hairline {
+    box-shadow: inset 0 0 0 1px hsl(var(--border));
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(220 60% 14%), hsl(222 90% 56%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Animated mesh gradient used in the hero ----------------------- */
+  .mesh-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+  }
+  .mesh-bg::before,
+  .mesh-bg::after {
+    content: '';
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(60px);
+    will-change: transform;
+  }
+  .mesh-orb {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(70px);
+    opacity: .55;
+    will-change: transform;
+  }
+
+  @keyframes orbDriftA {
+    0%, 100% { transform: translate3d(0,0,0) scale(1); }
+    50% { transform: translate3d(40px,-30px,0) scale(1.08); }
+  }
+  @keyframes orbDriftB {
+    0%, 100% { transform: translate3d(0,0,0) scale(1); }
+    50% { transform: translate3d(-30px,40px,0) scale(1.05); }
+  }
+  @keyframes orbDriftC {
+    0%, 100% { transform: translate3d(0,0,0) scale(1); }
+    50% { transform: translate3d(20px,20px,0) scale(.95); }
+  }
+  .orb-a { animation: orbDriftA 14s ease-in-out infinite; }
+  .orb-b { animation: orbDriftB 18s ease-in-out infinite; }
+  .orb-c { animation: orbDriftC 22s ease-in-out infinite; }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .shimmer-line {
+    background: linear-gradient(90deg,
+      transparent 0%,
+      hsl(0 0% 100% / .35) 50%,
+      transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 3.2s linear infinite;
+  }
+
+  /* Hairline section divider with soft glow */
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent,
+      hsl(var(--border-strong)) 25%,
+      hsl(var(--border-strong)) 75%,
+      transparent);
+    position: relative;
+  }
+
+  /* Marquee for ticker / trust strip */
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .marquee-track {
+    animation: marquee 40s linear infinite;
+  }
+
+  /* Lift on hover */
+  .hover-lift {
+    transition: transform .35s var(--ease-premium), box-shadow .35s var(--ease-premium);
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
   }
 }

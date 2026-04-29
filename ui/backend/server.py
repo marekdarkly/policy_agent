@@ -320,9 +320,9 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
             name=request.userName,
             location=request.location,
             policy_id=request.policyId,
-            coverage_type=request.coverageType
+            coverage_type=request.coverageType,
+            domain=request.domain,
         )
-        user_context["domain"] = request.domain
         
         # Span correlation now happens per-agent in ModelInvoker (see launchdarkly_config.py)
         # Each agent (triage, policy, provider, brand) sets its own ld.ai_config.key
@@ -518,9 +518,9 @@ async def chat_stream(request: ChatRequest):
                 name=request.userName if hasattr(request, 'userName') else "Marek Poliks",
                 location=request.location if hasattr(request, 'location') else "San Francisco, CA",
                 policy_id=request.policyId if hasattr(request, 'policyId') else "TH-HMO-GOLD-2024",
-                coverage_type=request.coverageType if hasattr(request, 'coverageType') else "Gold HMO"
+                coverage_type=request.coverageType if hasattr(request, 'coverageType') else "Gold HMO",
+                domain=request.domain,
             )
-            user_context["domain"] = request.domain
             
             # Send triage status
             yield f"data: {json.dumps({'type': 'status', 'agent': 'triage', 'message': 'Analyzing your question...'})}\n\n"

@@ -313,18 +313,48 @@ const ChatWidget = ({ isOpen, onClose, initialQuery }: ChatWidgetProps) => {
           <button
             className={`cw-feedback-btn ${feedbackGiven === "positive" ? "active" : ""}`}
             title="Good response"
+            aria-label="Thumbs up"
             onClick={() => sendFeedback(true)}
             disabled={!lastRequestId || isLoading}
           >
-            +
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.85"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M7 10v12" />
+              <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H7a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L15 1a3.13 3.13 0 0 1 0 4.88Z" />
+            </svg>
           </button>
           <button
             className={`cw-feedback-btn ${feedbackGiven === "negative" ? "active" : ""}`}
             title="Bad response"
+            aria-label="Thumbs down"
             onClick={() => sendFeedback(false)}
             disabled={!lastRequestId || isLoading}
           >
-            -
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.85"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M17 14V2" />
+              <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H17a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L9 23a3.13 3.13 0 0 1 0-4.88Z" />
+            </svg>
           </button>
           <button className="cw-close-btn" onClick={onClose} title="Close chat">
             &times;
