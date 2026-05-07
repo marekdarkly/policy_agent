@@ -25,6 +25,50 @@ interface AgentStep {
   };
 }
 
+// Demo "login switcher" presets. The user key drives LaunchDarkly targeting:
+// - marek-internal-dev is in the `internal-developers` segment
+// - marek-commercial-plan is in the `insurancebot-commercial-experience` segment
+// The two segments are mutually exclusive (each excludes the other's key).
+interface DemoUser {
+  id: 'internal' | 'commercial';
+  label: string;
+  badge: string;
+  userKey: string;
+  userName: string;
+  userType: string;
+  role: string;
+  plan: string;
+  coverageType: string;
+  policyId: string;
+}
+
+const DEMO_USERS: Record<DemoUser['id'], DemoUser> = {
+  internal: {
+    id: 'internal',
+    label: 'Marek Poliks',
+    badge: 'Internal Dev',
+    userKey: 'marek-internal-dev',
+    userName: 'Marek Poliks',
+    userType: 'internal_dev',
+    role: 'Developer',
+    plan: 'internal',
+    coverageType: 'Internal Dev Plan',
+    policyId: 'TH-INTERNAL-DEV',
+  },
+  commercial: {
+    id: 'commercial',
+    label: 'Marek Poliks',
+    badge: 'Commercial Plan',
+    userKey: 'marek-commercial-plan',
+    userName: 'Marek Poliks',
+    userType: 'commercial',
+    role: 'Member',
+    plan: 'gold',
+    coverageType: 'Gold HMO',
+    policyId: 'TH-HMO-GOLD-2024',
+  },
+};
+
 interface ChatResponse {
   response: string;
   requestId: string;
@@ -65,8 +109,24 @@ function App() {
   const [showMetrics, setShowMetrics] = useState(false);
   const [showEvalReasoning, setShowEvalReasoning] = useState(false);
   const [guardrailEnabled, setGuardrailEnabled] = useState(true);  // Toggle for guardrail
+  // Active demo user — drives LaunchDarkly user-key targeting. Default to
+  // Internal Dev so a fresh page load starts in the "internal" experience.
+  const [activeUserId, setActiveUserId] = useState<DemoUser['id']>(() => {
+    const saved = typeof window !== 'undefined' ? window.localStorage.getItem('demoUserId') : null;
+    return (saved === 'commercial' || saved === 'internal') ? saved : 'internal';
+  });
+  const activeUser = DEMO_USERS[activeUserId];
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContentRef = useRef<HTMLDivElement>(null);
+
+  const switchUser = (id: DemoUser['id']) => {
+    setActiveUserId(id);
+    try {
+      window.localStorage.setItem('demoUserId', id);
+    } catch {
+      // ignore storage failures
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -215,6 +275,13 @@ function App() {
         body: JSON.stringify({
           userInput: currentInput,
           guardrailEnabled: guardrailEnabled,
+          userKey: activeUser.userKey,
+          userName: activeUser.userName,
+          userType: activeUser.userType,
+          role: activeUser.role,
+          plan: activeUser.plan,
+          coverageType: activeUser.coverageType,
+          policyId: activeUser.policyId,
         }),
       });
 
@@ -318,6 +385,42 @@ function App() {
             <a href="#services">Services</a>
             <a href="#about">About</a>
             <a href="#contact">Contact</a>
+            <div
+              className="user-switcher"
+              role="group"
+              aria-label="Demo user switcher"
+              title={`LaunchDarkly user_key: ${activeUser.userKey}`}
+            >
+              <span className="user-switcher-current">
+                <span className="user-switcher-avatar" aria-hidden="true">
+                  {activeUser.userName.charAt(0)}
+                </span>
+                <span className="user-switcher-name">{activeUser.userName}</span>
+                <span
+                  className={`user-switcher-badge user-switcher-badge-${activeUser.id}`}
+                >
+                  {activeUser.badge}
+                </span>
+              </span>
+              <button
+                type="button"
+                className={`user-switcher-btn ${activeUserId === 'internal' ? 'active' : ''}`}
+                onClick={() => switchUser('internal')}
+                disabled={isLoading || activeUserId === 'internal'}
+                title="Login as Marek Poliks (Internal Dev)"
+              >
+                Internal Dev
+              </button>
+              <button
+                type="button"
+                className={`user-switcher-btn ${activeUserId === 'commercial' ? 'active' : ''}`}
+                onClick={() => switchUser('commercial')}
+                disabled={isLoading || activeUserId === 'commercial'}
+                title="Login as Marek Poliks (Commercial Plan)"
+              >
+                Commercial Plan
+              </button>
+            </div>
           </div>
         </nav>
 

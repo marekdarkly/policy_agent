@@ -19,6 +19,9 @@ Orchestrates batch runs of simulations with configurable intervals and limits.
 ### `guarded_release_accuracy_simulator.py`
 Specialized simulator for testing guarded release features with accuracy-based rollback triggers.
 
+### `brand_agent_guarded_rollout_simulator.py` + `setup_brand_guarded_rollout.py`
+Drives a Sonnet -> Haiku guarded rollout on `brand_agent` for the `insurancebot-enterprise-customers` segment. The setup helper seeds the segment rule (`customer_tier=enterprise`), tries to create the rollout via the LD REST API, and prints UI fallback instructions if the API path is unavailable. The simulator then sends synthetic accuracy / cost / duration metrics so the rollout auto-rolls back on accuracy while cost and duration improve. Run `setup_brand_guarded_rollout.py --cleanup` to reverse the changes when done.
+
 ## Usage
 
 Run simulations from the project root:

@@ -16,6 +16,10 @@ def create_user_profile(
     policy_id: str = "POL-12345",
     coverage_type: str = "Gold Plan",
     domain: str = "togglehealth",
+    user_key: str | None = None,
+    user_type: str | None = None,
+    role: str | None = None,
+    plan_override: str | None = None,
 ) -> dict[str, Any]:
     """Create a comprehensive user profile for LaunchDarkly context.
     
@@ -40,8 +44,10 @@ def create_user_profile(
     # Parse location
     city, state = location.split(", ") if ", " in location else (location, "CA")
     
-    # Generate user key from name
-    user_key = name.lower().replace(" ", "-")
+    # User key: explicit override wins (used by the demo "login switcher" so we
+    # can target by user key directly in LaunchDarkly), otherwise derive from name.
+    if not user_key:
+        user_key = name.lower().replace(" ", "-")
     
     # Determine timezone from location
     timezone_map = {
@@ -107,6 +113,14 @@ def create_user_profile(
         # Domain tag (consumed by judges, triage, brand voice)
         "domain": domain,
     }
+
+    # Optional identity overrides used by the demo "login switcher".
+    # These let us target by user key / role / user_type in LaunchDarkly without
+    # having to mutate the rest of the profile shape.
+    if user_type:
+        profile["user_type"] = user_type
+    if role:
+        profile["role"] = role
 
     # ── domain-specific fields ───────────────────────────────────────────
     if domain == "togglebank":
@@ -235,6 +249,14 @@ def create_user_profile(
                 "coverage_tier": plan_tier,
             },
         })
+
+    # Plan override: forces both `plan` and `customer_tier` to a non-gold label
+    # (e.g. "internal") so the internal-dev user doesn't accidentally satisfy
+    # commercial segment plan-based rules.
+    if plan_override:
+        profile["plan"] = plan_override
+        profile["customer_tier"] = plan_override
+        profile["customer_segment"] = f"{plan_override}_member"
 
     return profile
 

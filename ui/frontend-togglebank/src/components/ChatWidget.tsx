@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
+import { useDemoUser } from "@/lib/demoUser";
 import "./ChatWidget.css";
 
 interface Message {
@@ -53,9 +54,8 @@ interface ChatWidgetProps {
   initialQuery?: string;
 }
 
-const DOMAIN = "togglebank";
-
 const ChatWidget = ({ isOpen, onClose, initialQuery }: ChatWidgetProps) => {
+  const { user: demoUser } = useDemoUser();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "0",
@@ -204,11 +204,15 @@ const ChatWidget = ({ isOpen, onClose, initialQuery }: ChatWidgetProps) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userInput: currentInput,
-          domain: DOMAIN,
-          userName: "Jordan Taylor",
+          domain: demoUser.domain,
+          userName: demoUser.userName,
           location: "London, UK",
-          policyId: "TB-PREM-CURR-2026",
-          coverageType: "TB-PREM-CURR-2026",
+          policyId: demoUser.policyId,
+          coverageType: demoUser.coverageType,
+          userKey: demoUser.userKey,
+          userType: demoUser.userType,
+          role: demoUser.role,
+          plan: demoUser.plan,
           guardrailEnabled,
         }),
       });

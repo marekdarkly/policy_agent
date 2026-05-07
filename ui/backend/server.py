@@ -289,6 +289,13 @@ class ChatRequest(BaseModel):
     coverageType: Optional[str] = "Gold HMO"
     guardrailEnabled: Optional[bool] = True
     domain: Optional[str] = "togglehealth"
+    # Demo "login switcher" overrides: when present, these control LaunchDarkly
+    # context targeting (user key, role, user_type, plan) without touching the
+    # rest of the profile shape.
+    userKey: Optional[str] = None
+    userType: Optional[str] = None
+    role: Optional[str] = None
+    plan: Optional[str] = None
 
 
 class ChatResponse(BaseModel):
@@ -322,6 +329,14 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
             policy_id=request.policyId,
             coverage_type=request.coverageType,
             domain=request.domain,
+            user_key=request.userKey,
+            user_type=request.userType,
+            role=request.role,
+            plan_override=request.plan,
+        )
+        logger.info(
+            f"[{request_id}] LD context: user_key={user_context.get('user_key')} "
+            f"user_type={user_context.get('user_type')} plan={user_context.get('plan')}"
         )
         
         # Span correlation now happens per-agent in ModelInvoker (see launchdarkly_config.py)
@@ -520,6 +535,10 @@ async def chat_stream(request: ChatRequest):
                 policy_id=request.policyId if hasattr(request, 'policyId') else "TH-HMO-GOLD-2024",
                 coverage_type=request.coverageType if hasattr(request, 'coverageType') else "Gold HMO",
                 domain=request.domain,
+                user_key=request.userKey,
+                user_type=request.userType,
+                role=request.role,
+                plan_override=request.plan,
             )
             
             # Send triage status
