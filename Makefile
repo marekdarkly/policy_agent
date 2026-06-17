@@ -1,7 +1,9 @@
-.PHONY: help install setup run verify clean aws-login aws-check format lint test-suite test-quick upload-tools
+.PHONY: help install setup run verify clean aws-login aws-check format lint test-suite test-quick upload-tools togglehealth togglecell togglebank
 
 # Configuration
-PYTHON := python3
+# Prefer Python 3.12 (the code uses PEP 701 multiline f-strings, which 3.11 cannot parse).
+# Falls back to python3.13 / python3 if 3.12 is not installed.
+PYTHON := $(shell command -v python3.12 || command -v python3.13 || command -v python3)
 VENV := venv
 VENV_BIN := $(VENV)/bin
 PYTHON_VENV := $(VENV_BIN)/python
@@ -90,6 +92,8 @@ run-ui: aws-check ## Run the web UI (FastAPI backend + React frontend)
 	(cd ui/backend && ../../$(PYTHON_VENV) server.py) & \
 	(cd ui/frontend && npm run dev) & \
 	wait
+
+togglehealth: run-ui ## Run ToggleHealth UI (medical insurance demo) - alias for run-ui
 
 togglecell: aws-check ## Run ToggleCell UI (telecom demo, same AI configs)
 	@echo ""

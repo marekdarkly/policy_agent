@@ -12,9 +12,12 @@ All brands share the same AI agent architecture and LaunchDarkly configuration. 
 
 ### Web Interface (Recommended)
 
+First time: `make setup`, fill in `.env`, then provision the LaunchDarkly AI Configs
+with `python scripts/setup_ld_ai_configs.py` (see [LaunchDarkly AI Config Setup](#launchdarkly-ai-config-setup)).
+
 ```bash
 # ToggleHealth (medical insurance)
-cd ui && ./start.sh
+make togglehealth      # (or just `make`, or `cd ui && ./start.sh`)
 # Open http://localhost:3000
 
 # ToggleCell (telecom)
@@ -97,12 +100,14 @@ Two workflow engines can drive the same agent graph:
 
 ## LaunchDarkly AI Config Setup
 
-Create these AI Configs in LaunchDarkly:
+Every agent prompt and model is resolved from LaunchDarkly AI Configs at runtime — if
+they don't exist in your project, the workflow fails at the triage step. The project
+needs these seven configs:
 
 **Agents (Agent-based configs):**
 - `triage_agent`
-- `policy_agent` (add custom param: `awskbid` = your-policy-kb-id)
-- `provider_agent` (add custom param: `awskbid` = your-provider-kb-id)
+- `policy_agent` (custom param: `awskbid` = your-policy-kb-id)
+- `provider_agent` (custom param: `awskbid` = your-provider-kb-id)
 - `scheduler_agent`
 
 **Brand (Completion-based config):**
@@ -111,6 +116,29 @@ Create these AI Configs in LaunchDarkly:
 **Judges (Agent-based configs):**
 - `ai-judge-accuracy`
 - `ai-judge-coherence`
+
+### Create them automatically
+
+Don't build these by hand. Set `LAUNCHDARKLY_ACCESS_TOKEN` (with the **writeProject**
+scope) and `LAUNCHDARKLY_PROJECT_KEY` in `.env`, then run:
+
+```bash
+python scripts/setup_ld_ai_configs.py --dry-run   # preview
+python scripts/setup_ld_ai_configs.py             # create all 7 (idempotent)
+```
+
+This reads the canonical definitions in [`scripts/ld_ai_configs/`](scripts/ld_ai_configs/)
+(real prompts, models, and `awskbid` params, with the `{{domain}}` template preserved)
+and creates each config with its variation served by default. Models can be overridden
+for every config with `LD_SETUP_MODEL=<bedrock-model-id>` if your AWS account doesn't
+have the defaults enabled.
+
+If you're driving this from Claude Code, the [`setup-launchdarkly`](.claude/skills/setup-launchdarkly/SKILL.md)
+skill walks through the whole flow.
+
+You can **reuse the same shared Bedrock Knowledge Bases** as the reference demo — the
+policy/provider definitions already point at them (`PHC7IW8FTM`, `RV4PHKDQA4`). See
+[RAG Knowledge Base Data](#rag-knowledge-base-data) to use your own instead.
 
 ## Observability
 
@@ -171,6 +199,8 @@ See [simulations/README.md](simulations/README.md) for details.
 
 | Script | Purpose |
 |--------|---------|
+| `scripts/setup_ld_ai_configs.py` | Create all 7 AI Configs (triage/policy/provider/scheduler/brand + 2 judges) in your LaunchDarkly project from `ld_ai_configs/` |
+| `scripts/ld_ai_configs/*.json` | Canonical AI Config definitions (prompts, models, `awskbid`) used by the setup script |
 | `scripts/upload_tools_to_launchdarkly.py` | Upload tool definitions from `launchdarkly_tools_library.json` to LaunchDarkly |
 | `scripts/launchdarkly_tools_library.json` | 20 pre-built MCP tool definitions (Snowflake, calendar, NLP, healthcare, etc.) |
 
@@ -251,7 +281,8 @@ Optional:
 ```bash
 make setup          # Install dependencies & check AWS
 make run            # Interactive chatbot (terminal)
-make ui             # ToggleHealth web UI
+make ui             # ToggleHealth web UI (alias for run-ui; also the default `make`)
+make togglehealth   # ToggleHealth web UI (alias for run-ui)
 make togglecell     # ToggleCell web UI
 make togglebank     # ToggleBank web UI
 make test-suite     # Full agent test suite (50 iterations)
@@ -371,10 +402,10 @@ OpenTelemetry instrumentation exports structured traces to LaunchDarkly Monitor,
 
 ## Requirements
 
-- Python 3.11+
+- Python 3.12+ (the code uses PEP 701 multiline f-strings — 3.11 will not parse `ui/backend/server.py`)
 - Node.js 18+ (for UI frontends)
 - AWS CLI with SSO configured
-- LaunchDarkly account with AI Configs enabled
+- LaunchDarkly account with AI Configs enabled (run `scripts/setup_ld_ai_configs.py` to provision them)
 - AWS Bedrock access (us-east-1)
 
 ## License
