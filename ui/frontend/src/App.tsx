@@ -78,6 +78,7 @@ interface ChatResponse {
     confidence: number;
     agent_count: number;
     rag_enabled: boolean;
+    total_duration_ms?: number;
     accuracy_score?: number;
     accuracy_reasoning?: string;
     accuracy_issues?: string[];
